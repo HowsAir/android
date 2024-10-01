@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Breath Better</string>
+    <string name="arrancar_busqueda">Arrancar Busqueda</string>
+    <string name="detener_busqueda">Detener Busqueda</string>
+</resources>
