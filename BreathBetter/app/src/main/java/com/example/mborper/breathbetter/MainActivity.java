@@ -18,8 +18,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Intent serviceIntent = null;
 
-    // ---------------------------------------------------------------------------------------------
-    // ---------------------------------------------------------------------------------------------
     public void onStartServiceButtonClicked(View v) {
         Log.d(LOG_TAG, "Start service button clicked");
 
@@ -39,8 +37,6 @@ public class MainActivity extends AppCompatActivity {
 
     } // onStartServiceButtonClicked
 
-    // ---------------------------------------------------------------------------------------------
-    // ---------------------------------------------------------------------------------------------
     public void onStopServiceButtonClicked(View v) {
 
         if (this.serviceIntent == null) {

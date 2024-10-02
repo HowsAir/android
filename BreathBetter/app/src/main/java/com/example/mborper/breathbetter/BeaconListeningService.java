@@ -7,8 +7,6 @@ import android.util.Log;
 public class BeaconListeningService extends IntentService {
     private static final String LOG_TAG = ">>>>";
 
-    private long waitTime = 10000;
-
     private boolean keepRunning = true;
 
     // Constructor must call the super with a name for the worker thread
@@ -49,7 +47,9 @@ public class BeaconListeningService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         // ERROR MAY PRODUCE NULL POINTER EXCEPTION
-        this.waitTime = intent.getLongExtra("waitTime", /* default */ 50000);
+        /* default */
+        assert intent != null;
+        long waitTime = intent.getLongExtra("waitTime", /* default */ 50000);
         this.keepRunning = true;
 
         // This runs in a WORKER THREAD!
