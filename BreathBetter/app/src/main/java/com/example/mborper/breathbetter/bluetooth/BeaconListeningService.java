@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.util.Log;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -15,19 +14,11 @@ import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
-import com.example.mborper.breathbetter.api.ApiClient;
-import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.api.Measurement;
-import com.example.mborper.breathbetter.bluetooth.IBeaconFrame;
-import com.example.mborper.breathbetter.bluetooth.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class BeaconListeningService extends IntentService {
     private static final String LOG_TAG = ">>>>";
@@ -126,5 +117,9 @@ public class BeaconListeningService extends IntentService {
         super.onDestroy();
         stopBTLEDeviceSearch();
         keepRunning = false;
+    }
+
+    public Measurement getActualMeasurement() {
+        return actualMeasurement;
     }
 }

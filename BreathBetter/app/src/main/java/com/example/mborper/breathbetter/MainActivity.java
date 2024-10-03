@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 8888;
     private Intent serviceIntent = null;
     private ApiService apiService;
+    private BeaconListeningService beaconListeningService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,14 +43,14 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        apiService = ApiClient.getClient().create(ApiService.class);
-        requestPermissions();
-
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        requestPermissions();
+        apiService = ApiClient.getClient().create(ApiService.class);
     }
 
     public void onStartServiceButtonClicked(View v) {
@@ -62,9 +63,10 @@ public class MainActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "MainActivity: Starting the service");
 
         this.serviceIntent = new Intent(this, BeaconListeningService.class);
-        this.serviceIntent.putExtra("targetDevice", "YOUR_BEACON_NAME"); // Replace with your beacon's name
+        this.serviceIntent.putExtra("targetDevice", "ManusBeacon"); // Replace with your beacon's name
 
         startForegroundService(this.serviceIntent);
+        beaconListeningService = new BeaconListeningService();
     }
 
     public void onStopServiceButtonClicked(View v) {
@@ -74,11 +76,16 @@ public class MainActivity extends AppCompatActivity {
 
         stopService(this.serviceIntent);
         this.serviceIntent = null;
+        beaconListeningService = null;
         Log.d(LOG_TAG, "Stop service button clicked");
     }
 
     public void onMakeRequestButtonClicked(View v) {
-        sendMeasurementToApi(beaconListeningService.actualMeasurement);
+        if (beaconListeningService != null && beaconListeningService.getActualMeasurement() != null) {
+            sendMeasurementToApi(beaconListeningService.getActualMeasurement());
+        } else {
+            Log.e(LOG_TAG, "BeaconListeningService or actualMeasurement is null");
+        }
     }
 
 
