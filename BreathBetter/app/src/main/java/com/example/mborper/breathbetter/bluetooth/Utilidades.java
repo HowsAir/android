@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.bluetooth;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;

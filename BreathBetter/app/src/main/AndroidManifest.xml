@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".BeaconListeningService" />
+        <service android:name=".bluetooth.BeaconListeningService" />
 
     </application>
 

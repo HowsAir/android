@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "Breath Better"
 include(":app")
-include(":REST")

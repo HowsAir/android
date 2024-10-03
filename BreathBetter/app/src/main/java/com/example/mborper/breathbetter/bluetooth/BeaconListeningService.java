@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.bluetooth;
 
 import android.app.IntentService;
 import android.content.Intent;

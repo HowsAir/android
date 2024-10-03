@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.api;
 
 public class Measurement {
     public double getPpm() {

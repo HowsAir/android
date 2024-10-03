@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.api;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;

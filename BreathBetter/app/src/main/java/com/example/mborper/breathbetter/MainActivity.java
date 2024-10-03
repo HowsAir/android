@@ -10,6 +10,12 @@ import androidx.core.view.WindowInsetsCompat;
 import android.content.Intent;
 import android.util.Log;
 import android.view.View;
+
+import com.example.mborper.breathbetter.api.ApiClient;
+import com.example.mborper.breathbetter.api.ApiService;
+import com.example.mborper.breathbetter.api.Measurement;
+import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
+
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
