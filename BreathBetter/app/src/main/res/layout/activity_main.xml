@@ -8,23 +8,37 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/arrancar"
+        android:id="@+id/makeRequest"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/arrancar_busqueda"
-        app:layout_constraintBottom_toTopOf="@+id/detener"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.874" />
-
-    <Button
-        android:id="@+id/detener"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="276dp"
-        android:text="@string/detener_busqueda"
+        android:onClick="onMakeRequestButtonClicked"
+        android:text="@string/make_request"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stopSearching" />
+
+    <Button
+        android:id="@+id/startSearching"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onStartServiceButtonClicked"
+        android:text="@string/start_searching"
+        app:layout_constraintBottom_toTopOf="@+id/stopSearching"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/stopSearching"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onStopServiceButtonClicked"
+        android:text="@string/stop_searching"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.489"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
