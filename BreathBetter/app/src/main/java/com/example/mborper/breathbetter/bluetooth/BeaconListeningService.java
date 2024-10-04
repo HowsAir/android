@@ -1,15 +1,19 @@
 package com.example.mborper.breathbetter.bluetooth;
 
-import android.app.IntentService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.IBinder;
 import android.util.Log;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -23,38 +27,62 @@ import android.Manifest;
 
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.Measurement;
-import static android.content.Context.RECEIVER_NOT_EXPORTED;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class BeaconListeningService extends IntentService {
+public class BeaconListeningService extends Service {
+
     private static final String LOG_TAG = "BEACON_LISTENING_SERVICE";
     private boolean keepRunning = true;
     private BluetoothLeScanner scanner;
     private ScanCallback scanCallback;
     public Measurement actualMeasurement;
     private static final int NOTIFICATION_ID = 1;
+    private HandlerThread handlerThread;
+    private Handler serviceHandler;
+    private final IBinder binder = new LocalBinder();
 
-    public BeaconListeningService() {
-        super("BeaconListeningServiceWorkerThread");
-        Log.d(LOG_TAG, "BeaconListeningService: constructor ends");
+    public class LocalBinder extends Binder {
+        public BeaconListeningService getService() {
+            return BeaconListeningService.this;
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(LOG_TAG, "BeaconListeningService: onCreate");
         startForegroundService();
-        initializeBluetooth();
+        initializeHandlerThread();
+        //initializeBluetooth();
+        fakingMeasurements();
     }
 
-    // Este método crea la notificación que usaremos para el servicio en primer plano
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(LOG_TAG, "BeaconListeningService.onStartCommand: starts");
+        String targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
+        serviceHandler.post(() -> performWork(targetDeviceUUID));
+        return START_STICKY;
+    }
+
+    private void initializeHandlerThread() {
+        handlerThread = new HandlerThread("BeaconListeningServiceThread");
+        handlerThread.start();
+        serviceHandler = new Handler(handlerThread.getLooper());
+    }
+
     private void startForegroundService() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Crear el canal de notificación para Android O y superiores
             NotificationChannel channel = new NotificationChannel(
                     "BLE_CHANNEL_ID",
                     "BLE Service Channel",
@@ -63,14 +91,12 @@ public class BeaconListeningService extends IntentService {
             notificationManager.createNotificationChannel(channel);
         }
 
-        // Crear una notificación simple para mantener el servicio en primer plano
         Notification notification = new NotificationCompat.Builder(this, "BLE_CHANNEL_ID")
                 .setContentTitle("BLE Service")
                 .setContentText("Scanning for BLE devices...")
-                .setSmallIcon(R.drawable.ic_launcher_foreground) // Icono que se mostrará en la notificación
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .build();
 
-        // Iniciar el servicio en primer plano con la notificación
         startForeground(NOTIFICATION_ID, notification);
     }
 
@@ -95,17 +121,10 @@ public class BeaconListeningService extends IntentService {
         }
     }
 
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        Log.d(LOG_TAG, "BeaconListeningService.onHandleIntent: starts: thread=" + Thread.currentThread().getId());
-        String targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
+    private void performWork(String targetDeviceUUID) {
+        Log.d(LOG_TAG, "BeaconListeningService.performWork: starts: thread=" + Thread.currentThread().getId());
 
-
-//        if (TARGET_UUID != null) {
-//            searchBeaconsByUUID(TARGET_UUID);
-//        } else {
-            searchSpecificBTLEDevice(targetDeviceUUID);
-       // }
+        searchSpecificBTLEDevice(targetDeviceUUID);
 
         try {
             while (keepRunning) {
@@ -116,7 +135,7 @@ public class BeaconListeningService extends IntentService {
         }
 
         stopBTLEDeviceSearch();
-        Log.d(LOG_TAG, "BeaconListeningService.onHandleIntent: ends");
+        Log.d(LOG_TAG, "BeaconListeningService.performWork: ends");
     }
 
     private void searchSpecificBTLEDevice(final String targetDeviceUUID) {
@@ -137,15 +156,22 @@ public class BeaconListeningService extends IntentService {
             return;
         }
         this.scanner.startScan(filters, new ScanSettings.Builder().build(), this.scanCallback);
-
-
     }
+
+    private void fakingMeasurements() {
+        actualMeasurement = new Measurement();
+        actualMeasurement.setPpm(50);
+        actualMeasurement.setTemperature(50);
+        actualMeasurement.setLatitude(50);
+        actualMeasurement.setLongitude(50);
+        Log.d("FAKE", actualMeasurement.toString());
+    }
+
+    public Measurement getActualMeasurement() { return actualMeasurement; }
 
     private void processScanResult(ScanResult result, String targetDeviceUUID) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
-        //Log.d("SU UID", Utilities.bytesToString(tib.getUUID()));
-        //Log.d("MI UID", "EQUIPO-JAVIER-3A" + " jeje");
-        if(Utilities.bytesToString(tib.getUUID()).equals("EQUIPO-JAVIER-3A")) {
+        if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
             Log.e("RESULT", "THIS IS PPM" + Utilities.bytesToInt(tib.getMajor()));
             Log.e("RESULT", "THIS IS TEMP" + Utilities.bytesToInt(tib.getMinor()));
             actualMeasurement = new Measurement();
@@ -153,17 +179,6 @@ public class BeaconListeningService extends IntentService {
             actualMeasurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
             actualMeasurement.setLatitude(50);
             actualMeasurement.setLongitude(50);
-
-            sendMeasurementBroadcast();
-        }
-    }
-
-    private void sendMeasurementBroadcast() {
-        if (actualMeasurement != null) {
-            Intent intent = new Intent("com.example.mborper.breathbetter.MEASUREMENT_RECEIVED");
-            intent.putExtra("measurement", actualMeasurement);
-            sendBroadcast(intent);
-            Log.d(LOG_TAG, "Measurement broadcast sent: " + actualMeasurement);
         }
     }
 
@@ -182,13 +197,9 @@ public class BeaconListeningService extends IntentService {
 
     @Override
     public void onDestroy() {
-        sendMeasurementBroadcast();
         super.onDestroy();
         stopBTLEDeviceSearch();
         keepRunning = false;
-    }
-
-    public Measurement getActualMeasurement() {
-        return actualMeasurement;
+        handlerThread.quitSafely();
     }
 }
