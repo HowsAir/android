@@ -5,15 +5,14 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.ParcelUuid;
 import android.util.Log;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.content.pm.PackageManager;
 
@@ -24,15 +23,14 @@ import android.Manifest;
 
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.Measurement;
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 
 public class BeaconListeningService extends IntentService {
     private static final String LOG_TAG = "BEACON_LISTENING_SERVICE";
-    private static final UUID TARGET_UUID = UUID.fromString("D744C889-0168-4FA7-B264-8B7EA5C0F6D6"); // Specific UUID
     private boolean keepRunning = true;
     private BluetoothLeScanner scanner;
     private ScanCallback scanCallback;
@@ -100,13 +98,14 @@ public class BeaconListeningService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Log.d(LOG_TAG, "BeaconListeningService.onHandleIntent: starts: thread=" + Thread.currentThread().getId());
-        String targetDevice = intent.getStringExtra("targetDevice");
+        String targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
 
-        if (TARGET_UUID != null) {
-            searchBeaconsByUUID(TARGET_UUID);
-        } else {
-            searchSpecificBTLEDevice(targetDevice);
-        }
+
+//        if (TARGET_UUID != null) {
+//            searchBeaconsByUUID(TARGET_UUID);
+//        } else {
+            searchSpecificBTLEDevice(targetDeviceUUID);
+       // }
 
         try {
             while (keepRunning) {
@@ -120,60 +119,52 @@ public class BeaconListeningService extends IntentService {
         Log.d(LOG_TAG, "BeaconListeningService.onHandleIntent: ends");
     }
 
-    private void searchSpecificBTLEDevice(final String targetDevice) {
+    private void searchSpecificBTLEDevice(final String targetDeviceUUID) {
         this.scanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
-                Log.d(LOG_TAG, "searchSpecificBTLEDevice(): onScanResult()");
-                processScanResult(result);
+                processScanResult(result, targetDeviceUUID);
             }
         };
 
-        ScanFilter filter = new ScanFilter.Builder().setDeviceName(targetDevice).build();
+        ScanFilter filter = new ScanFilter.Builder().setDeviceName(targetDeviceUUID).build();
         List<ScanFilter> filters = new ArrayList<>();
         filters.add(filter);
 
-        startScan(filters);
-    }
-
-    private void searchBeaconsByUUID(UUID targetUUID) {
-        this.scanCallback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                Log.d(LOG_TAG, "searchBeaconsByUUID(): onScanResult()");
-                processScanResult(result);
-            }
-        };
-
-        // Create a filter for the specified UUID
-        ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(targetUUID)) // Set the UUID filter
-                .build();
-
-        List<ScanFilter> filters = new ArrayList<>();
-        filters.add(filter);
-
-        startScan(filters);
-    }
-
-    private void startScan(List<ScanFilter> filters) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             Log.e(LOG_TAG, "BLUETOOTH_SCAN permission not granted");
             return;
         }
         this.scanner.startScan(filters, new ScanSettings.Builder().build(), this.scanCallback);
+
+
     }
 
-    private void processScanResult(ScanResult result) {
+    private void processScanResult(ScanResult result, String targetDeviceUUID) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
+        //Log.d("SU UID", Utilities.bytesToString(tib.getUUID()));
+        //Log.d("MI UID", "EQUIPO-JAVIER-3A" + " jeje");
+        if(Utilities.bytesToString(tib.getUUID()).equals("EQUIPO-JAVIER-3A")) {
+            Log.e("RESULT", "THIS IS PPM" + Utilities.bytesToInt(tib.getMajor()));
+            Log.e("RESULT", "THIS IS TEMP" + Utilities.bytesToInt(tib.getMinor()));
+            actualMeasurement = new Measurement();
+            actualMeasurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
+            actualMeasurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
+            actualMeasurement.setLatitude(50);
+            actualMeasurement.setLongitude(50);
 
-        actualMeasurement = new Measurement();
-        actualMeasurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
-        actualMeasurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
-        actualMeasurement.setLatitude(50);
-        actualMeasurement.setLongitude(50);
+            sendMeasurementBroadcast();
+        }
+    }
+
+    private void sendMeasurementBroadcast() {
+        if (actualMeasurement != null) {
+            Intent intent = new Intent("com.example.mborper.breathbetter.MEASUREMENT_RECEIVED");
+            intent.putExtra("measurement", actualMeasurement);
+            sendBroadcast(intent);
+            Log.d(LOG_TAG, "Measurement broadcast sent: " + actualMeasurement);
+        }
     }
 
     private void stopBTLEDeviceSearch() {
@@ -191,6 +182,7 @@ public class BeaconListeningService extends IntentService {
 
     @Override
     public void onDestroy() {
+        sendMeasurementBroadcast();
         super.onDestroy();
         stopBTLEDeviceSearch();
         keepRunning = false;

@@ -1,8 +1,11 @@
 package com.example.mborper.breathbetter;
 
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -26,13 +29,12 @@ import android.content.pm.PackageManager;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.api.Measurement;
-import com.example.mborper.breathbetter.bluetooth.IBeaconFrame;
-import com.example.mborper.breathbetter.bluetooth.Utilities;
 
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import static android.content.Context.RECEIVER_NOT_EXPORTED;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
@@ -41,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
     private ApiService apiService;
     private BeaconListeningService beaconListeningService;
     private ActivityResultLauncher<Intent> enableBluetoothLauncher;
+    private static final String TARGET_UUID = "EQUIPO-JAVIER-3A";
+    private Measurement lastReceivedMeasurement;
+    private BroadcastReceiver measurementReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,9 +59,32 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
+
         requestPermissions();
         isBluetoothEnabled();
+        registerBroadcaster();
         apiService = ApiClient.getClient().create(ApiService.class);
+    }
+
+    private void registerBroadcaster() {
+        measurementReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if ("com.example.mborper.breathbetter.MEASUREMENT_RECEIVED".equals(intent.getAction())) {
+                    lastReceivedMeasurement = (Measurement) intent.getSerializableExtra("measurement");
+                    Log.d(LOG_TAG, "Received measurement: " + lastReceivedMeasurement);
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter("com.example.mborper.breathbetter.MEASUREMENT_RECEIVED");
+
+        // Use registerReceiver with the RECEIVER_NOT_EXPORTED flag
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(measurementReceiver, filter, RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(measurementReceiver, filter);
+        }
     }
 
     private void isBluetoothEnabled() {
@@ -73,6 +101,15 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(LOG_TAG, "Bluetooth enabling was canceled by user");
                     }
                 });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Unregister the receiver to prevent memory leaks
+        if (measurementReceiver != null) {
+            unregisterReceiver(measurementReceiver);
+        }
     }
 
     public void onStartServiceButtonClicked(View v) {
@@ -96,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "MainActivity: Starting the service");
 
         this.serviceIntent = new Intent(this, BeaconListeningService.class);
-        this.serviceIntent.putExtra("targetDevice", "ManusBeacon"); // Replace with your beacon's name
+        this.serviceIntent.putExtra("targetDeviceUUID", TARGET_UUID); // Replace with your beacon's name
 
         startForegroundService(this.serviceIntent);
         beaconListeningService = new BeaconListeningService();
@@ -114,29 +151,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onMakeRequestButtonClicked(View v) {
-        if (beaconListeningService != null && beaconListeningService.getActualMeasurement() != null) {
-            sendMeasurementToApi(beaconListeningService.getActualMeasurement());
+        if (lastReceivedMeasurement != null) {
+            sendMeasurementToApi(lastReceivedMeasurement);
         } else {
-            Log.e(LOG_TAG, "BeaconListeningService or actualMeasurement is null");
+            Log.e(LOG_TAG, "No measurement available to send");
+            // Optionally, show a message to the user
         }
     }
 
 
     private void sendMeasurementToApi(Measurement measurement) {
 
-        if(measurement != null) {
+    /*    if(measurement != null) {
             measurement.setPpm(2);
             measurement.setTemperature(3);
             measurement.setLongitude(4);
             measurement.setLatitude(5);
         }
-
+*/
         Call<Measurement> postCall = apiService.sendMeasurement(measurement);
         postCall.enqueue(new Callback<Measurement>() {
             @Override
             public void onResponse(Call<Measurement> call, Response<Measurement> response) {
                 if (response.isSuccessful()) {
                     Log.d(LOG_TAG, "Measurement sent successfully");
+                } else {
+                    Log.e(LOG_TAG, "Error sending measurement to the API: " + response.code());
                 }
             }
 

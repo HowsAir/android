@@ -1,6 +1,8 @@
 package com.example.mborper.breathbetter.api;
 
-public class Measurement {
+import java.io.Serializable;
+
+public class Measurement implements Serializable {
     public double getPpm() {
         return ppm;
     }
