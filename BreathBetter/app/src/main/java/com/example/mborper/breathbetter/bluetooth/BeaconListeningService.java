@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.ParcelUuid;
 import android.util.Log;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -26,10 +27,12 @@ import com.example.mborper.breathbetter.api.Measurement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 
 public class BeaconListeningService extends IntentService {
     private static final String LOG_TAG = "BEACON_LISTENING_SERVICE";
+    private static final UUID TARGET_UUID = UUID.fromString("D744C889-0168-4FA7-B264-8B7EA5C0F6D6"); // Specific UUID
     private boolean keepRunning = true;
     private BluetoothLeScanner scanner;
     private ScanCallback scanCallback;
@@ -98,7 +101,12 @@ public class BeaconListeningService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         Log.d(LOG_TAG, "BeaconListeningService.onHandleIntent: starts: thread=" + Thread.currentThread().getId());
         String targetDevice = intent.getStringExtra("targetDevice");
-        searchSpecificBTLEDevice(targetDevice);
+
+        if (TARGET_UUID != null) {
+            searchBeaconsByUUID(TARGET_UUID);
+        } else {
+            searchSpecificBTLEDevice(targetDevice);
+        }
 
         try {
             while (keepRunning) {
@@ -126,6 +134,31 @@ public class BeaconListeningService extends IntentService {
         List<ScanFilter> filters = new ArrayList<>();
         filters.add(filter);
 
+        startScan(filters);
+    }
+
+    private void searchBeaconsByUUID(UUID targetUUID) {
+        this.scanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                super.onScanResult(callbackType, result);
+                Log.d(LOG_TAG, "searchBeaconsByUUID(): onScanResult()");
+                processScanResult(result);
+            }
+        };
+
+        // Create a filter for the specified UUID
+        ScanFilter filter = new ScanFilter.Builder()
+                .setServiceUuid(new ParcelUuid(targetUUID)) // Set the UUID filter
+                .build();
+
+        List<ScanFilter> filters = new ArrayList<>();
+        filters.add(filter);
+
+        startScan(filters);
+    }
+
+    private void startScan(List<ScanFilter> filters) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             Log.e(LOG_TAG, "BLUETOOTH_SCAN permission not granted");
             return;
