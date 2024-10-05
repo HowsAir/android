@@ -68,8 +68,8 @@ public class BeaconListeningService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "BeaconListeningService.onStartCommand: starts");
-        String targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
-        serviceHandler.post(() -> performWork(targetDeviceUUID));
+        //String targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
+        //serviceHandler.post(() -> performWork(targetDeviceUUID));
         return START_STICKY;
     }
 
