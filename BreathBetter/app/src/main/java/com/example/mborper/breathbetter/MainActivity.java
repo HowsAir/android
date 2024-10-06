@@ -11,8 +11,6 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -22,9 +20,6 @@ import android.util.Log;
 import android.view.View;
 
 import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
-import android.Manifest;
-
-import android.content.pm.PackageManager;
 
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
@@ -37,11 +32,10 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
-    private static final int PERMISSION_REQUEST_CODE = 8888;
     private Intent serviceIntent = null;
     private ApiService apiService;
     private ActivityResultLauncher<Intent> enableBluetoothLauncher;
-    private static final String TARGET_UUID = "EPSG-MANU-GTI-3A";
+    private static final String TARGET_UUID = "99AECF02-7F55-4405-9E8D-AFD81DC9407E"; //desde un beacon scanner me aparece como 4B:DF:00:A1:11:C0
     private Measurement lastReceivedMeasurement;
     private BeaconListeningServiceConnection serviceConnection;
     private BeaconListeningService.LocalBinder binder;
@@ -59,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-
-        requestPermissions();
         isBluetoothEnabled();
         apiService = ApiClient.getClient().create(ApiService.class);
         serviceConnection = new BeaconListeningServiceConnection();
@@ -73,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
                         Log.d(LOG_TAG, "Bluetooth enabled by user");
-                        startAndBindService();
+                        //startAndBindService();
                     } else {
                         Log.e(LOG_TAG, "Bluetooth enabling was canceled by user");
                     }
@@ -92,13 +84,13 @@ public class MainActivity extends AppCompatActivity {
     public void onStartServiceButtonClicked(View v) {
         Log.d(LOG_TAG, "Start service button clicked");
 
-        BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
-        if (bta != null && !bta.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            enableBluetoothLauncher.launch(enableBtIntent);
-        } else {
-            startAndBindService();
-        }
+            BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
+            if (bta != null && !bta.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                enableBluetoothLauncher.launch(enableBtIntent);
+            } else {
+                startAndBindService();
+            }
     }
 
     private void startAndBindService() {
@@ -153,46 +145,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(LOG_TAG, "Error sending measurement: " + t.getMessage());
             }
         });
-    }
-
-    private void requestPermissions() {
-        // Verifica si los permisos necesarios no han sido concedidos
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.FOREGROUND_SERVICE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            // Solicita los permisos necesarios
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{
-                            Manifest.permission.BLUETOOTH,
-                            Manifest.permission.BLUETOOTH_ADMIN,
-                            Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.BLUETOOTH_SCAN,
-                            Manifest.permission.BLUETOOTH_CONNECT,
-                            Manifest.permission.FOREGROUND_SERVICE,
-                            Manifest.permission.FOREGROUND_SERVICE_LOCATION // Nuevo permiso añadido
-                    },
-                    PERMISSION_REQUEST_CODE);
-        }
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(LOG_TAG, "onRequestPermissionResult(): permissions granted!");
-            } else {
-                Log.d(LOG_TAG, "onRequestPermissionResult(): Help: permissions NOT granted!");
-            }
-        }
     }
 
     private class BeaconListeningServiceConnection implements ServiceConnection {
