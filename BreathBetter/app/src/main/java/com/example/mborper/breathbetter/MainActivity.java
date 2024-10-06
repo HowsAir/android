@@ -5,25 +5,35 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.MutableLiveData;
+
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+
+import android.Manifest;
+import android.widget.Toast;
 
 import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
 
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.api.Measurement;
+import com.example.mborper.breathbetter.bluetooth.BluetoothPermissionHandler;
 
 
 import retrofit2.Call;
@@ -32,14 +42,14 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
+    private static final int REQUEST_ENABLE_BT = 1;
     private Intent serviceIntent = null;
     private ApiService apiService;
-    private ActivityResultLauncher<Intent> enableBluetoothLauncher;
-    private static final String TARGET_UUID = "99AECF02-7F55-4405-9E8D-AFD81DC9407E"; //desde un beacon scanner me aparece como 4B:DF:00:A1:11:C0
-    private Measurement lastReceivedMeasurement;
+    private static final String TARGET_UUID = "99AECF02-7F55-4405-9E8D-AFD81DC9407E";
     private BeaconListeningServiceConnection serviceConnection;
-    private BeaconListeningService.LocalBinder binder;
     private boolean isBound = false;
+
+    private MutableLiveData<Measurement> lastMeasurementLiveData = new MutableLiveData<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,23 +63,108 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        isBluetoothEnabled();
         apiService = ApiClient.getClient().create(ApiService.class);
         serviceConnection = new BeaconListeningServiceConnection();
+
+        // Observe the LiveData
+        lastMeasurementLiveData.observe(this, this::updateUI);
+
+        //checkBluetoothPermissions();
     }
 
-    private void isBluetoothEnabled() {
-        // Inicializa el lanzador para habilitar Bluetooth
-        enableBluetoothLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Log.d(LOG_TAG, "Bluetooth enabled by user");
-                        //startAndBindService();
-                    } else {
-                        Log.e(LOG_TAG, "Bluetooth enabling was canceled by user");
-                    }
-                });
+    private void checkBluetoothPermissions() {
+        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
+            // Permissions are granted, proceed with Bluetooth operations
+            initializeBluetooth();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (BluetoothPermissionHandler.handlePermissionResult(requestCode, permissions, grantResults)) {
+            // All required permissions are granted
+            initializeBluetooth();
+        } else {
+            showToast("Bluetooth and Location permissions are required for this app to function properly");
+        }
+    }
+
+    private void initializeBluetooth() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            showToast("This device doesn't support Bluetooth");
+            return;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            } else {
+                // If we don't have BLUETOOTH_CONNECT permission, we should have already requested it in checkBluetoothPermissions()
+                // So this else block should not be reached under normal circumstances
+                showToast("Bluetooth permission is required");
+            }
+        } else {
+            startAndBindService();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == RESULT_OK) {
+                startAndBindService();
+            } else {
+                showToast("Bluetooth is required for this app");
+            }
+        }
+    }
+
+    private void startAndBindService() {
+        Log.d("adapter", "adapterenabled");
+        if (serviceIntent == null) {
+            serviceIntent = new Intent(this, BeaconListeningService.class);
+            serviceIntent.putExtra("targetDeviceUUID", TARGET_UUID);
+            ContextCompat.startForegroundService(this, serviceIntent);
+        }
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isBound) {
+            unbindService(serviceConnection);
+            isBound = false;
+        }
+    }
+
+    public void onStartServiceButtonClicked(View v) {
+        checkBluetoothPermissions();
+    }
+
+    public void onStopServiceButtonClicked(View v) {
+        if (serviceIntent != null) {
+            if (isBound) {
+                unbindService(serviceConnection);
+                isBound = false;
+            }
+            stopService(serviceIntent);
+            serviceIntent = null;
+            showToast("Service stopped");
+        }
+    }
+
+    public void onMakeRequestButtonClicked(View v) {
+        Measurement lastMeasurement = lastMeasurementLiveData.getValue();
+        if (lastMeasurement != null) {
+            sendMeasurementToApi(lastMeasurement);
+        } else {
+            showToast("No measurement available to send");
+        }
     }
 
     @Override
@@ -81,52 +176,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void onStartServiceButtonClicked(View v) {
-        Log.d(LOG_TAG, "Start service button clicked");
-
-            BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
-            if (bta != null && !bta.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                enableBluetoothLauncher.launch(enableBtIntent);
-            } else {
-                startAndBindService();
-            }
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    private void startAndBindService() {
-        Log.d(LOG_TAG, "MainActivity: Starting and binding the service");
-        serviceIntent = new Intent(this, BeaconListeningService.class);
-        serviceIntent.putExtra("targetDeviceUUID", TARGET_UUID);
-        startForegroundService(serviceIntent);
-        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-    }
+    private class BeaconListeningServiceConnection implements ServiceConnection {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            BeaconListeningService.LocalBinder binder = (BeaconListeningService.LocalBinder) service;
+            BeaconListeningService beaconService = binder.getService();
+            beaconService.setMeasurementCallback(measurement -> {
+                lastMeasurementLiveData.postValue(measurement);
+            });
+            isBound = true;
+            showToast("Service bound successfully");
+        }
 
-    public void onStopServiceButtonClicked(View v) {
-        if (serviceIntent != null) {
-            if (isBound) {
-                unbindService(serviceConnection);
-                isBound = false;
-            }
-            stopService(serviceIntent);
-            serviceIntent = null;
-            Log.d(LOG_TAG, "Stop service button clicked");
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            isBound = false;
+            showToast("Service unbound");
         }
     }
 
-    public void onMakeRequestButtonClicked(View v) {
-        if (isBound && binder != null) {
-            lastReceivedMeasurement = binder.getService().getActualMeasurement();
-            if (lastReceivedMeasurement != null) {
-                sendMeasurementToApi(lastReceivedMeasurement);
-            } else {
-                Log.e(LOG_TAG, "No measurement available to send");
-                // Optionally, show a message to the user
-            }
-        } else {
-            Log.e(LOG_TAG, "Service not bound or binder is null");
-        }
+    private void updateUI(Measurement measurement) {
+        // Update UI elements with the new measurement data
+        // For example:
+        // TextView ppmTextView = findViewById(R.id.ppmTextView);
+        // ppmTextView.setText("PPM: " + measurement.getPpm());
     }
-
 
     private void sendMeasurementToApi(Measurement measurement) {
         Call<Measurement> postCall = apiService.sendMeasurement(measurement);
@@ -145,21 +223,5 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(LOG_TAG, "Error sending measurement: " + t.getMessage());
             }
         });
-    }
-
-    private class BeaconListeningServiceConnection implements ServiceConnection {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            binder = (BeaconListeningService.LocalBinder) service;
-            isBound = true;
-            Log.d(LOG_TAG, "Service bound successfully");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            binder = null;
-            isBound = false;
-            Log.d(LOG_TAG, "Service unbound");
-        }
     }
 }
