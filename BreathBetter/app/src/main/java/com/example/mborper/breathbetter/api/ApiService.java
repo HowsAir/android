@@ -7,10 +7,30 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
+/**
+ * Author: Manuel Borregales
+ * Date: 04/10/2024
+ *
+ * The ApiService interface defines the API endpoints that the client will interact with.
+ * It uses Retrofit's annotations to define GET and POST requests for sending and receiving measurements.
+ */
 public interface ApiService {
-    @GET("measurements/")
-    Call<List<Measurement>> getMeasurements();  // Si esperas una lista de mediciones
 
+    /**
+     * Fetches the list of measurements from the API using a GET request.
+     *
+     * @return Call object encapsulating a List of Measurement objects.
+     */
+    @GET("measurements/")
+    Call<List<Measurement>> getMeasurements();
+
+    /**
+     * Sends a new measurement to the API using a POST request.
+     *
+     * @param measurement The Measurement object to be sent to the server.
+     * @return Call object encapsulating the response, including the posted Measurement object.
+     */
     @POST("measurements/")
-    Call<Measurement> sendMeasurement(@Body Measurement measurement);  // Envías una medición al servidor
+    Call<Measurement> sendMeasurement(@Body Measurement measurement);
 }
+
