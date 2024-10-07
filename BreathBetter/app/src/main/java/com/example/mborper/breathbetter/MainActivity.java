@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
 
     /** UUID for the target Bluetooth device. */
-    private static final String TARGET_UUID = "EPSG-MANU-GTI-3A";
+    private static final String TARGET_UUID = "MANU-EPSG-GTI-3A";
 
     private ApiService apiService;
     private static final int REQUEST_ENABLE_BT = 1;

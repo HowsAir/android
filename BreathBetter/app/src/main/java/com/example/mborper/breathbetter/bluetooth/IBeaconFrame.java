@@ -2,9 +2,12 @@ package com.example.mborper.breathbetter.bluetooth;
 
 import java.util.Arrays;
 
-// -----------------------------------------------------------------------------------
-// @author: Jordi Bataller i Mascarell
-// -----------------------------------------------------------------------------------
+/**
+ * @file: IBeaconFrame.java
+ * @author: Jordi Bataller i Mascarell
+ * @description: The IBeaconFrame offers getters to obtain the data stored on the beacons the app scans.
+ * It's primarily used to obtain uuid, major and minor.
+ */
 public class IBeaconFrame {
     private byte[] prefix = null; // 9 bytes
     private byte[] uuid = null; // 16 bytes
@@ -24,6 +27,8 @@ public class IBeaconFrame {
     /**
      * Returns the prefix of the iBeacon.
      *
+     *      getPrefix() ---> [byte]
+     *
      * @return The prefix as a byte array.
      */
     public byte[] getPrefix() {
@@ -33,6 +38,8 @@ public class IBeaconFrame {
     // -------------------------------------------------------------------------------
     /**
      * Returns the UUID of the iBeacon.
+     *
+     *      getUUID() ---> [byte]
      *
      * @return The UUID as a byte array.
      */
@@ -44,6 +51,8 @@ public class IBeaconFrame {
     /**
      * Returns the major value of the iBeacon.
      *
+     *      getMajor() ---> [byte]
+     *
      * @return The major as a byte array.
      */
     public byte[] getMajor() {
@@ -53,6 +62,8 @@ public class IBeaconFrame {
     // -------------------------------------------------------------------------------
     /**
      * Returns the minor value of the iBeacon.
+     *
+     *      getMinor() ---> [byte]
      *
      * @return The minor as a byte array.
      */
@@ -64,6 +75,8 @@ public class IBeaconFrame {
     /**
      * Returns the transmission power of the iBeacon.
      *
+     *      getTxPower() ---> byte
+     *
      * @return The transmission power as a byte.
      */
     public byte getTxPower() {
@@ -73,6 +86,8 @@ public class IBeaconFrame {
     // -------------------------------------------------------------------------------
     /**
      * Returns the raw bytes of the iBeacon.
+     *
+     *      getBytes() ---> [byte]
      *
      * @return The bytes as a byte array.
      */
@@ -84,6 +99,8 @@ public class IBeaconFrame {
     /**
      * Returns the advertising flags of the iBeacon.
      *
+     *      getAdvFlags() ---> [byte]
+     *
      * @return The advertising flags as a byte array.
      */
     public byte[] getAdvFlags() {
@@ -93,6 +110,8 @@ public class IBeaconFrame {
     // -------------------------------------------------------------------------------
     /**
      * Returns the advertising header of the iBeacon.
+     *
+     *      getAdvHeader() ---> [byte]
      *
      * @return The advertising header as a byte array.
      */
@@ -104,6 +123,8 @@ public class IBeaconFrame {
     /**
      * Returns the company ID of the iBeacon.
      *
+     *      getCompanyID() ---> [byte]
+     *
      * @return The company ID as a byte array.
      */
     public byte[] getCompanyID() {
@@ -114,6 +135,8 @@ public class IBeaconFrame {
     /**
      * Returns the iBeacon type.
      *
+     *      getIBeaconType() ---> byte
+     *
      * @return The iBeacon type as a byte.
      */
     public byte getIBeaconType() {
@@ -123,6 +146,8 @@ public class IBeaconFrame {
     // -------------------------------------------------------------------------------
     /**
      * Returns the length of the iBeacon.
+     *
+     *      getIBeaconLength() ---> byte
      *
      * @return The length of the iBeacon as a byte.
      */

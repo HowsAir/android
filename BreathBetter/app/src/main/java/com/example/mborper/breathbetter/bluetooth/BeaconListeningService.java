@@ -52,7 +52,7 @@ public class BeaconListeningService extends Service {
     private final IBinder binder = new LocalBinder();
     private MeasurementCallback measurementCallback;
 
-    private static final long SCAN_PERIOD = 3000;  // The time in milliseconds to scan for BLE devices
+    private static final long SCAN_PERIOD = 1000;  // The time in milliseconds to scan for BLE devices
     private static final long SCAN_INTERVAL = 10000; // The interval between scans
     private Measurement lastMeasurement;
 
