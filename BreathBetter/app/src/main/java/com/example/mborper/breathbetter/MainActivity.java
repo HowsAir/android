@@ -1,6 +1,5 @@
 package com.example.mborper.breathbetter;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
@@ -9,8 +8,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -27,7 +24,6 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
-import android.Manifest;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -88,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (BluetoothPermissionHandler.handlePermissionResult(requestCode, permissions, grantResults)) {
+        if (BluetoothPermissionHandler.handlePermissionResult(requestCode, grantResults)) {
             // All required permissions are granted
             initializeBluetooth();
         } else {

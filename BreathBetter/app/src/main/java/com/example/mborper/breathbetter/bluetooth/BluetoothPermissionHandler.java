@@ -2,7 +2,6 @@ package com.example.mborper.breathbetter.bluetooth;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import androidx.core.app.ActivityCompat;
@@ -48,7 +47,7 @@ public class BluetoothPermissionHandler {
         return true;
     }
 
-    public static boolean handlePermissionResult(int requestCode, String[] permissions, int[] grantResults) {
+    public static boolean handlePermissionResult(int requestCode, int[] grantResults) {
         if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
             for (int result : grantResults) {
                 if (result != PackageManager.PERMISSION_GRANTED) {

@@ -28,7 +28,6 @@ import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.Measurement;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
