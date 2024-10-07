@@ -31,6 +31,7 @@ import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.Measurement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +42,7 @@ public class BeaconListeningService extends Service {
     private boolean keepRunning = true;
     private BluetoothLeScanner scanner;
     private ScanCallback scanCallback;
+
     private static final int NOTIFICATION_ID = 1;
     private HandlerThread handlerThread;
     private Handler serviceHandler;
@@ -75,6 +77,25 @@ public class BeaconListeningService extends Service {
         //fakingMeasurements();
     }
 
+    private void startForegroundService() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationChannel channel = new NotificationChannel(
+                "BLE_CHANNEL_ID",
+                "BLE Service Channel",
+                NotificationManager.IMPORTANCE_LOW
+        );
+        notificationManager.createNotificationChannel(channel);
+
+        Notification notification = new NotificationCompat.Builder(this, "BLE_CHANNEL_ID")
+                .setContentTitle("BLE Service")
+                .setContentText("Scanning for BLE devices...")
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .build();
+
+        startForeground(NOTIFICATION_ID, notification);
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "BeaconListeningService.onStartCommand: starts");
@@ -89,42 +110,26 @@ public class BeaconListeningService extends Service {
         serviceHandler = new Handler(handlerThread.getLooper());
     }
 
-    private void startForegroundService() {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    "BLE_CHANNEL_ID",
-                    "BLE Service Channel",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            notificationManager.createNotificationChannel(channel);
-        }
-
-        Notification notification = new NotificationCompat.Builder(this, "BLE_CHANNEL_ID")
-                .setContentTitle("BLE Service")
-                .setContentText("Scanning for BLE devices...")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .build();
-
-        startForeground(NOTIFICATION_ID, notification);
-    }
-
     private void initializeBluetooth() {
-        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+       /* BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
             Log.e(LOG_TAG, "Unable to initialize BluetoothManager.");
             return;
-        }
+        }*/
 
-        BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
-        if (bluetoothAdapter == null) {
+        BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
+        if (bta == null) {
             Log.e(LOG_TAG, "Device does not support Bluetooth");
             return;
         }
 
-        if (bluetoothAdapter.isEnabled()) {
-            this.scanner = bluetoothAdapter.getBluetoothLeScanner();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(LOG_TAG, "BLUETOOTH_CONNECT permission not granted");
+            //return;
+        }
+
+        if (bta.isEnabled()) {
+            this.scanner = bta.getBluetoothLeScanner();
             Log.d(LOG_TAG, "Bluetooth scanner initialized");
         } else {
             Log.e(LOG_TAG, "Bluetooth is not enabled");
@@ -173,7 +178,8 @@ public class BeaconListeningService extends Service {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
-                Log.d("SEARCH", "Device found: " + result.getDevice().getAddress());
+                //Log.d("SEARCH", "Device found: " + result);
+                processScanResult(result);
                 // Aquí puedes acceder a otros datos del ScanRecord si es necesario
             }
 
@@ -185,50 +191,21 @@ public class BeaconListeningService extends Service {
 
         List<ScanFilter> filters = new ArrayList<>(); // Lista vacía para escanear todo
 
-        ScanSettings settings = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                .build();
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            return;
+            Log.e(LOG_TAG, "BLUETOOTH_SCAN permission not granted");
+            //return;
         }
-        scanner.startScan(filters, settings, this.scanCallback);
-
-        /*this.scanCallback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                Log.d("SEARCH", "Device found: " + result.getDevice().getAddress());
-                // Procesar todos los dispositivos encontrados
-                processScanResult(result);
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                Log.e("SEARCH", "Scan failed with error code: " + errorCode);
-            }
-        };
-
-        // No se utiliza filtro, por lo que se escaneará cualquier beacon
-        List<ScanFilter> filters = new ArrayList<>(); // Lista vacía para escanear todo
-
-        ScanSettings settings = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                .build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        scanner.startScan(filters, settings, this.scanCallback);*/
+        this.scanner.startScan(filters, new ScanSettings.Builder().build(), this.scanCallback);
     }
 
     private void processScanResult(ScanResult result) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
-
-        // Aquí puedes registrar el UUID y otros datos del beacon
-        Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()));
-        Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
-        Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
+        if(Utilities.bytesToString(tib.getUUID()).equals("MANU-EPSG-GTI-3A")) {
+            // Aquí puedes registrar el UUID y otros datos del beacon
+            Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()) + "UUID NOT TRANSLATED: " + Arrays.toString(tib.getUUID()));
+            Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
+            Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
+        }
     }
 
 
@@ -305,7 +282,7 @@ public class BeaconListeningService extends Service {
                 //                                          int[] grantResults)
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
-                return;
+                //return;
             }
             this.scanner.stopScan(this.scanCallback);
             this.scanCallback = null;
