@@ -41,15 +41,16 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
-    private static final int REQUEST_ENABLE_BT = 1;
-    private Intent serviceIntent = null;
-    private ApiService apiService;
-    private static final String TARGET_UUID = "EQUIPO-JAVIER-3A";
-    private BeaconListeningServiceConnection serviceConnection;
-    private boolean isBound = false;
+    private static final String TARGET_UUID = "EPSG-MANU-GTI-3A";
 
+    private ApiService apiService;
+
+    private static final int REQUEST_ENABLE_BT = 1;
+    private BeaconListeningServiceConnection serviceConnection;
     private BeaconListeningService beaconService;
     private Handler mainHandler = new Handler(Looper.getMainLooper());
+    private Intent serviceIntent = null;
+    private boolean isBound = false;
 
     private MutableLiveData<Measurement> lastMeasurementLiveData = new MutableLiveData<>();
 
@@ -67,130 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
         apiService = ApiClient.getClient().create(ApiService.class);
         serviceConnection = new BeaconListeningServiceConnection();
-
-        // Observe the LiveData
         lastMeasurementLiveData.observe(this, this::updateUI);
-
-        //checkBluetoothPermissions();
-    }
-
-    private void checkBluetoothPermissions() {
-        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
-            // Permissions are granted, proceed with Bluetooth operations
-            initializeBluetooth();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (BluetoothPermissionHandler.handlePermissionResult(requestCode, grantResults)) {
-            // All required permissions are granted
-            initializeBluetooth();
-        } else {
-            showToast("Bluetooth and Location permissions are required for this app to function properly");
-        }
-    }
-
-    private void initializeBluetooth() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            showToast("This device doesn't support Bluetooth");
-            return;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            } else {
-                // If we don't have BLUETOOTH_CONNECT permission, we should have already requested it in checkBluetoothPermissions()
-                // So this else block should not be reached under normal circumstances
-                showToast("Bluetooth permission is required");
-            }
-        } else {
-            startAndBindService();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ENABLE_BT) {
-            if (resultCode == RESULT_OK) {
-                startAndBindService();
-            } else {
-                showToast("Bluetooth is required for this app");
-            }
-        }
-    }
-
-    private void startAndBindService() {
-        Log.d("adapter", "adapterenabled");
-        if (serviceIntent == null) {
-            serviceIntent = new Intent(this, BeaconListeningService.class);
-            serviceIntent.putExtra("targetDeviceUUID", TARGET_UUID);
-            ContextCompat.startForegroundService(this, serviceIntent);
-        }
-        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (isBound) {
-            unbindService(serviceConnection);
-            isBound = false;
-        }
-    }
-
-    public void onStartServiceButtonClicked(View v) {
-        checkBluetoothPermissions();
-    }
-
-    public void onStopServiceButtonClicked(View v) {
-        if (serviceIntent != null) {
-            if (isBound) {
-                unbindService(serviceConnection);
-                isBound = false;
-            }
-            stopService(serviceIntent);
-            serviceIntent = null;
-            showToast("Service stopped");
-        }
-    }
-
-    public void onMakeRequestButtonClicked(View v) {
-        Measurement lastMeasurement = lastMeasurementLiveData.getValue();
-        if (lastMeasurement != null) {
-            sendMeasurementToApi(lastMeasurement);
-        } else {
-            showToast("No measurement available to send");
-            // Try to get the last measurement from the service
-            if (beaconService != null) {
-                lastMeasurement = beaconService.getLastMeasurement();
-                if (lastMeasurement != null) {
-                    sendMeasurementToApi(lastMeasurement);
-                } else {
-                    showToast("No measurement available from service");
-                }
-            } else {
-                showToast("Service not bound");
-            }
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if(isBound) {
-            unbindService(serviceConnection);
-            isBound = false;
-        }
-    }
-
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     private class BeaconListeningServiceConnection implements ServiceConnection {
@@ -219,21 +97,96 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateUI(Measurement measurement) {
-        // Update UI elements with the new measurement data
-        TextView ppmTextView = findViewById(R.id.ppmTextView);
-        TextView tempTextView = findViewById(R.id.tempTextView);
-        TextView latLongTextView = findViewById(R.id.latLongTextView);
+    public void onStartServiceButtonClicked(View v) {
+        tryBluetoothInit();
+    }
 
-        if (measurement != null) {
-            ppmTextView.setText("PPM: " + measurement.getPpm());
-            tempTextView.setText("Temperature: " + measurement.getTemperature());
-            latLongTextView.setText("Lat: " + measurement.getLatitude() + ", Long: " + measurement.getLongitude());
-        } else {
-            ppmTextView.setText("PPM: N/A");
-            tempTextView.setText("Temperature: N/A");
-            latLongTextView.setText("Lat: N/A, Long: N/A");
+    public void onStopServiceButtonClicked(View v) {
+        if (serviceIntent != null) {
+            if (isBound) {
+                unbindService(serviceConnection);
+                isBound = false;
+            }
+            stopService(serviceIntent);
+            serviceIntent = null;
+            showToast("Service stopped");
         }
+    }
+
+    public void onMakeRequestButtonClicked(View v) {
+        Measurement lastMeasurement = lastMeasurementLiveData.getValue();
+        if (lastMeasurement != null) {
+            sendMeasurementToApi(lastMeasurement);
+        } else {
+            showToast("No measurement available to send");
+            if (beaconService != null) {
+                lastMeasurement = beaconService.getLastMeasurement();
+                if (lastMeasurement != null) {
+                    sendMeasurementToApi(lastMeasurement);
+                } else {
+                    showToast("No measurement available from service");
+                }
+            } else {
+                showToast("Service not bound");
+            }
+        }
+    }
+
+    private void tryBluetoothInit() {
+        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
+            initializeBluetooth();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (BluetoothPermissionHandler.handlePermissionResult(requestCode, grantResults)) {
+            // All required permissions are granted
+            initializeBluetooth();
+        } else {
+            showToast("Bluetooth and Location permissions are required for this app to function properly");
+        }
+    }
+
+    private void initializeBluetooth() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            showToast("This device doesn't support Bluetooth");
+            return;
+        }
+
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            } else {
+                showToast("Bluetooth permission is required");
+            }
+        } else {
+            startAndBindService();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == RESULT_OK) {
+                startAndBindService();
+            } else {
+                showToast("Bluetooth is required for this app");
+            }
+        }
+    }
+
+    private void startAndBindService() {
+        if (serviceIntent == null) {
+            serviceIntent = new Intent(this, BeaconListeningService.class);
+            serviceIntent.putExtra("targetDeviceUUID", TARGET_UUID);
+            ContextCompat.startForegroundService(this, serviceIntent);
+        }
+        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void sendMeasurementToApi(Measurement measurement) {
@@ -253,5 +206,43 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(LOG_TAG, "Error sending measurement: " + t.getMessage());
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (isBound) {
+            unbindService(serviceConnection);
+            isBound = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(isBound) {
+            unbindService(serviceConnection);
+            isBound = false;
+        }
+    }
+
+    private void updateUI(Measurement measurement) {
+        TextView ppmTextView = findViewById(R.id.ppmTextView);
+        TextView tempTextView = findViewById(R.id.tempTextView);
+        TextView latLongTextView = findViewById(R.id.latLongTextView);
+
+        if (measurement != null) {
+            ppmTextView.setText("PPM: " + measurement.getPpm());
+            tempTextView.setText("Temperature: " + measurement.getTemperature());
+            latLongTextView.setText("Lat: " + measurement.getLatitude() + ", Long: " + measurement.getLongitude());
+        } else {
+            ppmTextView.setText("PPM: N/A");
+            tempTextView.setText("Temperature: N/A");
+            latLongTextView.setText("Lat: N/A, Long: N/A");
+        }
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }
