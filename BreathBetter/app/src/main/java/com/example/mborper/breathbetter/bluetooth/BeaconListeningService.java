@@ -5,17 +5,14 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.ParcelUuid;
 import android.util.Log;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -33,7 +30,6 @@ import com.example.mborper.breathbetter.api.Measurement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 
 public class BeaconListeningService extends Service {
@@ -111,12 +107,6 @@ public class BeaconListeningService extends Service {
     }
 
     private void initializeBluetooth() {
-       /* BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        if (bluetoothManager == null) {
-            Log.e(LOG_TAG, "Unable to initialize BluetoothManager.");
-            return;
-        }*/
-
         BluetoothAdapter bta = BluetoothAdapter.getDefaultAdapter();
         if (bta == null) {
             Log.e(LOG_TAG, "Device does not support Bluetooth");
@@ -141,8 +131,7 @@ public class BeaconListeningService extends Service {
 
         while (keepRunning) {
             if (scanner != null) {
-                searchAllBTLEDevices();
-                //searchSpecificBTLEDevice(targetDeviceUUID);
+                searchBTLEDevices(targetDeviceUUID);
                 try {
                     Thread.sleep(SCAN_PERIOD);
                 } catch (InterruptedException e) {
@@ -171,7 +160,7 @@ public class BeaconListeningService extends Service {
         Log.d(LOG_TAG, "BeaconListeningService.performWork: ends");
     }
 
-    private void searchAllBTLEDevices() {
+    private void searchBTLEDevices(String target) {
         Log.d("SEARCH", "Starting search for all devices.");
 
         this.scanCallback = new ScanCallback() {
@@ -179,7 +168,7 @@ public class BeaconListeningService extends Service {
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
                 //Log.d("SEARCH", "Device found: " + result);
-                processScanResult(result);
+                processScanResult(result, target);
                 // Aquí puedes acceder a otros datos del ScanRecord si es necesario
             }
 
@@ -189,7 +178,7 @@ public class BeaconListeningService extends Service {
             }
         };
 
-        List<ScanFilter> filters = new ArrayList<>(); // Lista vacía para escanear todo
+        List<ScanFilter> filters = new ArrayList<>(); // Lista vacía para escanear
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             Log.e(LOG_TAG, "BLUETOOTH_SCAN permission not granted");
@@ -198,13 +187,22 @@ public class BeaconListeningService extends Service {
         this.scanner.startScan(filters, new ScanSettings.Builder().build(), this.scanCallback);
     }
 
-    private void processScanResult(ScanResult result) {
+    private void processScanResult(ScanResult result, String target) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
-        if(Utilities.bytesToString(tib.getUUID()).equals("MANU-EPSG-GTI-3A")) {
-            // Aquí puedes registrar el UUID y otros datos del beacon
+        if(Utilities.bytesToString(tib.getUUID()).equals(target)) {
             Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()) + "UUID NOT TRANSLATED: " + Arrays.toString(tib.getUUID()));
             Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
             Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
+
+            Measurement measurement = new Measurement();
+            measurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
+            measurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
+            measurement.setLatitude(50); // Replace with actual location data
+            measurement.setLongitude(50); // Replace with actual location data
+
+            if (measurementCallback != null) {
+                measurementCallback.onMeasurementReceived(measurement);
+            }
         }
     }
 
@@ -241,47 +239,16 @@ public class BeaconListeningService extends Service {
                 .build();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         scanner.startScan(filters, settings, this.scanCallback);
     }
 
-    private void processScanResult(ScanResult result, String targetDeviceUUID) {
-        IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
-        Log.d("PROCESS", "TARGET ANTES DEL IF" + targetDeviceUUID);
-        Log.d("PROCESS", "TIB EN STRING" + Utilities.bytesToString(tib.getUUID()));
-        if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
-            Log.e("RESULT", "THIS IS PPM" + Utilities.bytesToInt(tib.getMajor()));
-            Log.e("RESULT", "THIS IS TEMP" + Utilities.bytesToInt(tib.getMinor()));
-            Measurement measurement = new Measurement();
-            measurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
-            measurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
-            measurement.setLatitude(50); // Replace with actual location data
-            measurement.setLongitude(50); // Replace with actual location data
-
-            if (measurementCallback != null) {
-                measurementCallback.onMeasurementReceived(measurement);
-            }
-        }
-    }*/
+     */
 
     private void stopBTLEDeviceSearch() {
         if (this.scanCallback != null && this.scanner != null) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+            if(ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 //return;
             }
             this.scanner.stopScan(this.scanCallback);
