@@ -132,7 +132,7 @@ public class IBeaconFrame {
 
     // -------------------------------------------------------------------------------
     /**
-     * Constructs a new TramaIBeacon instance from the provided bytes.
+     * Constructs a new IBeaconFrame instance from the provided bytes.
      *
      * @param bytes The raw bytes containing the iBeacon information.
      */
