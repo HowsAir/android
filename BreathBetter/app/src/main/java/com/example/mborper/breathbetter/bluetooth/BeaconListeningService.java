@@ -45,8 +45,9 @@ public class BeaconListeningService extends Service {
     private final IBinder binder = new LocalBinder();
     private MeasurementCallback measurementCallback;
 
-    private static final long SCAN_PERIOD = 10000;
-    private static final long SCAN_INTERVAL = 11000;
+    private static final long SCAN_PERIOD = 3000;
+    private static final long SCAN_INTERVAL = 10000;
+    private Measurement lastMeasurement;
 
     public interface MeasurementCallback {
         void onMeasurementReceived(Measurement measurement);
@@ -190,61 +191,24 @@ public class BeaconListeningService extends Service {
     private void processScanResult(ScanResult result, String target) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
         if(Utilities.bytesToString(tib.getUUID()).equals(target)) {
-            Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()) + "UUID NOT TRANSLATED: " + Arrays.toString(tib.getUUID()));
+            Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()));
             Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
             Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
 
-            Measurement measurement = new Measurement();
-            measurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
-            measurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
-            measurement.setLatitude(50); // Replace with actual location data
-            measurement.setLongitude(50); // Replace with actual location data
+            Measurement newMeasurement = new Measurement();
+            newMeasurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
+            newMeasurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
+            newMeasurement.setLatitude(50); // Replace with actual location data
+            newMeasurement.setLongitude(50); // Replace with actual location data
 
-            if (measurementCallback != null) {
-                measurementCallback.onMeasurementReceived(measurement);
+            if (!newMeasurement.equals(lastMeasurement)) {
+                lastMeasurement = newMeasurement;
+                if (measurementCallback != null) {
+                    measurementCallback.onMeasurementReceived(newMeasurement);
+                }
             }
         }
     }
-
-
-    /*private void searchSpecificBTLEDevice(final String targetDeviceUUID) {
-        Log.d("SEARCH", "Starting search for UUID: " + targetDeviceUUID);
-
-        this.scanCallback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                Log.d("SEARCH", "Device found: " + result.getDevice().getAddress());
-                processScanResult(result, targetDeviceUUID);
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                Log.e("SEARCH", "Scan failed with error code: " + errorCode);
-            }
-        };
-
-        UUID serviceUuid = UUID.fromString(targetDeviceUUID);
-        ParcelUuid parcelServiceUuid = new ParcelUuid(serviceUuid);
-
-        ScanFilter filter = new ScanFilter.Builder()
-                .setServiceUuid(parcelServiceUuid)
-                .build();
-
-        List<ScanFilter> filters = new ArrayList<>();
-        filters.add(filter);
-
-        ScanSettings settings = new ScanSettings.Builder()
-                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                .build();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        scanner.startScan(filters, settings, this.scanCallback);
-    }
-
-     */
 
     private void stopBTLEDeviceSearch() {
         if (this.scanCallback != null && this.scanner != null) {
@@ -267,6 +231,10 @@ public class BeaconListeningService extends Service {
 
     public void setMeasurementCallback(MeasurementCallback callback) {
         this.measurementCallback = callback;
+    }
+
+    public Measurement getLastMeasurement() {
+        return lastMeasurement;
     }
 
     private void fakingMeasurements() {

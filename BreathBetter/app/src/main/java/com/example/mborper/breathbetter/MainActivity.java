@@ -21,11 +21,14 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.MutableLiveData;
 
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
 import android.Manifest;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
@@ -45,9 +48,12 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 1;
     private Intent serviceIntent = null;
     private ApiService apiService;
-    private static final String TARGET_UUID = "99AECF02-7F55-4405-9E8D-AFD81DC9407E";
+    private static final String TARGET_UUID = "EQUIPO-JAVIER-3A";
     private BeaconListeningServiceConnection serviceConnection;
     private boolean isBound = false;
+
+    private BeaconListeningService beaconService;
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private MutableLiveData<Measurement> lastMeasurementLiveData = new MutableLiveData<>();
 
@@ -164,6 +170,17 @@ public class MainActivity extends AppCompatActivity {
             sendMeasurementToApi(lastMeasurement);
         } else {
             showToast("No measurement available to send");
+            // Try to get the last measurement from the service
+            if (beaconService != null) {
+                lastMeasurement = beaconService.getLastMeasurement();
+                if (lastMeasurement != null) {
+                    sendMeasurementToApi(lastMeasurement);
+                } else {
+                    showToast("No measurement available from service");
+                }
+            } else {
+                showToast("Service not bound");
+            }
         }
     }
 
@@ -184,12 +201,19 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             BeaconListeningService.LocalBinder binder = (BeaconListeningService.LocalBinder) service;
-            BeaconListeningService beaconService = binder.getService();
+            beaconService = binder.getService();
             beaconService.setMeasurementCallback(measurement -> {
-                lastMeasurementLiveData.postValue(measurement);
+                mainHandler.post(() -> {
+                    lastMeasurementLiveData.setValue(measurement);
+                });
             });
             isBound = true;
             showToast("Service bound successfully");
+
+            Measurement lastMeasurement = beaconService.getLastMeasurement();
+            if (lastMeasurement != null) {
+                lastMeasurementLiveData.setValue(lastMeasurement);
+            }
         }
 
         @Override
@@ -201,9 +225,19 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI(Measurement measurement) {
         // Update UI elements with the new measurement data
-        // For example:
-        // TextView ppmTextView = findViewById(R.id.ppmTextView);
-        // ppmTextView.setText("PPM: " + measurement.getPpm());
+        TextView ppmTextView = findViewById(R.id.ppmTextView);
+        TextView tempTextView = findViewById(R.id.tempTextView);
+        TextView latLongTextView = findViewById(R.id.latLongTextView);
+
+        if (measurement != null) {
+            ppmTextView.setText("PPM: " + measurement.getPpm());
+            tempTextView.setText("Temperature: " + measurement.getTemperature());
+            latLongTextView.setText("Lat: " + measurement.getLatitude() + ", Long: " + measurement.getLongitude());
+        } else {
+            ppmTextView.setText("PPM: N/A");
+            tempTextView.setText("Temperature: N/A");
+            latLongTextView.setText("Lat: N/A, Long: N/A");
+        }
     }
 
     private void sendMeasurementToApi(Measurement measurement) {
