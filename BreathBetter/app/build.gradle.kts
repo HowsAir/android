@@ -45,5 +45,6 @@ dependencies {
     implementation(libs.logging.interceptor)
     androidTestImplementation(libs.runner)
     androidTestImplementation(libs.core)
-    testImplementation("org.mockito:mockito-core:3.12.4")
+    androidTestImplementation(libs.rules)
+    testImplementation(libs.mockito.mockito.core)
 }
