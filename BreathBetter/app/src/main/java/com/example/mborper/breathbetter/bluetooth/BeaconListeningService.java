@@ -174,38 +174,41 @@ public class BeaconListeningService extends Service {
      * Continuously performs BLE device scans while the service is running.
      */
     private void performWork() {
-        Log.d(LOG_TAG, "BeaconListeningService.performWork: starts: thread=" + Thread.currentThread().getId());
+        Log.d(LOG_TAG, "BeaconListeningService.performWork: starts");
 
-        while (keepRunning) {
-            if (scanner != null) {
-                searchBTLEDevices();
-                try {
-                    Thread.sleep(SCAN_PERIOD);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+        serviceHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (!keepRunning) {
+                    Log.d(LOG_TAG, "BeaconListeningService.performWork: stopping scan.");
+                    stopBTLEDeviceSearch(); // Ensure to stop scanning
+                    stopSelf(); // Stop the service completely
+                    return;
                 }
-                stopBTLEDeviceSearch();
-                try {
-                    Thread.sleep(SCAN_INTERVAL - SCAN_PERIOD);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
+
+                if (scanner != null) {
+                    Log.d(LOG_TAG, "Starting BLE scan.");
+                    searchBTLEDevices();
+
+                    // Stop scan after SCAN_PERIOD
+                    serviceHandler.postDelayed(() -> {
+                        Log.d(LOG_TAG, "Stopping BLE scan.");
+                        stopBTLEDeviceSearch();
+
+                        // Schedule the next scan after SCAN_INTERVAL if keepRunning is true
+                        if (keepRunning) {
+                            serviceHandler.postDelayed(this, SCAN_INTERVAL);
+                        }
+                    }, SCAN_PERIOD);
+                } else {
+                    Log.e(LOG_TAG, "Bluetooth scanner is null. Retrying in 10 seconds.");
+                    serviceHandler.postDelayed(this, 10000);
+                    initializeBluetooth();
                 }
-            } else {
-                Log.e(LOG_TAG, "Bluetooth scanner is null. Retrying in 10 seconds.");
-                try {
-                    Thread.sleep(10000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-                initializeBluetooth();
             }
-        }
-
-        Log.d(LOG_TAG, "BeaconListeningService.performWork: ends");
+        });
     }
+
 
     /**
      * Starts scanning for Bluetooth devices and sends the result to processScanResult()
@@ -272,6 +275,9 @@ public class BeaconListeningService extends Service {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
+            Log.d(LOG_TAG, "STOPPING SCAN");
+            keepRunning = false;
+            stopSelf();
             this.scanner.stopScan(this.scanCallback);
             this.scanCallback = null;
         }

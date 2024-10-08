@@ -2,6 +2,8 @@
 agp = "8.6.0"
 converterGson = "2.9.0com.squareup.retrofit2"
 converterGsonVersion = "2.9.0"
+core = "1.6.1"
+espressoCoreVersion = "3.0.2"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
@@ -10,11 +12,15 @@ loggingInterceptor = "4.9.3"
 material = "1.12.0"
 activity = "1.9.2"
 constraintlayout = "2.1.4"
+mockitoCore = "3.12.4"
 retrofit = "2.9.0"
+runner = "1.0.2"
 
 [libraries]
+android-espresso-core = { module = "com.android.support.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-gson-v290 = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
+core = { module = "androidx.test:core", version.ref = "core" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -23,7 +29,11 @@ logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", ver
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+mockito-core = { module = "org.mockito:mockito-core" }
+mockito-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+rules = { module = "androidx.test:rules", version.ref = "core" }
+runner = { module = "com.android.support.test:runner", version.ref = "runner" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
