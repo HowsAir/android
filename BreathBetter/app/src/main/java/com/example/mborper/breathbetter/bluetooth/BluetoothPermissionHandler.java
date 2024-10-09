@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Author: Manuel Borregales
- * Date: 06/10/2024
- *
  * The BluetoothPermissionHandler class handles the request and validation of Bluetooth-related permissions
  * in Android. It checks if the necessary permissions are granted, requests them if not, and processes
  * the result of the permission requests.
+ *
+ * @author Manuel Borregales
+ * @date: 06/10/2024
  */
 public class BluetoothPermissionHandler {
 

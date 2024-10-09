@@ -6,12 +6,12 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
- * Author: Manuel Borregales
- * Date: 04/10/2024
- *
  * The ApiClient class configures and provides a Retrofit instance to communicate with the API backend.
  * This class sets up the base URL for the API, logging for HTTP requests, and includes a converter factory
  * to handle JSON responses using Gson.
+ *
+ * @author  Manuel Borregales
+ * @date:    04/10/2024
  */
 public class ApiClient {
 

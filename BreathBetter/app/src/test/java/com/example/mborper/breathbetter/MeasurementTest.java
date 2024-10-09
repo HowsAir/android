@@ -8,6 +8,13 @@ import com.example.mborper.breathbetter.api.Measurement;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * MeasurementTest class Tests all the getters and setters from the
+ * measurement class to verify it's working normally
+ *
+ * @author Manuel Borregales
+ * @date: 2024-10-08
+ */
 public class MeasurementTest {
 
     private Measurement measurement;

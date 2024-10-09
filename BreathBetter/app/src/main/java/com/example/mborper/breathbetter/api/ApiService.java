@@ -8,11 +8,11 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 
 /**
- * Author: Manuel Borregales
- * Date: 04/10/2024
- *
  * The ApiService interface defines the API endpoints that the client will interact with.
  * It uses Retrofit's annotations to define GET and POST requests for sending and receiving measurements.
+ *
+ * @author  Manuel Borregales
+ * @date:    04/10/2024
  */
 public interface ApiService {
 

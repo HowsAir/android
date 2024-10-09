@@ -20,6 +20,12 @@ import static org.hamcrest.Matchers.is;
 import androidx.test.rule.GrantPermissionRule;
 import android.Manifest;
 
+/**
+ * Service Test class function is to test if the bluetooth service starts successfully
+ *
+ * @author Manuel Borregales
+ * @date: 2024-10-08
+ */
 @RunWith(AndroidJUnit4.class)
 public class ServiceTest {
 
@@ -40,7 +46,6 @@ public class ServiceTest {
         onView(withId(R.id.startSearching)).perform(click());
 
         activityScenarioRule.getScenario().onActivity(activity -> {
-            // Asegúrate de que el Toast aparezca en la ventana correcta
             onView(withText("Service bound successfully"))
                     .inRoot(withDecorView(not(is(activity.getWindow().getDecorView()))))
                     .check(matches(isDisplayed()));

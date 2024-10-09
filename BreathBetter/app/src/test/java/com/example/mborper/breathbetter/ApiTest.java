@@ -12,6 +12,13 @@ import static org.junit.Assert.*;
 import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.api.Measurement;
 
+/**
+ * ApiTest mocks a database and sends measurements via fake http requests
+ * to see if the API request logic is working as expected
+ *
+ * @author Manuel Borregales
+ * @date: 2024-10-08
+ */
 public class ApiTest {
 
     private ApiService mockApiService;

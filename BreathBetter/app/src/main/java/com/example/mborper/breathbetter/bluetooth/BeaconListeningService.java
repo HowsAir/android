@@ -31,12 +31,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @file BeaconListeningService.java
- * @author Manuel Borregales
- * @date 2024-10-07
- * @description BeaconListeningService is an Android Service that scans for Bluetooth Low Energy (BLE) devices using
+ * BeaconListeningService is an Android Service that scans for Bluetooth Low Energy (BLE) devices using
  * BluetoothLeScanner. It operates in the background as a foreground service and continuously scans for
  * devices based on a provided target UUID. When a matching device is found, it generates a Measurement object.
+ *
+ * @author  Manuel Borregales
+ * @date:    2024-10-07
  */
 public class BeaconListeningService extends Service {
 
@@ -120,7 +120,7 @@ public class BeaconListeningService extends Service {
 
     /**
      * Called when the service is started with a start command. It receives the target device UUID to scan for.
-     *
+     * <p>
      *          Intent
      *      Natural: flags  ---> onStartCommand() --->  Natural
      *      Natural: startId
@@ -240,7 +240,7 @@ public class BeaconListeningService extends Service {
     /**
      * Processes the result of a BLE device scan. If a device with the matching UUID obtained in onStartCommand()
      * is found, a new Measurement is created.
-     *
+     * <p>
      *    ScanResult:result ---> processScanResult()
      *
      * @param result The result of the BLE scan containing device information.

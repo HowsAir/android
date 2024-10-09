@@ -40,13 +40,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * @file MainActivity.java
- * @author Manuel Borregales
- * @date 2024-10-07
- * @description Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
+ * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
  * It initializes Bluetooth, binds to the service, listens for measurements, and allows sending data to the API.
+ * @author Manuel Borregales
+ * @date: 2024-10-07
  */
-
 public class MainActivity extends AppCompatActivity {
 
     /** Log tag for debugging. */
@@ -195,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Handles the result of the permission request, it's called after accepting or rejecting a permission request.
-     *
+     * <p>
      *      Natural: requestCode
      *      [Texto]: Permissions    ---->   onRequestPermissionsResult()
      *      [Natural]: Granted permissions
@@ -238,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Handles the result of the Bluetooth enable request.
-     *
+     * <p>
      *      Natural: requestCode
      *      Natural: resultCode    ---->   onActivityResult()
      *      Intent: data
@@ -273,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Sends the provided measurement to the API via HTTP post request.
-     *
+     * <p>
      *      Measurement { ppm: Natural
      *                   temperature: Natural   ---> sendMeasurementToApi()
      *                   latitude: Real
