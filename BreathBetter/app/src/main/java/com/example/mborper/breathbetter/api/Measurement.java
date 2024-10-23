@@ -3,67 +3,67 @@ package com.example.mborper.breathbetter.api;
 import java.io.Serializable;
 
 /**
- * Author: Manuel Borregales
- * Date: 07/10/2024
- *
  * The Measurement class represents the data model for a measurement object.
  * It implements Serializable so that it can be easily passed between activities or services in Android.
+ *
+ * @author  Manuel Borregales
+ * @date:    04/10/2024
  */
 public class Measurement implements Serializable {
 
-    private double ppm;
-    private double temperature;
+    private int ppm;
+    private int temperature;
     private double latitude;
     private double longitude;
 
     /**
      * Returns the PPM (parts per million) value of the measurement.
-     *
-     *      getPpm() ---> Entero:ppm
+     * <p>
+     *      getPpm() ---> Natural:ppm
      *
      * @return ppm value as a double.
      */
-    public double getPpm() {
+    public int getPpm() {
         return ppm;
     }
 
     /**
      * Sets the PPM (parts per million) value for the measurement.
-     *
-     *      Entero:Ppm ---> setPpm()
+     * <p>
+     *      Natural:Ppm ---> setPpm()
      *
      * @param ppm The PPM value to be set.
      */
-    public void setPpm(double ppm) {
+    public void setPpm(int ppm) {
         this.ppm = ppm;
     }
 
     /**
      * Returns the temperature value of the measurement.
-     *
-     *      getTemperature() ---> Entero:temperature
+     *<p>
+     *      getTemperature() ---> Natural:temperature
      *
      * @return temperature as a double.
      */
-    public double getTemperature() {
+    public int getTemperature() {
         return temperature;
     }
 
     /**
      * Sets the temperature value for the measurement.
-     *
-     *      Entero:temperature ---> setTemperature()
+     *<p>
+     *      Natural:temperature ---> setTemperature()
      *
      * @param temperature The temperature value to be set.
      */
-    public void setTemperature(double temperature) {
+    public void setTemperature(int temperature) {
         this.temperature = temperature;
     }
 
     /**
      * Returns the latitude where the measurement was taken.
-     *
-     *      getLatitude() ---> Entero:latitude
+     *<p>
+     *      getLatitude() ---> Real:latitude
      *
      * @return latitude as a double.
      */
@@ -73,8 +73,8 @@ public class Measurement implements Serializable {
 
     /**
      * Sets the latitude value for the measurement.
-     *
-     *      Entero:latitude ---> setLatitude()
+     *<p>
+     *      Real:latitude ---> setLatitude()
      *
      * @param latitude The latitude value to be set.
      */
@@ -84,8 +84,8 @@ public class Measurement implements Serializable {
 
     /**
      * Returns the longitude where the measurement was taken.
-     *
-     *      getLongitude() ---> Entero:longitude
+     *<p>
+     *      getLongitude() ---> Real:longitude
      *
      * @return longitude as a double.
      */
@@ -95,8 +95,8 @@ public class Measurement implements Serializable {
 
     /**
      * Sets the longitude value for the measurement.
-     *
-     *      Entero:longitude ---> setLongitude()
+     *<p>
+     *      Real:longitude ---> setLongitude()
      *
      * @param longitude The longitude value to be set.
      */

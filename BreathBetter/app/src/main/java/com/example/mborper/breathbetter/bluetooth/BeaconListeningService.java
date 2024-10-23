@@ -220,7 +220,7 @@ public class BeaconListeningService extends Service {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
-                processScanResult(result, targetDeviceUUID);
+                processScanResult(result);
             }
 
             @Override
@@ -245,9 +245,9 @@ public class BeaconListeningService extends Service {
      *
      * @param result The result of the BLE scan containing device information.
      */
-    private void processScanResult(ScanResult result, String target) {
+    private void processScanResult(ScanResult result) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
-        if (Utilities.bytesToString(tib.getUUID()).equals(target)) {
+        if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
             Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()));
             Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
             Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
