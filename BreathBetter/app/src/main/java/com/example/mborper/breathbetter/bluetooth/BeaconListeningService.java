@@ -24,6 +24,7 @@ import androidx.core.app.NotificationCompat;
 
 import android.Manifest;
 
+import com.example.mborper.breathbetter.MainActivity;
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.Measurement;
 
@@ -321,9 +322,9 @@ public class BeaconListeningService extends Service {
     private void processScanResult(ScanResult result) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
         if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
-            Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()));
-            Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
-            Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
+//            Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()));
+//            Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
+//            Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
 
             Measurement newMeasurement = new Measurement();
             newMeasurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
@@ -336,6 +337,10 @@ public class BeaconListeningService extends Service {
                 if (measurementCallback != null) {
                     measurementCallback.onMeasurementReceived(newMeasurement);
                 }
+                Log.d("main", "ppm" + lastMeasurement.getPpm());
+                Log.d("main", "temp" + lastMeasurement.getTemperature());
+                Log.d("main", "lat" + lastMeasurement.getLatitude());
+                Log.d("main", "long" + lastMeasurement.getLongitude());
             }
         }
     }

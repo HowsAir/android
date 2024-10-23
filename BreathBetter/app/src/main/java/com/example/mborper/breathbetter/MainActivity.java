@@ -119,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
             Measurement lastMeasurement = beaconService.getLastMeasurement();
             if (lastMeasurement != null) {
                 lastMeasurementLiveData.setValue(lastMeasurement);
+                receiveAndSendMeasurement();
             }
         }
 
@@ -134,6 +135,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            receiveAndSendMeasurement();
+            mainHandler.postDelayed(this, 10000);
+        }
+    };
+
     /**
      * Starts the Bluetooth initialization process when the start service button is clicked.
      *
@@ -141,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onStartServiceButtonClicked(View v) {
         tryBluetoothInit(); // Attempts to initialize Bluetooth.
+        mainHandler.post(runnable);
     }
 
     /**
@@ -158,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 stopService(serviceIntent);
                 serviceIntent = null;
+                mainHandler.removeCallbacks(runnable);
                 showToast("Service stopped");
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
@@ -167,11 +178,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Makes a request to the API with the last available measurement when the request button is clicked.
-     *
-     * @param v The button view that was clicked.
+     * Makes a request to the API with the last available measurement everytime a new measurement is received
      */
-    public void onMakeRequestButtonClicked(View v) {
+    public void receiveAndSendMeasurement() {
         Measurement lastMeasurement = lastMeasurementLiveData.getValue();
         if (lastMeasurement != null) {
             sendMeasurementToApi(lastMeasurement); // Sends the current measurement to the API.
@@ -334,6 +343,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(LOG_TAG, "Error in onDestroy: " + e.getMessage());
         }
         super.onDestroy();
+        mainHandler.removeCallbacks(runnable);
     }
 
     /**
