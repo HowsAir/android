@@ -40,11 +40,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * @file MainActivity.java
- * @author Manuel Borregales
- * @date 2024-10-07
- * @description Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
+ * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
  * It initializes Bluetooth, binds to the service, listens for measurements, and allows sending data to the API.
+ * @author Manuel Borregales
+ * date:  2024-10-07
+ * last edited: 2024-10-23
  */
 
 public class MainActivity extends AppCompatActivity {
@@ -56,16 +56,18 @@ public class MainActivity extends AppCompatActivity {
     private static final String TARGET_UUID = "MANU-EPSG-GTI-3A";
 
     private ApiService apiService;
+
+    /** Handles the mutable variable */
+    private Handler mainHandler = new Handler(Looper.getMainLooper());
+    /** LiveData that holds the last received measurement and updates the UI accordingly. */
+    private MutableLiveData<Measurement> lastMeasurementLiveData = new MutableLiveData<>();
+
     private static final int REQUEST_ENABLE_BT = 1;
     private BeaconListeningServiceConnection serviceConnection;
     private BeaconListeningService beaconService;
     private Intent serviceIntent = null;
     /** Tracks whether the service is bound to the activity. */
     private boolean isBound = false;
-    /** Handles the mutable variable */
-    private Handler mainHandler = new Handler(Looper.getMainLooper());
-    /** LiveData that holds the last received measurement and updates the UI accordingly. */
-    private MutableLiveData<Measurement> lastMeasurementLiveData = new MutableLiveData<>();
 
     /**
      * Called when the activity is created. Initializes the UI and sets up the service connection and observer.
@@ -79,14 +81,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         serviceConnection = new BeaconListeningServiceConnection();
-
-        // Adjusts the padding based on system bars.
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
+        AdjustPadding();
         // Initializes the API client and service connection.
         apiService = ApiClient.getClient().create(ApiService.class);
         // Observes the LiveData for any updates to the last measurement.
@@ -135,47 +130,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Runnable runnable = new Runnable() {
+    private void AdjustPadding() {
+        // Adjusts the padding based on system bars.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+    }
+
+    /**
+     * Function to store and send automatically measurements to the API without a button every 10 seconds
+     */
+    private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
             receiveAndSendMeasurement();
             mainHandler.postDelayed(this, 10000);
         }
     };
-
-    /**
-     * Starts the Bluetooth initialization process when the start service button is clicked.
-     *
-     * @param v The button view that was clicked.
-     */
-    public void onStartServiceButtonClicked(View v) {
-        tryBluetoothInit(); // Attempts to initialize Bluetooth.
-        mainHandler.post(runnable);
-    }
-
-    /**
-     * Stops the service and unbinds it when the stop service button is clicked.
-     *
-     * @param v The button view that was clicked.
-     */
-    public void onStopServiceButtonClicked(View v) {
-        if (serviceIntent != null) {
-            try {
-                if (isBound && beaconService != null) {
-                    beaconService.stopService(); // This will trigger the complete cleanup
-                    unbindService(serviceConnection);
-                    isBound = false;
-                }
-                stopService(serviceIntent);
-                serviceIntent = null;
-                mainHandler.removeCallbacks(runnable);
-                showToast("Service stopped");
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
-                showToast("Error stopping service");
-            }
-        }
-    }
 
     /**
      * Makes a request to the API with the last available measurement everytime a new measurement is received
@@ -200,17 +173,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Attempts to initialize Bluetooth, checking and requesting necessary permissions.
+     * Starts the Bluetooth initialization process when the start service button is clicked.
+     *
+     * @param v The button view that was clicked.
      */
-    private void tryBluetoothInit() {
-        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
-            initializeBluetooth();
-        }
+    public void onStartServiceButtonClicked(View v) {
+        startAndBindService();
+        mainHandler.post(runnable);
     }
 
     /**
      * Handles the result of the permission request, it's called after accepting or rejecting a permission request.
-     *
+     * <p>
      *      Natural: requestCode
      *      [Texto]: Permissions    ---->   onRequestPermissionsResult()
      *      [Natural]: Granted permissions
@@ -223,37 +197,15 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (BluetoothPermissionHandler.handlePermissionResult(requestCode, grantResults)) {
-            initializeBluetooth();
+            beaconService.initializeBluetooth();
         } else {
             showToast("Bluetooth and Location permissions are required for this app to function properly");
         }
     }
 
     /**
-     * Initializes Bluetooth, enabling it if necessary and starting the service.
-     */
-    private void initializeBluetooth() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (bluetoothAdapter == null) {
-            showToast("This device doesn't support Bluetooth");
-            return;
-        }
-
-        if (!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            } else {
-                showToast("Bluetooth permission is required");
-            }
-        } else {
-            startAndBindService();
-        }
-    }
-
-    /**
      * Handles the result of the Bluetooth enable request.
-     *
+     * <p>
      *      Natural: requestCode
      *      Natural: resultCode    ---->   onActivityResult()
      *      Intent: data
@@ -275,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Starts the beacon service and binds it to this activity.
+     * Starts the beacon service and binds it to this activity, also sends the targetUUID.
      */
     private void startAndBindService() {
         if (serviceConnection == null) {
@@ -301,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Sends the provided measurement to the API via HTTP post request.
-     *
+     * <p>
      *      Measurement { ppm: Natural
      *                   temperature: Natural   ---> sendMeasurementToApi()
      *                   latitude: Real
@@ -328,6 +280,29 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Stops the service and unbinds it when the stop service button is clicked.
+     *
+     * @param v The button view that was clicked.
+     */
+    public void onStopServiceButtonClicked(View v) {
+        if (serviceIntent != null) {
+            try {
+                if (isBound && beaconService != null) {
+                    beaconService.stopService(); // This will trigger the complete cleanup
+                    unbindService(serviceConnection);
+                    isBound = false;
+                }
+                stopService(serviceIntent);
+                serviceIntent = null;
+                mainHandler.removeCallbacks(runnable);
+                showToast("Service stopped");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
+                showToast("Error stopping service");
+            }
+        }
+    }
 
     /**
      * Called when the activity is destroyed. Unbinds the service if it is currently bound.
