@@ -10,7 +10,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 import com.example.mborper.breathbetter.api.ApiService;
-import com.example.mborper.breathbetter.api.Measurement;
+import com.example.mborper.breathbetter.measurements.Measurement;
 
 public class ApiTest {
 

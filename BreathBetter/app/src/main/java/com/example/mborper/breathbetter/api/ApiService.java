@@ -1,5 +1,7 @@
 package com.example.mborper.breathbetter.api;
 
+import com.example.mborper.breathbetter.measurements.Measurement;
+
 import java.util.List;
 
 import retrofit2.Call;

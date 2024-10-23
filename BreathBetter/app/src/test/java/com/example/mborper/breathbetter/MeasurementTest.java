@@ -3,7 +3,7 @@ package com.example.mborper.breathbetter;
 // MeasurementTest.java
 import static org.junit.Assert.assertEquals;
 
-import com.example.mborper.breathbetter.api.Measurement;
+import com.example.mborper.breathbetter.measurements.Measurement;
 
 import org.junit.Before;
 import org.junit.Test;
