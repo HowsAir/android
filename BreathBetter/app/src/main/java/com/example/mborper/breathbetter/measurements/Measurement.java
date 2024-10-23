@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter.api;
+package com.example.mborper.breathbetter.measurements;
 
 import java.io.Serializable;
 
