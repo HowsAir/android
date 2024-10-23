@@ -42,7 +42,7 @@ public class BeaconListeningService extends Service {
 
     private static final String LOG_TAG = "BEACON_LISTENING_SERVICE";
     private String targetDeviceUUID;
-    private boolean keepRunning = true;
+    private volatile boolean keepRunning = true;
     private BluetoothLeScanner scanner;
     private ScanCallback scanCallback;
 
@@ -62,6 +62,31 @@ public class BeaconListeningService extends Service {
     public interface MeasurementCallback {
         void onMeasurementReceived(Measurement measurement);
     }
+
+    private Runnable scanRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!keepRunning) {
+                Log.d(LOG_TAG, "Service stopped, ending scan cycle");
+                return;
+            }
+
+            // Start scan
+            Log.d(LOG_TAG, "Starting BLE scan");
+            startScan();
+
+            // Schedule scan stop after SCAN_PERIOD
+            serviceHandler.postDelayed(() -> {
+                stopScan();
+
+                // Schedule next scan cycle after SCAN_INTERVAL if still running
+                if (keepRunning) {
+                    Log.d(LOG_TAG, "Scheduling next scan cycle");
+                    serviceHandler.postDelayed(scanRunnable, SCAN_INTERVAL - SCAN_PERIOD);
+                }
+            }, SCAN_PERIOD);
+        }
+    };
 
     /**
      * LocalBinder is used to bind the service to components such as activities.
@@ -90,9 +115,9 @@ public class BeaconListeningService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(LOG_TAG, "BeaconListeningService: onCreate");
-        startForegroundService();
         initializeHandlerThread();
         initializeBluetooth();
+        startForegroundService();
     }
 
     /**
@@ -133,9 +158,12 @@ public class BeaconListeningService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "BeaconListeningService.onStartCommand: starts");
-        targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
-        serviceHandler.post(() -> performWork());
-        return START_STICKY;
+        if (intent != null) {
+            targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
+            keepRunning = true;
+            serviceHandler.post(scanRunnable);
+        }
+        return START_NOT_STICKY; // Changed from START_STICKY
     }
 
     /**
@@ -170,43 +198,88 @@ public class BeaconListeningService extends Service {
         }
     }
 
+    private void startScan() {
+        if (scanner == null) {
+            Log.e(LOG_TAG, "Scanner is null, attempting to initialize Bluetooth");
+            initializeBluetooth();
+            if (scanner == null) {
+                Log.e(LOG_TAG, "Failed to initialize scanner");
+                return;
+            }
+        }
+
+        scanCallback = new ScanCallback() {
+            @Override
+            public void onScanResult(int callbackType, ScanResult result) {
+                super.onScanResult(callbackType, result);
+                processScanResult(result);
+            }
+
+            @Override
+            public void onScanFailed(int errorCode) {
+                Log.e(LOG_TAG, "Scan failed with error code: " + errorCode);
+            }
+        };
+
+        try {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+
+            }
+            scanner.startScan(null, new ScanSettings.Builder().build(), scanCallback);
+            Log.d(LOG_TAG, "Scan started successfully");
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Error starting scan: " + e.getMessage());
+        }
+    }
+
+    private void stopScan() {
+        if (scanner != null && scanCallback != null) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+                    != PackageManager.PERMISSION_GRANTED) {
+            }
+
+            try {
+                scanner.stopScan(scanCallback);
+                Log.d(LOG_TAG, "Scan stopped successfully");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error stopping scan: " + e.getMessage());
+            }
+        }
+    }
+
+
     /**
      * Continuously performs BLE device scans while the service is running.
      */
     private void performWork() {
-        Log.d(LOG_TAG, "BeaconListeningService.performWork: starts");
+        if (!keepRunning) {
+            Log.d(LOG_TAG, "BeaconListeningService.performWork: stopping scan.");
+            stopBTLEDeviceSearch();
+            return;
+        }
 
-        serviceHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!keepRunning) {
-                    Log.d(LOG_TAG, "BeaconListeningService.performWork: stopping scan.");
-                    stopBTLEDeviceSearch(); // Ensure to stop scanning
-                    stopSelf(); // Stop the service completely
-                    return;
+        if (scanner != null) {
+            Log.d(LOG_TAG, "Starting BLE scan.");
+            searchBTLEDevices();
+
+            serviceHandler.postDelayed(() -> {
+                if (keepRunning) {  // Check again before stopping
+                    Log.d(LOG_TAG, "Stopping BLE scan.");
+                    stopBTLEDeviceSearch();
+
+                    // Only schedule next scan if service is still running
+                    if (keepRunning) {
+                        serviceHandler.postDelayed(this::performWork, SCAN_INTERVAL);
+                    }
                 }
-
-                if (scanner != null) {
-                    Log.d(LOG_TAG, "Starting BLE scan.");
-                    searchBTLEDevices();
-
-                    // Stop scan after SCAN_PERIOD
-                    serviceHandler.postDelayed(() -> {
-                        Log.d(LOG_TAG, "Stopping BLE scan.");
-                        stopBTLEDeviceSearch();
-
-                        // Schedule the next scan after SCAN_INTERVAL if keepRunning is true
-                        if (keepRunning) {
-                            serviceHandler.postDelayed(this, SCAN_INTERVAL);
-                        }
-                    }, SCAN_PERIOD);
-                } else {
-                    Log.e(LOG_TAG, "Bluetooth scanner is null. Retrying in 10 seconds.");
-                    serviceHandler.postDelayed(this, 10000);
-                    initializeBluetooth();
-                }
+            }, SCAN_PERIOD);
+        } else {
+            Log.e(LOG_TAG, "Bluetooth scanner is null. Retrying in 10 seconds.");
+            if (keepRunning) {  // Only retry if service should keep running
+                serviceHandler.postDelayed(this::performWork, 10000);
+                initializeBluetooth();
             }
-        });
+        }
     }
 
 
@@ -272,15 +345,34 @@ public class BeaconListeningService extends Service {
      */
     private void stopBTLEDeviceSearch() {
         if (this.scanCallback != null && this.scanner != null) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+                    != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
             Log.d(LOG_TAG, "STOPPING SCAN");
-            keepRunning = false;
-            stopSelf();
             this.scanner.stopScan(this.scanCallback);
             this.scanCallback = null;
         }
+    }
+
+    /**
+     * Called when the activity wants to stop the service. Cleans up resources such as stopping the scan and terminating the handler thread.
+     */
+    public void stopService() {
+        Log.d(LOG_TAG, "stopService called");
+        keepRunning = false;
+
+        // Remove any pending scan runnables
+        if (serviceHandler != null) {
+            serviceHandler.removeCallbacks(scanRunnable);
+        }
+
+        // Stop current scan if active
+        stopScan();
+
+        // Stop foreground service and self
+        stopForeground(true);
+        stopSelf();
     }
 
     /**
@@ -288,10 +380,28 @@ public class BeaconListeningService extends Service {
      */
     @Override
     public void onDestroy() {
-        super.onDestroy();
-        stopBTLEDeviceSearch();
+        Log.d(LOG_TAG, "onDestroy called");
         keepRunning = false;
-        handlerThread.quitSafely();
+
+        // Remove any pending scan runnables
+        if (serviceHandler != null) {
+            serviceHandler.removeCallbacks(scanRunnable);
+        }
+
+        // Stop current scan
+        stopScan();
+
+        // Clean up handler thread
+        if (handlerThread != null) {
+            handlerThread.quitSafely();
+            try {
+                handlerThread.join(1000); // Wait for thread to finish
+            } catch (InterruptedException e) {
+                Log.e(LOG_TAG, "Error shutting down handler thread: " + e.getMessage());
+            }
+        }
+
+        super.onDestroy();
     }
 
     /**

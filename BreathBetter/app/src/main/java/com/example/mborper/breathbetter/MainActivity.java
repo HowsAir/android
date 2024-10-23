@@ -78,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         EdgeToEdge.enable(this); // Enables edge-to-edge mode for the UI.
         setContentView(R.layout.activity_main);
 
+        serviceConnection = new BeaconListeningServiceConnection();
+
         // Adjusts the padding based on system bars.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -87,8 +89,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Initializes the API client and service connection.
         apiService = ApiClient.getClient().create(ApiService.class);
-        serviceConnection = new BeaconListeningServiceConnection();
-
         // Observes the LiveData for any updates to the last measurement.
         lastMeasurementLiveData.observe(this, this::updateUI);
     }
@@ -150,13 +150,19 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onStopServiceButtonClicked(View v) {
         if (serviceIntent != null) {
-            if (isBound) {
-                unbindService(serviceConnection);
-                isBound = false;
+            try {
+                if (isBound && beaconService != null) {
+                    beaconService.stopService(); // This will trigger the complete cleanup
+                    unbindService(serviceConnection);
+                    isBound = false;
+                }
+                stopService(serviceIntent);
+                serviceIntent = null;
+                showToast("Service stopped");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
+                showToast("Error stopping service");
             }
-            stopService(serviceIntent);
-            serviceIntent = null;
-            showToast("Service stopped");
         }
     }
 
@@ -263,12 +269,25 @@ public class MainActivity extends AppCompatActivity {
      * Starts the beacon service and binds it to this activity.
      */
     private void startAndBindService() {
+        if (serviceConnection == null) {
+            serviceConnection = new BeaconListeningServiceConnection();
+        }
+
         if (serviceIntent == null) {
             serviceIntent = new Intent(this, BeaconListeningService.class);
             serviceIntent.putExtra("targetDeviceUUID", TARGET_UUID);
             ContextCompat.startForegroundService(this, serviceIntent);
         }
-        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        // Add null and binding checks
+        if (serviceConnection != null && !isBound) {
+            try {
+                bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error binding service: " + e.getMessage());
+                showToast("Error starting service: " + e.getMessage());
+            }
+        }
     }
 
     /**
@@ -300,28 +319,21 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Called when the activity is stopped. Unbinds the service if it is currently bound.
-     */
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (isBound) {
-            unbindService(serviceConnection);
-            isBound = false;
-        }
-    }
 
     /**
      * Called when the activity is destroyed. Unbinds the service if it is currently bound.
      */
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        if(isBound) {
-            unbindService(serviceConnection);
-            isBound = false;
+        try {
+            if (isBound && serviceConnection != null) {
+                unbindService(serviceConnection);
+                isBound = false;
+            }
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Error in onDestroy: " + e.getMessage());
         }
+        super.onDestroy();
     }
 
     /**
