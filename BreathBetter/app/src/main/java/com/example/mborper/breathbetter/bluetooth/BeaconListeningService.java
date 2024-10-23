@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -24,9 +25,10 @@ import androidx.core.app.NotificationCompat;
 
 import android.Manifest;
 
-import com.example.mborper.breathbetter.MainActivity;
 import com.example.mborper.breathbetter.R;
-import com.example.mborper.breathbetter.api.Measurement;
+import com.example.mborper.breathbetter.measurements.GasAlertManager;
+import com.example.mborper.breathbetter.measurements.LocationUtils;
+import com.example.mborper.breathbetter.measurements.Measurement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +57,7 @@ public class BeaconListeningService extends Service {
 
     private static final long SCAN_PERIOD = 1000;  // The time in milliseconds to scan for BLE devices
     private static final long SCAN_INTERVAL = 10000; // The interval between scans
+    private GasAlertManager gasAlertManager;
     private Measurement lastMeasurement;
 
     /**
@@ -116,6 +119,7 @@ public class BeaconListeningService extends Service {
     public void onCreate() {
         super.onCreate();
         Log.d(LOG_TAG, "BeaconListeningService: onCreate");
+        gasAlertManager = new GasAlertManager(this);
         initializeHandlerThread();
         initializeBluetooth();
         startForegroundService();
@@ -199,6 +203,10 @@ public class BeaconListeningService extends Service {
         }
     }
 
+    /**
+     * Continuously performs BLE device scans while the service is running.
+     * then sends the result to processScanResult()
+     */
     private void startScan() {
         if (scanner == null) {
             Log.e(LOG_TAG, "Scanner is null, attempting to initialize Bluetooth");
@@ -248,69 +256,6 @@ public class BeaconListeningService extends Service {
         }
     }
 
-
-    /**
-     * Continuously performs BLE device scans while the service is running.
-     */
-    private void performWork() {
-        if (!keepRunning) {
-            Log.d(LOG_TAG, "BeaconListeningService.performWork: stopping scan.");
-            stopBTLEDeviceSearch();
-            return;
-        }
-
-        if (scanner != null) {
-            Log.d(LOG_TAG, "Starting BLE scan.");
-            searchBTLEDevices();
-
-            serviceHandler.postDelayed(() -> {
-                if (keepRunning) {  // Check again before stopping
-                    Log.d(LOG_TAG, "Stopping BLE scan.");
-                    stopBTLEDeviceSearch();
-
-                    // Only schedule next scan if service is still running
-                    if (keepRunning) {
-                        serviceHandler.postDelayed(this::performWork, SCAN_INTERVAL);
-                    }
-                }
-            }, SCAN_PERIOD);
-        } else {
-            Log.e(LOG_TAG, "Bluetooth scanner is null. Retrying in 10 seconds.");
-            if (keepRunning) {  // Only retry if service should keep running
-                serviceHandler.postDelayed(this::performWork, 10000);
-                initializeBluetooth();
-            }
-        }
-    }
-
-
-    /**
-     * Starts scanning for Bluetooth devices and sends the result to processScanResult()
-     */
-    private void searchBTLEDevices() {
-        Log.d("SEARCH", "Starting search for all devices.");
-
-        this.scanCallback = new ScanCallback() {
-            @Override
-            public void onScanResult(int callbackType, ScanResult result) {
-                super.onScanResult(callbackType, result);
-                processScanResult(result);
-            }
-
-            @Override
-            public void onScanFailed(int errorCode) {
-                Log.e("SEARCH", "Scan failed with error code: " + errorCode);
-            }
-        };
-
-        List<ScanFilter> filters = new ArrayList<>();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            Log.e(LOG_TAG, "BLUETOOTH_SCAN permission not granted");
-        }
-        this.scanner.startScan(filters, new ScanSettings.Builder().build(), this.scanCallback);
-    }
-
     /**
      * Processes the result of a BLE device scan. If a device with the matching UUID obtained in onStartCommand()
      * is found, a new Measurement is created.
@@ -322,21 +267,26 @@ public class BeaconListeningService extends Service {
     private void processScanResult(ScanResult result) {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
         if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
-//            Log.d("PROCESS", "Device UUID: " + Utilities.bytesToString(tib.getUUID()));
-//            Log.d("PROCESS", "Device Major: " + Utilities.bytesToInt(tib.getMajor()));
-//            Log.d("PROCESS", "Device Minor: " + Utilities.bytesToInt(tib.getMinor()));
-
             Measurement newMeasurement = new Measurement();
             newMeasurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
             newMeasurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
-            newMeasurement.setLatitude(50); // Replace with actual location data
-            newMeasurement.setLongitude(50); // Replace with actual location data
+
+            // Get location for the measurement
+            LocationUtils locationUtils = new LocationUtils(this);
+            Location currentLocation = locationUtils.getCurrentLocation();
+            if (currentLocation != null) {
+                newMeasurement.setLatitude(currentLocation.getLatitude());
+                newMeasurement.setLongitude(currentLocation.getLongitude());
+            }
 
             if (!newMeasurement.equals(lastMeasurement)) {
                 lastMeasurement = newMeasurement;
                 if (measurementCallback != null) {
                     measurementCallback.onMeasurementReceived(newMeasurement);
                 }
+
+                gasAlertManager.checkAndAlert(newMeasurement.getPpm());
+
                 Log.d("main", "ppm" + lastMeasurement.getPpm());
                 Log.d("main", "temp" + lastMeasurement.getTemperature());
                 Log.d("main", "lat" + lastMeasurement.getLatitude());
@@ -372,6 +322,10 @@ public class BeaconListeningService extends Service {
             serviceHandler.removeCallbacks(scanRunnable);
         }
 
+        if (gasAlertManager != null) {
+            gasAlertManager.cleanup();
+        }
+
         // Stop current scan if active
         stopScan();
 
@@ -391,6 +345,10 @@ public class BeaconListeningService extends Service {
         // Remove any pending scan runnables
         if (serviceHandler != null) {
             serviceHandler.removeCallbacks(scanRunnable);
+        }
+
+        if (gasAlertManager != null) {
+            gasAlertManager.cleanup();
         }
 
         // Stop current scan
