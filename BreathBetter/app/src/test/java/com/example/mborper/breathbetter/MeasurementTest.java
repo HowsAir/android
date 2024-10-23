@@ -19,14 +19,14 @@ public class MeasurementTest {
 
     @Test
     public void testSetAndGetPpm() {
-        double ppm = 500.0;
+        int ppm = 500;
         measurement.setPpm(ppm);
         assertEquals(ppm, measurement.getPpm(), 0.001);
     }
 
     @Test
     public void testSetAndGetTemperature() {
-        double temperature = 25.5;
+        int temperature = 25;
         measurement.setTemperature(temperature);
         assertEquals(temperature, measurement.getTemperature(), 0.001);
     }

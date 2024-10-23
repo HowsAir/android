@@ -34,7 +34,7 @@ public class ApiClient {
                     .build();
 
             retrofit = new Retrofit.Builder()
-                    .baseUrl("http://192.168.32.132:3000/api/v1/") // Base URL of the API
+                    .baseUrl("http://192.168.1.132:3000/api/v1/") // Base URL of the API
                     .addConverterFactory(GsonConverterFactory.create()) // Use Gson to handle JSON
                     .client(client) // Use OkHttpClient for handling requests
                     .build();
