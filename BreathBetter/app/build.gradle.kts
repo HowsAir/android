@@ -53,4 +53,5 @@ dependencies {
     testImplementation(libs.mockito.mockito.core)
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)
+    implementation (libs.code.scanner)
 }

@@ -28,6 +28,7 @@ import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
 
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
+import com.example.mborper.breathbetter.login.SessionManager;
 import com.example.mborper.breathbetter.measurements.Measurement;
 import com.example.mborper.breathbetter.bluetooth.BluetoothPermissionHandler;
 

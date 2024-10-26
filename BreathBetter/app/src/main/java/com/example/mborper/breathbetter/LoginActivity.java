@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.mborper.breathbetter.databinding.ActivityLoginBinding;
 import com.example.mborper.breathbetter.login.LoginViewModel;
+import com.example.mborper.breathbetter.login.SessionManager;
 
 public class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;
@@ -50,7 +51,7 @@ public class LoginActivity extends AppCompatActivity {
                     sessionManager.createLoginSession(userId, email);
 
                     // Redirige a MainActivity
-                    startActivity(new Intent(this, MainActivity.class));
+                    startActivity(new Intent(this, QRExplanationActivity.class));
                     finish();
                     break;
                 case ERROR:

@@ -1,5 +1,6 @@
 [versions]
 agp = "8.6.0"
+codeScanner = "2.3.2"
 converterGson = "2.9.0com.squareup.retrofit2"
 converterGsonVersion = "2.9.0"
 core = "1.6.1"
@@ -19,6 +20,7 @@ runner = "1.0.2"
 
 [libraries]
 android-espresso-core = { module = "com.android.support.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
+code-scanner = { module = "com.github.yuriy-budiyev:code-scanner", version.ref = "codeScanner" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-gson-v290 = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
 core = { module = "androidx.test:core", version.ref = "core" }
