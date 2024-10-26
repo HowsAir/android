@@ -1,5 +1,7 @@
 package com.example.mborper.breathbetter.api;
 
+import com.example.mborper.breathbetter.login.pojo.LoginRequest;
+import com.example.mborper.breathbetter.login.pojo.LoginResponse;
 import com.example.mborper.breathbetter.measurements.Measurement;
 
 import java.util.List;
@@ -34,5 +36,8 @@ public interface ApiService {
      */
     @POST("measurements/")
     Call<Measurement> sendMeasurement(@Body Measurement measurement);
+
+    @POST("auth/login")
+    Call<LoginResponse> login(@Body LoginRequest loginRequest);
 }
 

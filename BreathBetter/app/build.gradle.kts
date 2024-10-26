@@ -25,6 +25,10 @@ android {
             )
         }
     }
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -47,4 +51,6 @@ dependencies {
     androidTestImplementation(libs.core)
     androidTestImplementation(libs.rules)
     testImplementation(libs.mockito.mockito.core)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.livedata)
 }

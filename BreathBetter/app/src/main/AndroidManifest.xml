@@ -38,6 +38,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".LoginActivity"
+            android:exported="false" />
 
         <service
             android:name=".bluetooth.BeaconListeningService"

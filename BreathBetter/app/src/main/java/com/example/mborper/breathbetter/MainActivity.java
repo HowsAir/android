@@ -1,16 +1,13 @@
 package com.example.mborper.breathbetter;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -46,7 +43,6 @@ import retrofit2.Response;
  * date:  2024-10-07
  * last edited: 2024-10-23
  */
-
 public class MainActivity extends AppCompatActivity {
 
     /** Log tag for debugging. */
@@ -69,23 +65,50 @@ public class MainActivity extends AppCompatActivity {
     /** Tracks whether the service is bound to the activity. */
     private boolean isBound = false;
 
-    /**
-     * Called when the activity is created. Initializes the UI and sets up the service connection and observer.
-     *
-     * @param savedInstanceState Bundle containing the activity's previously saved state.
-     */
+    private SessionManager sessionManager;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this); // Enables edge-to-edge mode for the UI.
+        sessionManager = new SessionManager(this);
+
+        if (isTheUserLoggedIn()) return;
+
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
+        AdjustPadding();
 
         serviceConnection = new BeaconListeningServiceConnection();
-        AdjustPadding();
-        // Initializes the API client and service connection.
         apiService = ApiClient.getClient().create(ApiService.class);
-        // Observes the LiveData for any updates to the last measurement.
         lastMeasurementLiveData.observe(this, this::updateUI);
+    }
+
+    private boolean isTheUserLoggedIn() {
+        if (!sessionManager.isLoggedIn()) {
+            Intent loginIntent = new Intent(this, LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Class to handle the logout button and process its click.
+     */
+    public void onLogoutButtonClicked(View v) {
+        // Stop service and clean up
+        onStopServiceButtonClicked(null);
+
+        // Clear session
+        sessionManager.logout();
+
+        // Redirect to login
+        Intent loginIntent = new Intent(this, LoginActivity.class);
+        startActivity(loginIntent);
+        finish();
     }
 
     /**
@@ -265,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
         Call<Measurement> postCall = apiService.sendMeasurement(measurement);
         postCall.enqueue(new Callback<Measurement>() {
             @Override
-            public void onResponse(Call<Measurement> call, Response<Measurement> response) {
+            public void onResponse(@NonNull Call<Measurement> call, @NonNull Response<Measurement> response) {
                 if (response.isSuccessful()) {
                     Log.d(LOG_TAG, "Measurement sent successfully");
                 } else {
@@ -274,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<Measurement> call, Throwable t) {
+            public void onFailure(@NonNull Call<Measurement> call, @NonNull Throwable t) {
                 Log.e(LOG_TAG, "Error sending measurement: " + t.getMessage());
             }
         });
@@ -322,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Updates the UI Textviews related to the last measurements taken .
+     * Updates the UI Textview related to the last measurements taken .
      *
      * @param measurement The measurement to take data from.
      */
