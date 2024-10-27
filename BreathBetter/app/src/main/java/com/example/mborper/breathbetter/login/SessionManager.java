@@ -3,43 +3,42 @@ package com.example.mborper.breathbetter.login;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+// SessionManager.java
 public class SessionManager {
-    private static final String PREF_NAME = "BreathBetterSession";
-    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
-    private static final String KEY_USER_ID = "userId";
-    private static final String KEY_USER_EMAIL = "userEmail";
+    private static final String PREF_NAME = "LoginPrefs";
+    private static final String AUTH_TOKEN = "auth_token";
+    private static final String USER_EMAIL = "user_email";
 
-    private SharedPreferences pref;
+    private SharedPreferences prefs;
     private SharedPreferences.Editor editor;
     private Context context;
 
     public SessionManager(Context context) {
         this.context = context;
-        pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        editor = pref.edit();
+        prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        editor = prefs.edit();
     }
 
-    public void createLoginSession(String userId, String email) {
-        editor.putBoolean(KEY_IS_LOGGED_IN, true);
-        editor.putString(KEY_USER_ID, userId);
-        editor.putString(KEY_USER_EMAIL, email);
-        editor.commit();
+    public void saveAuthToken(String token) {
+        editor.putString(AUTH_TOKEN, token);
+        editor.apply();
+    }
+
+    public String getAuthToken() {
+        return prefs.getString(AUTH_TOKEN, null);
+    }
+
+    public void saveUserEmail(String email) {
+        editor.putString(USER_EMAIL, email);
+        editor.apply();
+    }
+
+    public void clearSession() {
+        editor.clear();
+        editor.apply();
     }
 
     public boolean isLoggedIn() {
-        return pref.getBoolean(KEY_IS_LOGGED_IN, false);
-    }
-
-    public void logout() {
-        editor.clear();
-        editor.commit();
-    }
-
-    public String getUserId() {
-        return pref.getString(KEY_USER_ID, null);
-    }
-
-    public String getUserEmail() {
-        return pref.getString(KEY_USER_EMAIL, null);
+        return getAuthToken() != null;
     }
 }

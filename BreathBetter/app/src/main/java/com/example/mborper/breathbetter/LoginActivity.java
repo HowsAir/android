@@ -2,104 +2,109 @@ package com.example.mborper.breathbetter;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Patterns;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 
-import com.example.mborper.breathbetter.databinding.ActivityLoginBinding;
-import com.example.mborper.breathbetter.login.LoginViewModel;
+import com.example.mborper.breathbetter.api.ApiClient;
+import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.login.SessionManager;
+import com.example.mborper.breathbetter.login.pojo.LoginRequest;
+import com.example.mborper.breathbetter.login.pojo.LoginResponse;
+
+import java.util.List;
+
+import okhttp3.Headers;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
-    private ActivityLoginBinding binding;
-    private LoginViewModel viewModel;
+    private EditText emailEdit, passwordEdit;
+    private Button loginButton;
+    private ProgressBar progressBar;
     private SessionManager sessionManager;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityLoginBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        setContentView(R.layout.activity_login);
 
         sessionManager = new SessionManager(this);
+        if (sessionManager.isLoggedIn()) {
+            // Navigate to main activity if already logged in
+            startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
+            finish();
+        }
 
+        emailEdit = findViewById(R.id.etEmail);
+        passwordEdit = findViewById(R.id.etPassword);
+        loginButton = findViewById(R.id.btnLogin);
+        progressBar = findViewById(R.id.progressBar);
 
-        viewModel = new ViewModelProvider(this).get(LoginViewModel.class);
-        setupObservers();
-        setupListeners();
+        loginButton.setOnClickListener(v -> performLogin());
     }
 
-    private void setupObservers() {
-        viewModel.getLoginState().observe(this, state -> {
-            switch (state.getStatus()) {
-                case LOADING:
-                    binding.progressBar.setVisibility(View.VISIBLE);
-                    binding.btnLogin.setEnabled(false);
-                    break;
-                case SUCCESS:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.btnLogin.setEnabled(true);
+    private void performLogin() {
+        String email = emailEdit.getText().toString().trim();
+        String password = passwordEdit.getText().toString().trim();
 
-                    String userId = state.getUserId();
-                    String email = state.getEmail();
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-                    // Crea la sesión de inicio de sesión aquí
-                    sessionManager.createLoginSession(userId, email);
+        progressBar.setVisibility(View.VISIBLE);
+        loginButton.setEnabled(false);
 
-                    // Redirige a MainActivity
-                    startActivity(new Intent(this, QRExplanationActivity.class));
-                    finish();
-                    break;
-                case ERROR:
-                    binding.progressBar.setVisibility(View.GONE);
-                    binding.btnLogin.setEnabled(true);
-                    Toast.makeText(this, state.getError(), Toast.LENGTH_LONG).show();
-                    break;
+        LoginRequest loginRequest = new LoginRequest(email, password);
+        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+
+        apiService.login(loginRequest).enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                progressBar.setVisibility(View.GONE);
+                loginButton.setEnabled(true);
+
+                if (response.isSuccessful()) {
+                    // Get auth token from cookie
+                    String authToken = null;
+                    Headers headers = response.headers();
+                    List<String> cookies = headers.values("Set-Cookie");
+                    for (String cookie : cookies) {
+                        if (cookie.startsWith("auth_token=")) {
+                            authToken = cookie.split(";")[0].substring("auth_token=".length());
+                            break;
+                        }
+                    }
+
+                    if (authToken != null) {
+                        // Save auth token and user email
+                        sessionManager.saveAuthToken(authToken);
+                        sessionManager.saveUserEmail(email);
+
+                        // Navigate to main activity
+                        startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
+                        finish();
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+                loginButton.setEnabled(true);
+                Toast.makeText(LoginActivity.this, "Network error: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private void setupListeners() {
-        binding.btnLogin.setOnClickListener(v -> {
-            String email = binding.etEmail.getText().toString();
-            String password = binding.etPassword.getText().toString();
-            if (validateInput(email, password)) {
-                viewModel.login(email, password);
-            }
-        });
-
-        // Opcional: Agregar listener para "Olvidaste tu contraseña"
-        binding.tvForgotPassword.setOnClickListener(v -> {
-            // Implementar la lógica para recuperar contraseña
-        });
-    }
-
-    private boolean validateInput(String email, String password) {
-        if (email.isEmpty()) {
-            binding.tilEmail.setError("Email is required");
-            return false;
-        }
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.tilEmail.setError("Invalid email format");
-            return false;
-        }
-        if (password.isEmpty()) {
-            binding.tilPassword.setError("Password is required");
-            return false;
-        }
-
-        binding.tilEmail.setError(null);
-        binding.tilPassword.setError(null);
-        return true;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        binding = null;
     }
 }

@@ -1,5 +1,12 @@
 package com.example.mborper.breathbetter.api;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import okhttp3.Cookie;
+import okhttp3.CookieJar;
+import okhttp3.HttpUrl;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import okhttp3.OkHttpClient;
@@ -30,11 +37,25 @@ public class ApiClient {
             interceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // Logs HTTP request/response bodies
 
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(interceptor) // Add logging interceptor
+                    .addInterceptor(interceptor) // Your existing interceptor
+                    .cookieJar(new CookieJar() {  // Add the cookie jar here
+                        private final HashMap<String, List<Cookie>> cookieStore = new HashMap<>();
+
+                        @Override
+                        public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
+                            cookieStore.put(url.host(), cookies);
+                        }
+
+                        @Override
+                        public List<Cookie> loadForRequest(HttpUrl url) {
+                            List<Cookie> cookies = cookieStore.get(url.host());
+                            return cookies != null ? cookies : new ArrayList<>();
+                        }
+                    })
                     .build();
 
             retrofit = new Retrofit.Builder()
-                    .baseUrl("http://192.168.1.132:3000/api/v1/") // Base URL of the API
+                    .baseUrl("http://192.168.1.150:3000/api/v1/") // Base URL of the API
                     .addConverterFactory(GsonConverterFactory.create()) // Use Gson to handle JSON
                     .client(client) // Use OkHttpClient for handling requests
                     .build();

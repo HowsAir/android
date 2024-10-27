@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         onStopServiceButtonClicked(null);
 
         // Clear session
-        sessionManager.logout();
+        sessionManager.clearSession();
 
         // Redirect to login
         Intent loginIntent = new Intent(this, LoginActivity.class);

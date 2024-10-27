@@ -6,6 +6,7 @@ public class User {
     private String name;
     private String surname;
     private String email;
+    private String password;
     private String phone;
     private String country;
     private String city;
@@ -13,13 +14,8 @@ public class User {
     private String address;
     private int roleId;
 
-    // Getters y Setters
     public int getIdUser() {
         return idUser;
-    }
-
-    public void setIdUser(int idUser) {
-        this.idUser = idUser;
     }
 
     public String getName() {
@@ -46,51 +42,35 @@ public class User {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
+    public String getPassword() {
+        return email;
     }
 
-    public void setPhone(String phone) {
-        this.phone = phone;
+    public void setPassword(String password) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
     }
 
     public String getCountry() {
         return country;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
     public String getCity() {
         return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
     }
 
     public String getZip() {
         return zip;
     }
 
-    public void setZip(String zip) {
-        this.zip = zip;
-    }
-
     public String getAddress() {
         return address;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public int getRoleId() {
         return roleId;
-    }
-
-    public void setRoleId(int roleId) {
-        this.roleId = roleId;
     }
 }
