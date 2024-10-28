@@ -20,25 +20,30 @@ import okhttp3.logging.HttpLoggingInterceptor;
  * This class sets up the base URL for the API, logging for HTTP requests, and includes a converter factory
  * to handle JSON responses using Gson.
  */
+import android.content.Context;
+
+import com.example.mborper.breathbetter.login.SessionManager;
+
 public class ApiClient {
 
-    // Static Retrofit instance, used to interact with the API.
     private static Retrofit retrofit = null;
-
     /**
      * Returns a Retrofit client instance. If the client is null, a new instance is created and configured
      * with a base URL, a JSON converter, and an HTTP logging interceptor.
      *
      * @return Retrofit instance for making API requests.
      */
-    public static Retrofit getClient() {
+    public static Retrofit getClient(Context context) {
         if (retrofit == null) {
+            SessionManager sessionManager = new SessionManager(context); // Initialize the session manager
+
             HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY); // Logs HTTP request/response bodies
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
             OkHttpClient client = new OkHttpClient.Builder()
-                    .addInterceptor(interceptor) // Your existing interceptor
-                    .cookieJar(new CookieJar() {  // Add the cookie jar here
+                    .addInterceptor(interceptor)
+                    .addInterceptor(new AuthInterceptor(sessionManager)) // Add the custom interceptor here
+                    .cookieJar(new CookieJar() {
                         private final HashMap<String, List<Cookie>> cookieStore = new HashMap<>();
 
                         @Override
@@ -55,9 +60,9 @@ public class ApiClient {
                     .build();
 
             retrofit = new Retrofit.Builder()
-                    .baseUrl("http://192.168.1.150:3000/api/v1/") // Base URL of the API
-                    .addConverterFactory(GsonConverterFactory.create()) // Use Gson to handle JSON
-                    .client(client) // Use OkHttpClient for handling requests
+                    .baseUrl("http://192.168.32.237:3000/api/v1/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .client(client)
                     .build();
         }
         return retrofit;

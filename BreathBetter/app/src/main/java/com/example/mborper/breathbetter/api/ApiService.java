@@ -10,6 +10,8 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
 
 /**
  * Author: Manuel Borregales
@@ -39,5 +41,14 @@ public interface ApiService {
 
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest loginRequest);
+
+    /**
+     * Links a node to the current user
+     *
+     * @param nodeId The ID of the node to link
+     * @return Call object encapsulating the response
+     */
+    @PUT("nodes/{nodeId}/link")
+    Call<Void> linkNodeToUser(@Path("nodeId") String nodeId);
 }
 
