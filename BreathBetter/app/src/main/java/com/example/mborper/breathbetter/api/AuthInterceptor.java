@@ -18,24 +18,23 @@ public class AuthInterceptor implements Interceptor {
     public Response intercept(Chain chain) throws IOException {
         Request originalRequest = chain.request();
 
-        // Avoid adding the token to the login request
+        // Evita agregar el token a la solicitud de inicio de sesión
         if (originalRequest.url().encodedPath().equals("/auth/login")) {
             return chain.proceed(originalRequest);
         }
 
-        // Get the token from sessionManager
+        // Obtén el token del sessionManager
         String authToken = sessionManager.getAuthToken();
 
-        // If the token is available, add it to the headers
+        // Si el token está disponible, agrégalo a las cookies
         if (authToken != null) {
-            Request.Builder requestBuilder = originalRequest.newBuilder()
-                    .header("Authorization", "Bearer " + authToken); // Add your auth token in the Authorization header
-            Request request = requestBuilder.build();
-            return chain.proceed(request);
+            Request modifiedRequest = originalRequest.newBuilder()
+                    .header("Cookie", "auth_token=" + authToken) // Agrega el auth token como cookie
+                    .build();
+            return chain.proceed(modifiedRequest);
         }
 
-        // If no token is available, proceed with the original request
+        // Si no hay un token disponible, procede con la solicitud original
         return chain.proceed(originalRequest);
     }
 }
-
