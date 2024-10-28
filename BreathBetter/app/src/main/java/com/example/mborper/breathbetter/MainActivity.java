@@ -74,17 +74,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(this);
 
-        if (isTheUserLoggedIn()) return;
+        //if (isTheUserLoggedIn()) return;
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         AdjustPadding();
 
         serviceConnection = new BeaconListeningServiceConnection();
-        apiService = ApiClient.getClient().create(ApiService.class);
+        apiService = ApiClient.getClient(this).create(ApiService.class);
         lastMeasurementLiveData.observe(this, this::updateUI);
     }
 
+    /*
     private boolean isTheUserLoggedIn() {
         if (!sessionManager.isLoggedIn()) {
             Intent loginIntent = new Intent(this, LoginActivity.class);
@@ -94,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
+    */
 
     /**
      * Class to handle the logout button and process its click.

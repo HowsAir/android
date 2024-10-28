@@ -51,6 +51,9 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         sessionManager = new SessionManager(this);
+
+        //Si esta loggeado pero no ha vinculado el sensor, (eso lo comprobamos llamando a un endpoint
+        // de la api), lo mandamos al QRExplanationActivity, si ya esta vinculado, lo mandamos a MainActivity
         if (sessionManager.isLoggedIn()) {
             // Redirects to main activity if the user is already logged in
             startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
@@ -85,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.setEnabled(false);
 
         LoginRequest loginRequest = new LoginRequest(email, password);
-        ApiService apiService = ApiClient.getClient().create(ApiService.class);
+        ApiService apiService = ApiClient.getClient(this).create(ApiService.class);
 
         apiService.login(loginRequest).enqueue(new Callback<LoginResponse>() {
             /**
@@ -116,9 +119,10 @@ public class LoginActivity extends AppCompatActivity {
                     if (authToken != null) {
                         // Save auth token and user email in session manager
                         sessionManager.saveAuthToken(authToken);
-                        sessionManager.saveUserEmail(email);
 
                         // Redirects to main activity
+                        //Aqui se ejecutaria la misma comprobacion de la api, que hay en oncreate
+                        //o parecida
                         startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
                         finish();
                     } else {
