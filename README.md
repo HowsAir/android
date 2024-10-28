@@ -1,8 +1,8 @@
-# BreathBetter Android Application
+# HowsAir Android Application
 
 ## Description
 
-BreathBetter is an organization focused on improving air quality awareness by providing real-time data on air pollution. The Android application, which includes the BeaconListeningService, is part of a larger system consisting of an Arduino beacon transmitter and a web platform. The BeaconListeningService scans for Bluetooth Low Energy (BLE) beacons transmitted by air quality sensors and processes the received data (ozone concentration, temperature) to provide real-time information on air quality.
+HowsAir is an organization focused on improving air quality awareness by providing real-time data on air pollution. The Android application, which includes the BeaconListeningService, is part of a larger system consisting of an Arduino beacon transmitter and a web platform. The BeaconListeningService scans for Bluetooth Low Energy (BLE) beacons transmitted by air quality sensors and processes the received data (ozone concentration, temperature) to provide real-time information on air quality.
 
 This service is a crucial part of the Android app, responsible for continuously scanning and posting measurements to the database while the app runs in the background.
 
@@ -59,9 +59,6 @@ private void processScanResult(ScanResult result) {
     }
 }
 ```
-## Repository
-Link to the BreathBetter Android Repository:
-https://github.com/BreathBetter/android-app
 
 ## FAQ
 Q: What permissions are required for the service?
@@ -81,7 +78,7 @@ To verify that the BeaconListeningService works as intended:
 
 1. Enable Bluetooth and location services on your Android device.
 2. Run the Android application with the BeaconListeningService.
-3. Use a BLE beacon transmitter (such as the BreathBetter Arduino beacon) to broadcast air quality data.
+3. Use a BLE beacon transmitter (such as the Breeze from HowsAir) to broadcast air quality data.
 4. Monitor the logs to confirm that the service successfully detects and processes the beacons.
 5. The air quality data (e.g., ozone concentration and temperature) should appear in the app's UI or logs.
 
