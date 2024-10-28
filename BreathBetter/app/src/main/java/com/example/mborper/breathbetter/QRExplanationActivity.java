@@ -1,5 +1,6 @@
 package com.example.mborper.breathbetter;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -16,6 +17,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.mborper.breathbetter.api.ApiClient;
+import com.example.mborper.breathbetter.api.ApiService;
+import com.example.mborper.breathbetter.login.SessionManager;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 /**
  * It's the activity that asks the user for the permissions needed for qr scanning
  *
@@ -26,6 +35,8 @@ public class QRExplanationActivity extends AppCompatActivity {
 
     private final int QR_REQUEST_CODE = 24;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
+    private ApiService apiService;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +44,9 @@ public class QRExplanationActivity extends AppCompatActivity {
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_qr_explanation);
+
+        apiService = ApiClient.getClient(this).create(ApiService.class);
+        sessionManager = new SessionManager(this);
     }
 
     /**
@@ -105,10 +119,46 @@ public class QRExplanationActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == QR_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            String qrResult = data.getStringExtra(QRScannerActivity.QR_RESULT);
+            String nodeId = data.getStringExtra(QRScannerActivity.QR_RESULT);
 
-            //Here we would call the API to linkNodeToUser
-            Toast.makeText(this, "QR escaneado: " + qrResult, Toast.LENGTH_LONG).show();
+
+            linkNodeToUser(this, nodeId);
+
+            sessionManager.saveNodeId(nodeId);
+            
+            Toast.makeText(this, "QR escaneado: " + nodeId, Toast.LENGTH_LONG).show();
         }
+    }
+
+    /**
+     * Sends the nodeId to the API via HTTP put request.
+     *
+     *                   nodeId: String   ---> linkNodeToUser()
+     *
+     * @param nodeId String
+     */
+    private void linkNodeToUser(Context context, String nodeId) {
+        apiService.linkNodeToUser(nodeId)
+                .enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+
+                            // El nodo se vinculó exitosamente
+                            Toast.makeText(context, "Nodo vinculado exitosamente", Toast.LENGTH_SHORT).show();
+
+                            startActivity(new Intent(QRExplanationActivity.this, MainActivity.class));
+                        } else {
+                            // Manejar error de la API
+                            Toast.makeText(context, "Error al vincular el nodo", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        // Manejar error de red
+                        Toast.makeText(context, "Error de conexión", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
