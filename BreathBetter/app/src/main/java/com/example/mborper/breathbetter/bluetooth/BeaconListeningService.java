@@ -267,8 +267,7 @@ public class BeaconListeningService extends Service {
         if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
             // Get ppm an temperature
             Measurement newMeasurement = new Measurement();
-            newMeasurement.setPpm(Utilities.bytesToInt(tib.getMajor()));
-            newMeasurement.setTemperature(Utilities.bytesToInt(tib.getMinor()));
+            newMeasurement.setO3Value(Utilities.bytesToInt(tib.getMajor()));
 
             // Get location for the measurement
             LocationUtils locationUtils = new LocationUtils(this);
@@ -285,10 +284,9 @@ public class BeaconListeningService extends Service {
                     measurementCallback.onMeasurementReceived(newMeasurement);
                 }
 
-                gasAlertManager.checkAndAlert(newMeasurement.getPpm());
+                gasAlertManager.checkAndAlert(newMeasurement.getO3Value());
 
-                Log.d("main", "ppm" + lastMeasurement.getPpm());
-                Log.d("main", "temp" + lastMeasurement.getTemperature());
+                Log.d("main", "ppm" + lastMeasurement.getO3Value());
                 Log.d("main", "lat" + lastMeasurement.getLatitude());
                 Log.d("main", "long" + lastMeasurement.getLongitude());
             }

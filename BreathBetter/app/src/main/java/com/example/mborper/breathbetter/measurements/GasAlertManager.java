@@ -173,30 +173,30 @@ public class GasAlertManager {
      * sends an alert with the gas concentration, the current timestamp, and the
      * user's location.
      *
-     * @param ppm The detected gas concentration in PPM.
+     * @param o3Value The detected gas concentration in PPM.
      */
-    public void checkAndAlert(int ppm) {
+    public void checkAndAlert(int o3Value) {
         // Update timestamp from the last measurement
         lastBeaconTimestamp = System.currentTimeMillis();
 
         // Verify errors from the sensor
-        if (ppm < 0) {
+        if (o3Value < 0) {
             sendSensorErrorNotification("LECTURA_INVÁLIDA",
-                    "El sensor está reportando valores negativos: " + ppm + " PPM");
+                    "El sensor está reportando valores negativos: " + o3Value + " PPM");
             return;
         }
 
-        if (ppm > PPM_MAX_VALID_VALUE) {
+        if (o3Value > PPM_MAX_VALID_VALUE) {
             sendSensorErrorNotification("LECTURA_FUERA_DE_RANGO",
-                    "El sensor está reportando valores superiores al máximo válido: " + ppm + " PPM");
+                    "El sensor está reportando valores superiores al máximo válido: " + o3Value + " PPM");
             return;
         }
 
         // If there are not errors, check if the gas level is dangerous
-        if (ppm > PPM_DANGER_THRESHOLD) {
+        if (o3Value > PPM_DANGER_THRESHOLD) {
             String timestamp = TimeUtils.getCurrentTimestamp();
             String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
-            sendAlert(ppm, timestamp, location);
+            sendAlert(o3Value, timestamp, location);
         }
     }
 
@@ -206,11 +206,11 @@ public class GasAlertManager {
      * The notification contains details such as the gas concentration in PPM, the
      * timestamp of detection, and the user's location. It also plays an alert sound.
      *
-     * @param ppm The gas concentration in PPM.
+     * @param o3Value The gas concentration in PPM.
      * @param timestamp The timestamp when the gas level was detected.
      * @param location The user's current location.
      */
-    private void sendAlert(int ppm, String timestamp, String location) {
+    private void sendAlert(int o3Value, String timestamp, String location) {
         // Play alert sound
         if (alertSound != null && !alertSound.isPlaying()) {
             alertSound.start();
@@ -227,9 +227,9 @@ public class GasAlertManager {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ALERT_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("¡Alerta de Gas!")
-                .setContentText("Nivel de gas peligroso detectado: " + ppm + " PPM")
+                .setContentText("Nivel de gas peligroso detectado: " + o3Value + " PPM")
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("Nivel de gas peligroso detectado: " + ppm + " PPM\n" +
+                        .bigText("Nivel de gas peligroso detectado: " + o3Value + " PPM\n" +
                                 "Hora: " + timestamp + "\n" +
                                 "Ubicación: " + location))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

@@ -11,53 +11,30 @@ import java.io.Serializable;
  */
 public class Measurement implements Serializable {
 
-    private int ppm;
-    private int temperature;
+    private int o3Value;
     private double latitude;
     private double longitude;
 
     /**
-     * Returns the PPM (parts per million) value of the measurement.
+     * Returns the O3 Value (parts per million) value of the measurement.
      * <p>
-     *      getPpm() ---> Natural:ppm
+     *      getO3Value() ---> Natural:o3Value
      *
-     * @return ppm value as a double.
+     * @return o3Value as a double.
      */
-    public int getPpm() {
-        return ppm;
+    public int getO3Value() {
+        return o3Value;
     }
 
     /**
-     * Sets the PPM (parts per million) value for the measurement.
+     * Sets the o3Value (parts per million) value for the measurement.
      * <p>
-     *      Natural:Ppm ---> setPpm()
+     *      Natural:o3Value ---> setO3Value()
      *
-     * @param ppm The PPM value to be set.
+     * @param o3Value The o3Value to be set.
      */
-    public void setPpm(int ppm) {
-        this.ppm = ppm;
-    }
-
-    /**
-     * Returns the temperature value of the measurement.
-     *<p>
-     *      getTemperature() ---> Natural:temperature
-     *
-     * @return temperature as a double.
-     */
-    public int getTemperature() {
-        return temperature;
-    }
-
-    /**
-     * Sets the temperature value for the measurement.
-     *<p>
-     *      Natural:temperature ---> setTemperature()
-     *
-     * @param temperature The temperature value to be set.
-     */
-    public void setTemperature(int temperature) {
-        this.temperature = temperature;
+    public void setO3Value(int o3Value) {
+        this.o3Value = o3Value;
     }
 
     /**

@@ -262,8 +262,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Sends the provided measurement to the API via HTTP post request.
      * <p>
-     *      Measurement { ppm: Natural
-     *                   temperature: Natural   ---> sendMeasurementToApi()
+     *      Measurement { o3Value: Natural
+     *                                  ---> sendMeasurementToApi()
      *                   latitude: Real
      *                   longitude: Real }
      *
@@ -336,16 +336,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateUI(Measurement measurement) {
         TextView ppmTextView = findViewById(R.id.ppmTextView);
-        TextView tempTextView = findViewById(R.id.tempTextView);
         TextView latLongTextView = findViewById(R.id.latLongTextView);
 
         if (measurement != null) {
-            ppmTextView.setText("PPM: " + measurement.getPpm());
-            tempTextView.setText("Temperature: " + measurement.getTemperature());
+            ppmTextView.setText("O3 Value (PPM): " + measurement.getO3Value());
             latLongTextView.setText("Lat: " + measurement.getLatitude() + ", Long: " + measurement.getLongitude());
         } else {
             ppmTextView.setText("PPM: N/A");
-            tempTextView.setText("Temperature: N/A");
             latLongTextView.setText("Lat: N/A, Long: N/A");
         }
     }
