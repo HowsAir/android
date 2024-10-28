@@ -9,10 +9,15 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Looper;
+
 import androidx.core.app.NotificationCompat;
 
 import com.example.mborper.breathbetter.MainActivity;
 import com.example.mborper.breathbetter.R;
+
+import android.os.Handler;
+
 
 /**
  * GasAlertManager
@@ -37,17 +42,32 @@ public class GasAlertManager {
     // Channel ID for the gas alert notification
     private static final String ALERT_CHANNEL_ID = "GAS_ALERT_CHANNEL";
 
+    // Channel ID for the error notification
+    private static final String ERROR_CHANNEL_ID = "SENSOR_ERROR_CHANNEL";
+
     // ID for the gas alert notification
     private static final int ALERT_NOTIFICATION_ID = 2;
 
+    // ID for the error notification
+    private static final int ERROR_NOTIFICATION_ID = 3;
+
     // Gas concentration threshold in PPM (Parts Per Million) to trigger an alert
     private static final int PPM_DANGER_THRESHOLD = 100; // Adjust based on official guidelines
+
+    // Gas concentration threshold in PPM (Parts Per Million) to trigger an error
+    private static final int PPM_MAX_VALID_VALUE = 1000;
+
+    // Timeout for the BLE scan to throw error
+    private static final long BEACON_TIMEOUT_MS = 30000;
 
     // Context, NotificationManager, LocationUtils and MediaPlayer instances
     private final Context context;
     private final NotificationManager notificationManager;
     private final LocationUtils locationUtils;
     private MediaPlayer alertSound;
+    private long lastBeaconTimestamp;
+    private final Handler timeoutHandler;
+    private final Runnable timeoutChecker;
 
     /**
      * Constructor for GasAlertManager
@@ -62,7 +82,19 @@ public class GasAlertManager {
         this.notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         this.locationUtils = new LocationUtils(context);
         initializeAlertChannel(); // Set up the notification channel
+        initializeErrorChannel(); // Set up the error notification channel
         initializeAlertSound(); // Prepare the alert sound
+
+        // Inicializar el handler y runnable para verificar timeouts
+        timeoutHandler = new Handler(Looper.getMainLooper());
+        timeoutChecker = new Runnable() {
+            @Override
+            public void run() {
+                checkBeaconTimeout();
+                timeoutHandler.postDelayed(this, 5000); // Verify every 5 seconds
+            }
+        };
+        startTimeoutChecking();
     }
 
     /**
@@ -92,6 +124,32 @@ public class GasAlertManager {
     }
 
     /**
+     * Creates the error notification channel for error alerts.
+     * <p>
+     * This channel is required for Android 8.0 and above to issue notifications.
+     * The channel enables vibration and sets a default sound to notify the user
+     * of errors in the sensor.
+     */
+    private void initializeErrorChannel() {
+        NotificationChannel errorChannel = new NotificationChannel(
+                ERROR_CHANNEL_ID,
+                "Sensor Error Channel",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        errorChannel.setDescription("Alertas de errores del sensor");
+        errorChannel.enableVibration(true);
+        errorChannel.setVibrationPattern(new long[]{0, 500, 500, 500});
+
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                .build();
+        errorChannel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), audioAttributes);
+
+        notificationManager.createNotificationChannel(errorChannel);
+    }
+
+    /**
      * Initializes the sound to be played when a gas alert is triggered.
      * <p>
      * Uses the default alarm sound from the device's ringtone manager and sets
@@ -113,10 +171,27 @@ public class GasAlertManager {
      * @param ppm The detected gas concentration in PPM.
      */
     public void checkAndAlert(int ppm) {
+        // Update timestamp from the last measurement
+        lastBeaconTimestamp = System.currentTimeMillis();
+
+        // Verify errors from the sensor
+        if (ppm < 0) {
+            sendSensorErrorNotification("LECTURA_INVÁLIDA",
+                    "El sensor está reportando valores negativos: " + ppm + " PPM");
+            return;
+        }
+
+        if (ppm > PPM_MAX_VALID_VALUE) {
+            sendSensorErrorNotification("LECTURA_FUERA_DE_RANGO",
+                    "El sensor está reportando valores superiores al máximo válido: " + ppm + " PPM");
+            return;
+        }
+
+        // If there are not errors, check if the gas level is dangerous
         if (ppm > PPM_DANGER_THRESHOLD) {
             String timestamp = TimeUtils.getCurrentTimestamp();
             String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
-            sendAlert(ppm, timestamp, location); // Trigger alert notification and sound
+            sendAlert(ppm, timestamp, location);
         }
     }
 
@@ -158,6 +233,53 @@ public class GasAlertManager {
 
         // Issue the notification
         notificationManager.notify(ALERT_NOTIFICATION_ID, builder.build());
+    }
+
+    /**
+     * Sends a notification and plays an alert sound when the sensor is not working properly.
+     * <p>
+     * The notification contains details such as the failure to read gas or the inactivity of the sensor
+     * //@param //ppm The gas concentration in PPM.
+     * //@param //timestamp The timestamp when the gas level was detected.
+     * //@param //location The user's current location.
+     */
+    private void sendSensorErrorNotification(String errorType, String errorDetails) {
+        String timestamp = TimeUtils.getCurrentTimestamp();
+        String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
+
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context, 0, intent, PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ERROR_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("Error en Sensor de Gas")
+                .setContentText(errorType + ": " + errorDetails)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText("Error en el sensor de gas\n" +
+                                "Tipo de error: " + errorType + "\n" +
+                                "Detalles: " + errorDetails + "\n" +
+                                "Hora: " + timestamp + "\n" +
+                                "Ubicación: " + location))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        notificationManager.notify(ERROR_NOTIFICATION_ID, builder.build());
+    }
+
+    private void startTimeoutChecking() {
+        timeoutHandler.post(timeoutChecker);
+    }
+
+    private void checkBeaconTimeout() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastBeaconTimestamp > BEACON_TIMEOUT_MS) {
+            sendSensorErrorNotification("SIN_SEÑAL",
+                    "No se han recibido datos del sensor en los últimos 30 segundos");
+        }
     }
 
     /**
