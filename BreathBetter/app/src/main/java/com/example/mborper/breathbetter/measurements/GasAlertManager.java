@@ -68,6 +68,7 @@ public class GasAlertManager {
     private long lastBeaconTimestamp;
     private final Handler timeoutHandler;
     private final Runnable timeoutChecker;
+    public boolean isErrorNotified;
 
     /**
      * Constructor for GasAlertManager
@@ -84,13 +85,17 @@ public class GasAlertManager {
         initializeAlertChannel(); // Set up the notification channel
         initializeErrorChannel(); // Set up the error notification channel
         initializeAlertSound(); // Prepare the alert sound
+        isErrorNotified = false;
 
-        // Inicializar el handler y runnable para verificar timeouts
+        lastBeaconTimestamp = System.currentTimeMillis();
         timeoutHandler = new Handler(Looper.getMainLooper());
         timeoutChecker = new Runnable() {
             @Override
             public void run() {
-                checkBeaconTimeout();
+                if (!isErrorNotified) {
+                    checkBeaconTimeout();
+                }
+                checkBeaconTime();
                 timeoutHandler.postDelayed(this, 5000); // Verify every 5 seconds
             }
         };
@@ -279,6 +284,14 @@ public class GasAlertManager {
         if (currentTime - lastBeaconTimestamp > BEACON_TIMEOUT_MS) {
             sendSensorErrorNotification("SIN_SEÑAL",
                     "No se han recibido datos del sensor en los últimos 30 segundos");
+            isErrorNotified = true;
+        }
+    }
+
+    private void checkBeaconTime() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastBeaconTimestamp < BEACON_TIMEOUT_MS) {
+            isErrorNotified = false;
         }
     }
 
