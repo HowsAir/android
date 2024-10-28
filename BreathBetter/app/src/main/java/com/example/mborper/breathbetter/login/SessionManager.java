@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 /**
  * Manages user session data for the BreathBetter application,
  * handling storage and retrieval of session information such as the
- * authentication token and user email.
+ * authentication token and node ID.
  *
  * @author Manuel Borregales
  * @since 2024-10-28
@@ -14,7 +14,7 @@ import android.content.SharedPreferences;
 public class SessionManager {
     private static final String PREF_NAME = "LoginPrefs";
     private static final String AUTH_TOKEN = "auth_token";
-    private static final String USER_EMAIL = "user_email";
+    private static final String NODE_ID = "nodeId"; // Nueva clave para el nodeId
 
     private SharedPreferences prefs;
     private SharedPreferences.Editor editor;
@@ -51,17 +51,26 @@ public class SessionManager {
     }
 
     /**
-     * Saves the user's email in shared preferences.
+     * Saves the node ID in shared preferences.
      *
-     * @param email the email address to save.
+     * @param nodeId the node ID to save.
      */
-    public void saveUserEmail(String email) {
-        editor.putString(USER_EMAIL, email);
+    public void saveNodeId(String nodeId) {
+        editor.putString(NODE_ID, nodeId);
         editor.apply();
     }
 
     /**
-     * Clears all session data, including the authentication token and email.
+     * Retrieves the node ID from shared preferences.
+     *
+     * @return the stored node ID, or {@code null} if not found.
+     */
+    public String getNodeId() {
+        return prefs.getString(NODE_ID, null);
+    }
+
+    /**
+     * Clears all session data, including the authentication token and node ID.
      */
     public void clearSession() {
         editor.clear();
