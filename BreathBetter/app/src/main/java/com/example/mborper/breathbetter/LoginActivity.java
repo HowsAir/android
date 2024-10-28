@@ -52,11 +52,26 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
 
-        //Si esta loggeado pero no ha vinculado el sensor, (eso lo comprobamos llamando a un endpoint
-        // de la api), lo mandamos al QRExplanationActivity, si ya esta vinculado, lo mandamos a MainActivity
+        //Si esta loggeado pero no ha vinculado el sensor, , lo mandamos al QRExplanationActivity, si ya esta vinculado, lo mandamos a MainActivity
         if (sessionManager.isLoggedIn()) {
             // Redirects to main activity if the user is already logged in
-            startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
+
+            //Puede darse que ya haya vinculado el nodo o no lo haya vinculado,
+
+            //SUSTITUIR SPRINT 2 POR LLAMADA A ENDPOINT QUE COMPRUEBE SI ESTE USER YA TIENE NODO
+            //SI NO TIENE NODO LO MANDAMOS A QR SI YA TIENE OBTENEMOS SU NODEID LO GUARDAMOS Y
+            //LO MANDAMOS A MAIN ACTIVITY
+
+            //(eso lo comprobamos llamando a un endpoint
+            // de la api)
+            if(sessionManager.getNodeId() == null){
+                startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
+            }
+            else{
+                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            }
+
+
             finish();
         }
 
