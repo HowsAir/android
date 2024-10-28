@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">HowsAir</string>
+    <string name="start_searching">Start Searching</string>
+    <string name="stop_searching">Stop Searching</string>
+    <string name="make_request">Make Request</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="Scan_QR">Vincular QR</string>
+</resources>

@@ -1,0 +1,48 @@
+package com.example.mborper.breathbetter;
+
+// MeasurementTest.java
+import static org.junit.Assert.assertEquals;
+
+import com.example.mborper.breathbetter.measurements.Measurement;
+
+import org.junit.Before;
+import org.junit.Test;
+
+public class MeasurementTest {
+
+    private Measurement measurement;
+
+    @Before
+    public void setUp() {
+        measurement = new Measurement();
+    }
+
+    @Test
+    public void testSetAndGetPpm() {
+        int ppm = 500;
+        measurement.setPpm(ppm);
+        assertEquals(ppm, measurement.getPpm(), 0.001);
+    }
+
+    @Test
+    public void testSetAndGetTemperature() {
+        int temperature = 25;
+        measurement.setTemperature(temperature);
+        assertEquals(temperature, measurement.getTemperature(), 0.001);
+    }
+
+    @Test
+    public void testSetAndGetLatitude() {
+        double latitude = 40.7128;
+        measurement.setLatitude(latitude);
+        assertEquals(latitude, measurement.getLatitude(), 0.001);
+    }
+
+    @Test
+    public void testSetAndGetLongitude() {
+        double longitude = -74.0060;
+        measurement.setLongitude(longitude);
+        assertEquals(longitude, measurement.getLongitude(), 0.001);
+    }
+}
+
