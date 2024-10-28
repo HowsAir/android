@@ -23,12 +23,28 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Handles user login functionality for the BreathBetter app, including
+ * validating user input, initiating the login request to the API, and handling
+ * login responses. If login is successful, the user is redirected to the main
+ * activity; otherwise, appropriate feedback is displayed.
+ *
+ * @author Manuel Borregales
+ * @since 2024-10-28
+ */
 public class LoginActivity extends AppCompatActivity {
     private EditText emailEdit, passwordEdit;
     private Button loginButton;
     private ProgressBar progressBar;
     private SessionManager sessionManager;
 
+    /**
+     * Initializes the activity. Sets up UI components, checks for existing user sessions,
+     * and redirects to the main activity if the user is already logged in.
+     *
+     * @param savedInstanceState If the activity is being reinitialized after previously being shut down,
+     *                           this Bundle contains the data it most recently supplied.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,19 +52,26 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
         if (sessionManager.isLoggedIn()) {
-            // Navigate to main activity if already logged in
+            // Redirects to main activity if the user is already logged in
             startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
             finish();
         }
 
+        // Initialize UI components
         emailEdit = findViewById(R.id.etEmail);
         passwordEdit = findViewById(R.id.etPassword);
         loginButton = findViewById(R.id.btnLogin);
         progressBar = findViewById(R.id.progressBar);
 
+        // Set up login button click listener
         loginButton.setOnClickListener(v -> performLogin());
     }
 
+    /**
+     * Validates the user's input, then initiates a login request through the API.
+     * If fields are empty, it prompts the user to fill in all fields.
+     * While the request is processed, the progress bar is shown, and the login button is disabled.
+     */
     private void performLogin() {
         String email = emailEdit.getText().toString().trim();
         String password = passwordEdit.getText().toString().trim();
@@ -65,13 +88,21 @@ public class LoginActivity extends AppCompatActivity {
         ApiService apiService = ApiClient.getClient().create(ApiService.class);
 
         apiService.login(loginRequest).enqueue(new Callback<LoginResponse>() {
+            /**
+             * Handles a successful login response from the API. If authentication is successful,
+             * it saves the user's auth token and email, then redirects to the main activity.
+             * If authentication fails, it shows an error message.
+             *
+             * @param call The call to the API that was executed.
+             * @param response The response returned by the API call.
+             */
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 progressBar.setVisibility(View.GONE);
                 loginButton.setEnabled(true);
 
                 if (response.isSuccessful()) {
-                    // Get auth token from cookie
+                    // Get auth token from the response cookies
                     String authToken = null;
                     Headers headers = response.headers();
                     List<String> cookies = headers.values("Set-Cookie");
@@ -83,11 +114,11 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     if (authToken != null) {
-                        // Save auth token and user email
+                        // Save auth token and user email in session manager
                         sessionManager.saveAuthToken(authToken);
                         sessionManager.saveUserEmail(email);
 
-                        // Navigate to main activity
+                        // Redirects to main activity
                         startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
                         finish();
                     } else {
@@ -98,6 +129,13 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
 
+            /**
+             * Handles a failure in the login process due to network or other issues.
+             * Displays an error message to the user with details about the failure.
+             *
+             * @param call The call to the API that was attempted.
+             * @param t The throwable representing the error that occurred.
+             */
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
