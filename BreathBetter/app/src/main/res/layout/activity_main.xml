@@ -25,24 +25,24 @@
         android:id="@+id/stopSearching"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
         android:onClick="onStopServiceButtonClicked"
         android:text="@string/stop_searching"
-        app:layout_constraintBottom_toTopOf="@+id/ppmTextView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/startSearching"
-        app:layout_constraintVertical_bias="0.506" />
+        app:layout_constraintTop_toBottomOf="@+id/startSearching" />
 
     <TextView
         android:id="@+id/ppmTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
         android:text="ppm"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="430dp" />
+        app:layout_constraintTop_toBottomOf="@+id/stopSearching" />
 
     <TextView
         android:id="@+id/latLongTextView"
