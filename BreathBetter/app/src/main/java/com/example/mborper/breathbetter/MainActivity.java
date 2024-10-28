@@ -74,8 +74,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(this);
 
-        //if (isTheUserLoggedIn()) return;
-
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         AdjustPadding();
@@ -84,18 +82,6 @@ public class MainActivity extends AppCompatActivity {
         apiService = ApiClient.getClient(this).create(ApiService.class);
         lastMeasurementLiveData.observe(this, this::updateUI);
     }
-
-    /*
-    private boolean isTheUserLoggedIn() {
-        if (!sessionManager.isLoggedIn()) {
-            Intent loginIntent = new Intent(this, LoginActivity.class);
-            startActivity(loginIntent);
-            finish();
-            return true;
-        }
-        return false;
-    }
-    */
 
     /**
      * Class to handle the logout button and process its click.
@@ -183,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
         if (lastMeasurement != null) {
             sendMeasurementToApi(lastMeasurement); // Sends the current measurement to the API.
         } else {
-            showToast("No measurement available to send");
             if (beaconService != null) {
                 lastMeasurement = beaconService.getLastMeasurement();
                 if (lastMeasurement != null) {
@@ -191,8 +176,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     showToast("No measurement available from service");
                 }
-            } else {
-                showToast("Service not bound");
             }
         }
     }
