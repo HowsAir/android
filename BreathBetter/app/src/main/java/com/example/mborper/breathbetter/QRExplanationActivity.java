@@ -35,6 +35,8 @@ public class QRExplanationActivity extends AppCompatActivity {
 
     private final int QR_REQUEST_CODE = 24;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
+    private final int MANUAL_INPUT_REQUEST_CODE = 25;
+
     private ApiService apiService;
     private SessionManager sessionManager;
 
@@ -47,6 +49,10 @@ public class QRExplanationActivity extends AppCompatActivity {
 
         apiService = ApiClient.getClient(this).create(ApiService.class);
         sessionManager = new SessionManager(this);
+
+        // Click listener for the manual input button
+        findViewById(R.id.buttonNocamera).setOnClickListener(v -> startManualInput());
+
     }
 
     /**
@@ -105,6 +111,11 @@ public class QRExplanationActivity extends AppCompatActivity {
         }
     }
 
+    private void startManualInput() {
+        Intent intent = new Intent(this, ManualInputActivity.class);
+        startActivityForResult(intent, MANUAL_INPUT_REQUEST_CODE);
+    }
+
 
     /**
      * Called when an activity that was launched exits, giving you the requestCode you started it with,
@@ -118,15 +129,20 @@ public class QRExplanationActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == QR_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            String nodeId = data.getStringExtra(QRScannerActivity.QR_RESULT);
+        if (resultCode == RESULT_OK && data != null) {
+            String nodeId = null;
 
+            if (requestCode == QR_REQUEST_CODE) {
+                nodeId = data.getStringExtra(QRScannerActivity.QR_RESULT);
+            } else if (requestCode == MANUAL_INPUT_REQUEST_CODE) {
+                nodeId = data.getStringExtra(ManualInputActivity.MANUAL_RESULT);
+            }
 
-            linkNodeToUser(this, nodeId);
-
-            sessionManager.saveNodeId(nodeId);
-            
-            Toast.makeText(this, "QR escaneado: " + nodeId, Toast.LENGTH_LONG).show();
+            if (nodeId != null) {
+                linkNodeToUser(this, nodeId);
+                sessionManager.saveNodeId(nodeId);
+                Toast.makeText(this, "ID del nodo: " + nodeId, Toast.LENGTH_LONG).show();
+            }
         }
     }
 
