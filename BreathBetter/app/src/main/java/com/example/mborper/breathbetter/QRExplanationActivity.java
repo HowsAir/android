@@ -111,6 +111,13 @@ public class QRExplanationActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Starts the ManualInputActivity for manual node ID entry. This method is called when
+     * the user chooses to enter the node ID manually instead of scanning a QR code.
+     *
+     * The method creates an intent to launch ManualInputActivity and starts it
+     * with startActivityForResult to receive the entered node ID when the activity finishes.
+     */
     private void startManualInput() {
         Intent intent = new Intent(this, ManualInputActivity.class);
         startActivityForResult(intent, MANUAL_INPUT_REQUEST_CODE);

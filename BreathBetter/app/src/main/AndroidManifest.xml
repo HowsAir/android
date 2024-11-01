@@ -38,7 +38,7 @@
             android:exported="false">
         </activity>
 
-        <activity android:name=".QRExplanationActivity"
+        <activity android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,7 +48,7 @@
         </activity>
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".QRExplanationActivity"
             android:exported="false" />
 
         <activity
