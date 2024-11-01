@@ -11,7 +11,10 @@ import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 
+import com.example.mborper.breathbetter.login.SessionManager;
+
 import java.util.concurrent.Executor;
+
 
 /**
  * Activity that handles biometric authentication at app startup.
@@ -25,11 +28,21 @@ public class BiometricAuthActivity extends AppCompatActivity {
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_biometric_auth);
+
+        sessionManager = new SessionManager(this);
+
+        // Check if user is logged in
+        if (!sessionManager.isLoggedIn()) {
+            // If not logged in, go directly to login activity
+            proceedToLoginActivity();
+            return;
+        }
 
         // Check if biometric authentication is available
         if (isBiometricAvailable()) {
@@ -124,8 +137,9 @@ public class BiometricAuthActivity extends AppCompatActivity {
                                     "Error de autenticación: " + errString,
                                     Toast.LENGTH_SHORT).show();
                         }
-                        // Close the app on authentication error
-                        finish();
+                        // On authentication error, log out the user and go to login
+                        sessionManager.clearSession();
+                        proceedToLoginActivity();
                     }
 
                     @Override
@@ -153,13 +167,25 @@ public class BiometricAuthActivity extends AppCompatActivity {
     }
 
     /**
+     * Proceeds to the Login activity after a failed biometric authentication
+     */
+    private void proceedToLoginActivity() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+    /**
      * Proceeds to the next activity after successful authentication or when
      * biometric authentication is not available.
      */
     private void proceedToNextActivity() {
-        // Replace LoginActivity.class with your actual main/login activity
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
+        // Check if node is linked to determine next activity
+        if (sessionManager.getNodeId() == null) {
+            startActivity(new Intent(this, QRExplanationActivity.class));
+        } else {
+            startActivity(new Intent(this, MainActivity.class));
+        }
         finish();
     }
 }
