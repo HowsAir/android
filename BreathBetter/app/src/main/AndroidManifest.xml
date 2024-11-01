@@ -6,22 +6,20 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
-
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
     <uses-feature
         android:name="android.hardware.camera"
         android:required="true" />
-    <uses-permission android:name="android.permission.CAMERA"/>
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -33,12 +31,14 @@
         android:theme="@style/Theme.BreathBetter"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+
+
         <activity
             android:name=".MainActivity"
             android:exported="false">
         </activity>
 
-        <activity android:name=".LoginActivity"
+        <activity android:name=".QRExplanationActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -48,13 +48,17 @@
         </activity>
 
         <activity
-            android:name=".QRExplanationActivity"
+            android:name=".LoginActivity"
             android:exported="false" />
-
 
         <activity
             android:name=".QRScannerActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ManualInputActivity"
+            android:exported="false" />
+
 
         <service
             android:name=".bluetooth.BeaconListeningService"
