@@ -18,7 +18,7 @@ import java.util.concurrent.Executor;
  * If the device doesn't support biometric authentication or has no biometric data enrolled,
  * it will automatically proceed to the next activity.
  *
- * @author [Your Name]
+ * @author Alejandro Rosado
  */
 public class BiometricAuthActivity extends AppCompatActivity {
 
