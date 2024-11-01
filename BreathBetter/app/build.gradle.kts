@@ -54,4 +54,5 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)
     implementation (libs.code.scanner)
+    implementation(libs.biometric)
 }
