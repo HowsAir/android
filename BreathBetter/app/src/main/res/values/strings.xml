@@ -4,5 +4,6 @@
     <string name="stop_searching">Stop Searching</string>
     <string name="make_request">Make Request</string>
     <string name="logout">Cerrar sesión</string>
-    <string name="Scan_QR">Vincular QR</string>
+    <string name="Scan_QR">Vincular sensor con QR</string>
+    <string name="Scan_QR_NO_CAMERA">Vincular sin cámara</string>
 </resources>
