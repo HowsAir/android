@@ -40,17 +40,20 @@ public class BiometricAuthActivity extends AppCompatActivity {
         // Check if user is logged in
         if (!sessionManager.isLoggedIn()) {
             // If not logged in, go directly to login activity
-            proceedToLoginActivity();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
             return;
         }
 
-        // Check if biometric authentication is available
+        // User is logged in, proceed with biometric authentication
         if (isBiometricAvailable()) {
             setupBiometricAuth();
             showBiometricPrompt();
         } else {
-            // If biometric auth is not available, proceed to next activity
-            proceedToNextActivity();
+            // If biometric auth is not available, proceed to LoginActivity
+            // which will handle the navigation logic
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
         }
     }
 
@@ -124,7 +127,9 @@ public class BiometricAuthActivity extends AppCompatActivity {
                     @Override
                     public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                         super.onAuthenticationSucceeded(result);
-                        proceedToNextActivity();
+                        // Use LoginActivity's navigation logic
+                        startActivity(new Intent(BiometricAuthActivity.this, LoginActivity.class));
+                        finish();
                     }
 
                     @Override
@@ -139,7 +144,8 @@ public class BiometricAuthActivity extends AppCompatActivity {
                         }
                         // On authentication error, log out the user and go to login
                         sessionManager.clearSession();
-                        proceedToLoginActivity();
+                        startActivity(new Intent(BiometricAuthActivity.this, LoginActivity.class));
+                        finish();
                     }
 
                     @Override
@@ -164,28 +170,5 @@ public class BiometricAuthActivity extends AppCompatActivity {
      */
     private void showBiometricPrompt() {
         biometricPrompt.authenticate(promptInfo);
-    }
-
-    /**
-     * Proceeds to the Login activity after a failed biometric authentication
-     */
-    private void proceedToLoginActivity() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    /**
-     * Proceeds to the next activity after successful authentication or when
-     * biometric authentication is not available.
-     */
-    private void proceedToNextActivity() {
-        // Check if node is linked to determine next activity
-        if (sessionManager.getNodeId() == null) {
-            startActivity(new Intent(this, QRExplanationActivity.class));
-        } else {
-            startActivity(new Intent(this, MainActivity.class));
-        }
-        finish();
     }
 }
