@@ -180,15 +180,9 @@ public class GasAlertManager {
         lastBeaconTimestamp = System.currentTimeMillis();
 
         // Verify errors from the sensor
-        if (o3Value < 0) {
-            sendSensorErrorNotification("LECTURA_INVÁLIDA",
-                    "El sensor está reportando valores negativos: " + o3Value + " PPM");
-            return;
-        }
-
-        if (o3Value > PPM_MAX_VALID_VALUE) {
-            sendSensorErrorNotification("LECTURA_FUERA_DE_RANGO",
-                    "El sensor está reportando valores superiores al máximo válido: " + o3Value + " PPM");
+        if (o3Value < 0 || o3Value > PPM_MAX_VALID_VALUE) {
+            sendSensorErrorNotification("LECTURA_ERRONEA",
+                    "El sensor está reportando valores erroneos");
             return;
         }
 
@@ -260,10 +254,10 @@ public class GasAlertManager {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ERROR_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Error en Sensor de Gas")
+                .setContentTitle("Error en tu Nodo Sensor")
                 .setContentText(errorType + ": " + errorDetails)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("Error en el sensor de gas\n" +
+                        .bigText("Error en tu Nodo Sensor\n" +
                                 "Tipo de error: " + errorType + "\n" +
                                 "Detalles: " + errorDetails + "\n" +
                                 "Hora: " + timestamp + "\n" +
@@ -283,7 +277,7 @@ public class GasAlertManager {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastBeaconTimestamp > BEACON_TIMEOUT_MS) {
             sendSensorErrorNotification("SIN_SEÑAL",
-                    "No se han recibido datos del sensor en los últimos 30 segundos");
+                    "No se han recibido datos del sensor en los últimos 30 segundos, comprueba la conexion");
             isErrorNotified = true;
         }
     }

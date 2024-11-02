@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 if (lastMeasurement != null) {
                     sendMeasurementToApi(lastMeasurement);
                 } else {
-                    showToast("No measurement available from service");
+                    //showToast("No measurement available from service");
                 }
             }
         }
