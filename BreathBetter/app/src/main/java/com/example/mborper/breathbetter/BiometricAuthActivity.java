@@ -21,6 +21,8 @@ import java.util.concurrent.Executor;
  * If the device doesn't support biometric authentication or has no biometric data enrolled,
  * it will automatically proceed to the next activity.
  *
+ * @since 2024-11-01
+ * last edited: 2024-11-02
  * @author Alejandro Rosado
  */
 public class BiometricAuthActivity extends AppCompatActivity {
@@ -92,7 +94,7 @@ public class BiometricAuthActivity extends AppCompatActivity {
                         "No hay huellas registradas en el dispositivo",
                         Toast.LENGTH_LONG).show();
 
-                // Optionally, we could direct the user to the fingerprint settings
+                // Optionally, we could direct the user to the fingerprint settings (requires API level 30 or higher)
                 Intent enrollIntent = new Intent(Settings.ACTION_BIOMETRIC_ENROLL);
                 enrollIntent.putExtra(Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
                         BiometricManager.Authenticators.BIOMETRIC_STRONG);

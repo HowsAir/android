@@ -15,6 +15,7 @@ import com.budiyev.android.codescanner.CodeScannerView;
  * QRScannerActivity is an Android activity that allows scanning QR codes using the CodeScanner library.
  * It provides an interface to initiate scanning and handle the results obtained.
  *
+ * @since 2024-10-26
  * @author Juan Diaz
  */
 public class QRScannerActivity extends AppCompatActivity {

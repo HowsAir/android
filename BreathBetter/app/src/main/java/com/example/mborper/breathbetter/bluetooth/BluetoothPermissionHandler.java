@@ -16,7 +16,7 @@ import java.util.List;
  * the result of the permission requests.
  *
  * @author Manuel Borregales
- * @since 06/10/2024
+ * @since 2024-10-06
  */
 public class BluetoothPermissionHandler {
 

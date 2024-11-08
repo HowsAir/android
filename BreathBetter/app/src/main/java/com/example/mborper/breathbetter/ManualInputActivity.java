@@ -13,14 +13,27 @@ import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * Activity that allows users to manually input a node ID as an alternative to QR scanning.
+ * <p>
+ * This activity provides a UI for entering a node ID manually, with input filters to ensure
+ * only numeric characters are allowed and the length is limited to 5 digits.
+ * Once validated, the node ID is returned as the result of the activity.
  *
  * @author Alejandro Rosado
+ * @since 2024-11-01
  */
 public class ManualInputActivity extends AppCompatActivity {
 
     private EditText nodeIdInput;
     public static final String MANUAL_RESULT = "manual_result";
 
+    /**
+     * Initializes the activity and sets up the input field and button.
+     * <p>
+     * Sets input filters on the node ID field to restrict the length and enforce numeric input,
+     * and assigns a click listener to the confirm button to handle validation and submission.
+     *
+     * @param savedInstanceState the saved state of the activity
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,10 +53,10 @@ public class ManualInputActivity extends AppCompatActivity {
                                                Spanned dest, int dstart, int dend) {
                         for (int i = start; i < end; i++) {
                             if (!Character.isDigit(source.charAt(i))) {
-                                return "";
+                                return ""; // Block non-numeric characters
                             }
                         }
-                        return null;
+                        return null; // Allow numeric characters
                     }
                 }
         };
@@ -52,17 +65,14 @@ public class ManualInputActivity extends AppCompatActivity {
         confirmButton.setOnClickListener(v -> validateAndSubmit());
     }
 
-
     /**
-     * Validates the user input and submits the node ID. If the input is valid,
-     * creates an intent with the result and finishes the activity. If the input
-     * is empty, shows an error message to the user.
+     * Validates the user input and submits the node ID.
      * <p>
-     * The method performs the following steps:
-     *      1. Gets and trims the input text
-     *      2. Validates that the input is not empty
-     *      3. Creates and configures a result intent with the node ID
-     *      4. Sets the result and finishes the activity
+     * This method performs the following steps:
+     *      1. Retrieves and trims the text input from the node ID field.
+     *      2. Checks if the input is empty. If it is, displays an error message.
+     *      3. If valid, creates an intent with the node ID as an extra.
+     *      4. Sets the result for the activity and finishes it.
      */
     private void validateAndSubmit() {
         String nodeId = nodeIdInput.getText().toString().trim();

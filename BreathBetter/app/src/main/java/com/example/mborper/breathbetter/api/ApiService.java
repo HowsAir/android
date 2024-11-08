@@ -18,7 +18,7 @@ import retrofit2.http.Path;
  * It uses Retrofit's annotations to define GET and POST requests for sending and receiving measurements.
  *
  * @author Manuel Borregales
- * @since 04/10/2024
+ * @since 2024-10-04
  */
 public interface ApiService {
 
@@ -39,6 +39,15 @@ public interface ApiService {
     @POST("measurements/")
     Call<Measurement> sendMeasurement(@Body Measurement measurement);
 
+    /**
+     * Authenticates a user by sending login credentials to the API.
+     * <p>
+     * This method sends a LoginRequest object with user credentials to the server,
+     * returning a Call object that encapsulates the LoginResponse, which contains authentication data.
+     *
+     * @param loginRequest the LoginRequest object containing user login credentials
+     * @return Call object encapsulating the response with authentication details in a LoginResponse
+     */
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest loginRequest);
 

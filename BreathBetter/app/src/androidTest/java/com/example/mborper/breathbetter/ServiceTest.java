@@ -20,31 +20,53 @@ import static org.hamcrest.Matchers.is;
 import androidx.test.rule.GrantPermissionRule;
 import android.Manifest;
 
+/**
+ * Instrumented test for verifying the service start functionality in the app.
+ * <p>
+ * This test class uses Espresso to simulate user actions and check UI components
+ * related to starting a service in the app, including permission handling and toast messages.
+ *
+ * @author Manuel Borregales
+ * @since 2024-10-08
+ */
 @RunWith(AndroidJUnit4.class)
 public class ServiceTest {
 
+    /**
+     * Rule to launch the MainActivity for testing.
+     */
     @Rule
     public ActivityScenarioRule<MainActivity> activityScenarioRule =
             new ActivityScenarioRule<>(MainActivity.class);
 
-    // Add this rule to grant permissions automatically
+    /**
+     * Rule to automatically grant necessary permissions for the test.
+     * <p>
+     * This rule grants permissions for Bluetooth and location access,
+     * which are required to start the service.
+     */
     @Rule
     public GrantPermissionRule grantPermissionRule =
             GrantPermissionRule.grant(Manifest.permission.BLUETOOTH_CONNECT,
                     Manifest.permission.BLUETOOTH_SCAN,
                     Manifest.permission.ACCESS_FINE_LOCATION);
 
+    /**
+     * Tests that a toast message appears when the service starts.
+     * <p>
+     * Simulates a button click to start the service in MainActivity and verifies
+     * that the "Service bound successfully" toast message is displayed in the correct window.
+     */
     @Test
     public void testToastOnServiceStart() {
         // Simulates a click on the button to start the service
         onView(withId(R.id.startSearching)).perform(click());
 
         activityScenarioRule.getScenario().onActivity(activity -> {
-            // Asegúrate de que el Toast aparezca en la ventana correcta
+            // Ensure that the toast appears in the correct window
             onView(withText("Service bound successfully"))
                     .inRoot(withDecorView(not(is(activity.getWindow().getDecorView()))))
                     .check(matches(isDisplayed()));
         });
     }
 }
-

@@ -29,7 +29,7 @@ import com.example.mborper.breathbetter.login.SessionManager;
  * to handle JSON responses using Gson.
  *
  * @author Manuel Borregales
- * @since 04/10/2024
+ * @since 2024-10-04
  */
 public class ApiClient {
 
