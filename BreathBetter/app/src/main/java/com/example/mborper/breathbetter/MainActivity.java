@@ -21,6 +21,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,13 +38,18 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import com.example.mborper.breathbetter.BuzzerControl;
+
 /**
  * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
  * It initializes Bluetooth, binds to the service, listens for measurements, and allows sending data to the API.
  *
  * @author Manuel Borregales
  * @since  2024-10-07
- * last edited: 2024-10-23
+ * last edited: 2024-11-08
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -52,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
 
     /** UUID for the target Bluetooth device. */
     private static final String TARGET_UUID = "MANU-EPSG-GTI-3A";
+    //private static final String TARGET_UUID = "4d414e55-2d45-5053-472d-4754492d3341";
+
 
     private ApiService apiService;
 
@@ -69,6 +77,10 @@ public class MainActivity extends AppCompatActivity {
 
     private SessionManager sessionManager;
 
+    private BuzzerControl buzzerControl;
+
+    private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 2; // Different from REQUEST_ENABLE_BT
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +94,83 @@ public class MainActivity extends AppCompatActivity {
         serviceConnection = new BeaconListeningServiceConnection();
         apiService = ApiClient.getClient(this).create(ApiService.class);
         lastMeasurementLiveData.observe(this, this::updateUI);
+
+        initializeBuzzerControl();
+        setupBuzzerButtons();
+    }
+
+    private void initializeBuzzerControl() {
+        buzzerControl = new BuzzerControl(this, new BuzzerControl.Callback() {
+            @Override
+            public void onPermissionDenied() {
+                showToast("Bluetooth advertising permission denied");
+            }
+
+            @Override
+            public void onBluetoothNotSupported() {
+                showToast("BLE advertising not supported on this device");
+            }
+
+            @Override
+            public void onSuccess() {
+                Log.d(LOG_TAG, "Buzzer command sent successfully");
+            }
+
+            @Override
+            public void onFailure(String error) {
+                showToast("Buzzer control failed: " + error);
+            }
+        });
+    }
+
+    private void setupBuzzerButtons() {
+        Button turnOnButton = findViewById(R.id.turnOnBuzzer);
+        Button turnOffButton = findViewById(R.id.turnOffBuzzer);
+
+        turnOnButton.setOnClickListener(v -> {
+            if (!checkBluetoothPermissions()) {
+                requestBluetoothPermissions();
+                return;
+            }
+            buzzerControl.turnOnBuzzer();
+        });
+
+        turnOffButton.setOnClickListener(v -> {
+            if (!checkBluetoothPermissions()) {
+                requestBluetoothPermissions();
+                return;
+            }
+            buzzerControl.turnOnBuzzer(); // Note: The updated BuzzerControl class handles the turn off logic
+        });
+    }
+
+    private boolean checkBluetoothPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE)
+                    == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void requestBluetoothPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{
+                            Manifest.permission.BLUETOOTH_ADVERTISE,
+                            Manifest.permission.BLUETOOTH_CONNECT
+                    },
+                    BLUETOOTH_PERMISSION_REQUEST_CODE
+            );
+        } else {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.BLUETOOTH},
+                    BLUETOOTH_PERMISSION_REQUEST_CODE
+            );
+        }
     }
 
     /**
