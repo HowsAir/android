@@ -16,19 +16,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * @brief Test class for linking a node to a user
- *
- * @author Alejandro Rosado
- *
+ * Test class for linking a node to a user
  * Tests linking functionality in ApiService to ensure nodes can be correctly associated with users.
+ * <p>
+ * @since 2024-11-04
+ * @author Alejandro Rosado
  */
 public class LinkNodeTest {
 
     private ApiService mockApiService;
 
     /**
-     * @brief Sets up mock API service before each test
-     *
+     * Sets up mock API service before each test
      * Creates a mock instance of ApiService to simulate API interactions for testing.
      */
     @Before
@@ -37,12 +36,12 @@ public class LinkNodeTest {
     }
 
     /**
-     * @brief Tests a successful attempt to link a node to a user
+     * Tests a successful attempt to link a node to a user
      *
      * @throws Exception if an error occurs during API interaction
-     *
+     * <p>
      * String -> linkNodeToUser() -> Response<Void>
-     *
+     * <p>
      * Verifies that the linkNodeToUser method returns a successful HTTP 200 response.
      */
     @Test
@@ -61,12 +60,12 @@ public class LinkNodeTest {
     }
 
     /**
-     * @brief Tests a failed attempt to link a node to a user
+     * Tests a failed attempt to link a node to a user
      *
      * @throws Exception if an error occurs during API interaction
-     *
+     * <p>
      * String -> linkNodeToUser() -> Response<Void>
-     *
+     * <p>
      * Verifies that the linkNodeToUser method returns a failed HTTP 400 response
      * when an invalid request is made.
      */

@@ -23,19 +23,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * @brief Test class for user login functionality
- *
- * @author Alejandro Rosado
- *
+ * Test class for user login functionality
  * Utilizes the ApiService interface to mock API calls and verify login behavior.
+ * <p>
+ * @since 2024-11-04
+ * last edited: 2024-11-08
+ * @author Alejandro Rosado
  */
 public class LoginTest {
 
     private ApiService mockApiService;
 
     /**
-     * @brief Sets up mock API service before each test
-     *
+     * Sets up mock API service before each test
      * Creates a mock instance of ApiService to simulate API interactions for testing.
      */
     @Before
@@ -44,12 +44,11 @@ public class LoginTest {
     }
 
     /**
-     * @brief Tests a successful login attempt
-     *
+     * Tests a successful login attempt
      * @throws Exception if an error occurs during API interaction
-     *
+     * <p>
      * LoginRequest -> login() -> Response<LoginResponse>
-     *
+     * <p>
      * Verifies that the login response is successful and that user details and
      * an authentication token are correctly retrieved.
      */
@@ -62,12 +61,6 @@ public class LoginTest {
         fakeUser.setSurname("Smith");
         fakeUser.setEmail("test@example.com");
         fakeUser.setPassword("password123");
-        fakeUser.setPhone("123456789");
-        fakeUser.setCountry("Country");
-        fakeUser.setCity("City");
-        fakeUser.setZip("12345");
-        fakeUser.setAddress("123 Street Name");
-        fakeUser.setRoleId(1);
 
         LoginResponse fakeLoginResponse = new LoginResponse();
         fakeLoginResponse.setUser(fakeUser);
@@ -100,12 +93,11 @@ public class LoginTest {
     }
 
     /**
-     * @brief Tests a failed login attempt
-     *
+     * Tests a failed login attempt
      * @throws Exception if an error occurs during API interaction
-     *
+     * <p>
      * LoginRequest -> login() -> Response<LoginResponse>
-     *
+     * <p>
      * Verifies that a login attempt with invalid credentials returns an HTTP 401 error.
      */
     @Test
