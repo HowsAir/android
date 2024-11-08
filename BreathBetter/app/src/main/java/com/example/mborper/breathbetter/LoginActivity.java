@@ -52,7 +52,8 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
 
-        //Si esta loggeado pero no ha vinculado el sensor, , lo mandamos al QRExplanationActivity, si ya esta vinculado, lo mandamos a MainActivity
+        //Si esta loggeado pero no ha vinculado el sensor, , lo mandamos al QRExplanationActivity,
+        // si ya esta vinculado, lo mandamos a MainActivity
         if (sessionManager.isLoggedIn()) {
             // Redirects to main activity if the user is already logged in
 

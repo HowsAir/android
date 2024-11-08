@@ -29,7 +29,7 @@ import retrofit2.Response;
  * It's the activity that asks the user for the permissions needed for qr scanning
  *
  * @author Juan Diaz & Manuel Borregales
- * date:  2024-10-26
+ * @since  2024-10-26
  */
 public class QRExplanationActivity extends AppCompatActivity {
 
@@ -166,20 +166,16 @@ public class QRExplanationActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (response.isSuccessful()) {
-
-                            // El nodo se vinculó exitosamente
                             Toast.makeText(context, "Nodo vinculado exitosamente", Toast.LENGTH_SHORT).show();
 
                             startActivity(new Intent(QRExplanationActivity.this, MainActivity.class));
                         } else {
-                            // Manejar error de la API
                             Toast.makeText(context, "Error al vincular el nodo", Toast.LENGTH_SHORT).show();
                         }
                     }
 
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
-                        // Manejar error de red
                         Toast.makeText(context, "Error de conexión", Toast.LENGTH_SHORT).show();
                     }
                 });

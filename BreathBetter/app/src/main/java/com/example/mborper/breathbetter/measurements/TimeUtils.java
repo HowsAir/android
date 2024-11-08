@@ -13,7 +13,7 @@ import java.util.Locale;
  * default format is "yyyy-MM-dd HH:mm:ss".
  *
  * @author Manuel Borregales
- * date: 2024-10-23
+ * @since 2024-10-23
  */
 
 public class TimeUtils {

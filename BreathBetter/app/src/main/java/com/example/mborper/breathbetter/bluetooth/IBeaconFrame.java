@@ -3,10 +3,10 @@ package com.example.mborper.breathbetter.bluetooth;
 import java.util.Arrays;
 
 /**
- * @file: IBeaconFrame.java
- * @author: Jordi Bataller i Mascarell
- * @description: The IBeaconFrame offers getters to obtain the data stored on the beacons the app scans.
+ * The IBeaconFrame offers getters to obtain the data stored on the beacons the app scans.
  * It's primarily used to obtain uuid, major and minor.
+ *
+ * @author Jordi Batallar i Mascarell
  */
 public class IBeaconFrame {
     private byte[] prefix = null; // 9 bytes

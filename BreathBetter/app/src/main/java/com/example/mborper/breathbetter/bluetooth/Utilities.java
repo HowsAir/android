@@ -5,10 +5,10 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * @file: Utilities.java
- * @author: Jordi Bataller i Mascarell
- * @description: The Utilities class provides a set of utility functions to handle string and byte conversions,
+ * The Utilities class provides a set of utility functions to handle string and byte conversions,
  * including operations on UUIDs, byte arrays, and hexadecimal representations.
+ *
+ * @author Jordi Bataller i Mascarell
  */
 public class Utilities {
 

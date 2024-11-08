@@ -32,23 +32,14 @@ import android.os.Handler;
  * retrieve the user's current location for the notification.
  *
  * @author Manuel Borregales
- * date: 2024-10-23
+ * @since 2024-10-23
  */
 
 public class GasAlertManager {
-    // Logging tag for error or info messages
     private static final String LOG_TAG = "GasAlertManager";
-
-    // Channel ID for the gas alert notification
     private static final String ALERT_CHANNEL_ID = "GAS_ALERT_CHANNEL";
-
-    // Channel ID for the error notification
     private static final String ERROR_CHANNEL_ID = "SENSOR_ERROR_CHANNEL";
-
-    // ID for the gas alert notification
     private static final int ALERT_NOTIFICATION_ID = 2;
-
-    // ID for the error notification
     private static final int ERROR_NOTIFICATION_ID = 3;
 
     // Gas concentration threshold in PPM (Parts Per Million) to trigger an alert

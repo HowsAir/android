@@ -40,8 +40,9 @@ import retrofit2.Response;
 /**
  * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
  * It initializes Bluetooth, binds to the service, listens for measurements, and allows sending data to the API.
+ *
  * @author Manuel Borregales
- * date:  2024-10-07
+ * @since  2024-10-07
  * last edited: 2024-10-23
  */
 public class MainActivity extends AppCompatActivity {

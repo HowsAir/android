@@ -17,7 +17,7 @@ import android.util.Log;
  * permissions are checked before attempting to access the device's location.
  *
  * @author Manuel Borregales
- * date:  2024-10-23
+ * @since 2024-10-23
  */
 
 public class LocationUtils {

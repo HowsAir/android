@@ -57,12 +57,12 @@ public class ManualInputActivity extends AppCompatActivity {
      * Validates the user input and submits the node ID. If the input is valid,
      * creates an intent with the result and finishes the activity. If the input
      * is empty, shows an error message to the user.
-     *
+     * <p>
      * The method performs the following steps:
-     * 1. Gets and trims the input text
-     * 2. Validates that the input is not empty
-     * 3. Creates and configures a result intent with the node ID
-     * 4. Sets the result and finishes the activity
+     *      1. Gets and trims the input text
+     *      2. Validates that the input is not empty
+     *      3. Creates and configures a result intent with the node ID
+     *      4. Sets the result and finishes the activity
      */
     private void validateAndSubmit() {
         String nodeId = nodeIdInput.getText().toString().trim();

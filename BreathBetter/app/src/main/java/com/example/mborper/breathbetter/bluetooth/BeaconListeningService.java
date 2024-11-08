@@ -33,8 +33,9 @@ import com.example.mborper.breathbetter.measurements.Measurement;
  * BeaconListeningService is an Android Service that scans for Bluetooth Low Energy (BLE) devices using
  * BluetoothLeScanner. It operates in the background as a foreground service and continuously scans for
  * devices based on a provided target UUID. When a matching device is found, it generates a Measurement object.
+ *
  * @author Manuel Borregales
- * date: 2024-10-07
+ * @since 2024-10-07
  * last edited: 2024-10-23
  */
 public class BeaconListeningService extends Service {
