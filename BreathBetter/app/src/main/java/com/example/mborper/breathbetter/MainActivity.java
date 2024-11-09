@@ -49,7 +49,7 @@ import com.example.mborper.breathbetter.BuzzerControl;
  *
  * @author Manuel Borregales
  * @since  2024-10-07
- * last edited: 2024-11-08
+ * last edited: 2024-11-09
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -79,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
 
     private BuzzerControl buzzerControl;
 
+    private boolean isBuzzerOn = false;
+
     private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 2; // Different from REQUEST_ENABLE_BT
 
 
@@ -96,19 +98,27 @@ public class MainActivity extends AppCompatActivity {
         lastMeasurementLiveData.observe(this, this::updateUI);
 
         initializeBuzzerControl();
-        setupBuzzerButtons();
+        setupBuzzerButton();
     }
 
+    /**
+     * Initializes the BuzzerControl with callback handlers for various Bluetooth control statuses.
+     * <p>
+     * Initializes BuzzerControl -> sets up Callback -> handles responses to permission
+     * and Bluetooth capability checks.
+     */
     private void initializeBuzzerControl() {
         buzzerControl = new BuzzerControl(this, new BuzzerControl.Callback() {
             @Override
             public void onPermissionDenied() {
                 showToast("Bluetooth advertising permission denied");
+                updateBuzzerButtonState(false);
             }
 
             @Override
             public void onBluetoothNotSupported() {
                 showToast("BLE advertising not supported on this device");
+                updateBuzzerButtonState(false);
             }
 
             @Override
@@ -119,31 +129,53 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(String error) {
                 showToast("Buzzer control failed: " + error);
+                updateBuzzerButtonState(false);
             }
         });
     }
 
-    private void setupBuzzerButtons() {
-        Button turnOnButton = findViewById(R.id.turnOnBuzzer);
-        Button turnOffButton = findViewById(R.id.turnOffBuzzer);
+    /**
+     * Updates the button state for toggling the buzzer.
+     * <p>
+     * Changes the text on the button based on the buzzer's current state
+     * and updates the internal `isBuzzerOn` flag to match.
+     *
+     * @param isOn true if the buzzer is currently on, false if it is off
+     */
+    private void updateBuzzerButtonState(boolean isOn) {
+        Button toggleButton = findViewById(R.id.toggleBuzzer);
+        isBuzzerOn = isOn;
+        toggleButton.setText(isOn ? R.string.Stop_Find_Node : R.string.Find_Node);
+    }
 
-        turnOnButton.setOnClickListener(v -> {
+    /**
+     * Sets up the UI button for controlling the buzzer, verifying permissions before
+     * attempting any Bluetooth operations.
+     */
+    private void setupBuzzerButton() {
+        Button toggleButton = findViewById(R.id.toggleBuzzer);
+        toggleButton.setOnClickListener(v -> {
             if (!checkBluetoothPermissions()) {
                 requestBluetoothPermissions();
                 return;
             }
-            buzzerControl.turnOnBuzzer();
-        });
 
-        turnOffButton.setOnClickListener(v -> {
-            if (!checkBluetoothPermissions()) {
-                requestBluetoothPermissions();
-                return;
+            if (!isBuzzerOn) {
+                buzzerControl.turnOnBuzzer();
+                toggleButton.setText(R.string.Stop_Find_Node);
+            } else {
+                buzzerControl.turnOffBuzzer();
+                toggleButton.setText(R.string.Find_Node);
             }
-            buzzerControl.turnOnBuzzer(); // Note: The updated BuzzerControl class handles the turn off logic
+            isBuzzerOn = !isBuzzerOn;
         });
     }
 
+    /**
+     * Checks if the necessary Bluetooth permissions are granted based on Android version.
+     *
+     * @return true if permissions are granted, false otherwise
+     */
     private boolean checkBluetoothPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE)
@@ -154,8 +186,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Requests the necessary Bluetooth permissions based on the Android version.
+     */
     private void requestBluetoothPermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            // Request BLUETOOTH_ADVERTISE and BLUETOOTH_CONNECT permissions for Android 12 and above
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{
@@ -165,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
                     BLUETOOTH_PERMISSION_REQUEST_CODE
             );
         } else {
+            // Request BLUETOOTH permission for Android versions below 12
             ActivityCompat.requestPermissions(
                     this,
                     new String[]{Manifest.permission.BLUETOOTH},
@@ -231,6 +268,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Adjusts the padding of the main view based on system bar insets.
+     * <p>
+     * This method sets an `OnApplyWindowInsetsListener` to automatically apply
+     * padding to account for the system bars (e.g., status and navigation bars),
+     * ensuring the main view content does not overlap with these UI elements.
+     */
     private void AdjustPadding() {
         // Adjusts the padding based on system bars.
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

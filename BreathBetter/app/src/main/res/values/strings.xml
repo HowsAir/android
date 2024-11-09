@@ -6,4 +6,6 @@
     <string name="logout">Cerrar sesión</string>
     <string name="Scan_QR">Vincular sensor con QR</string>
     <string name="Scan_QR_NO_CAMERA">Vincular sin cámara</string>
+    <string name="Find_Node">Encontrar nodo</string>
+    <string name="Stop_Find_Node">Parar de buscar</string>
 </resources>
