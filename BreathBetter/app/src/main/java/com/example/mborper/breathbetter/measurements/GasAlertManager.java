@@ -33,6 +33,7 @@ import android.os.Handler;
  *
  * @author Manuel Borregales
  * @since 2024-10-23
+ * last updated 2024-11-09
  */
 
 public class GasAlertManager {
@@ -49,7 +50,7 @@ public class GasAlertManager {
     private static final int PPM_MAX_VALID_VALUE = 1000;
 
     // Timeout for the BLE scan to throw error
-    private static final long BEACON_TIMEOUT_MS = 30000;
+    private static final long BEACON_TIMEOUT_MS = 60000;
 
     // Context, NotificationManager, LocationUtils and MediaPlayer instances
     private final Context context;
@@ -226,12 +227,14 @@ public class GasAlertManager {
     }
 
     /**
-     * Sends a notification and plays an alert sound when the sensor is not working properly.
+     * Sends a notification to inform the user of a sensor error.
      * <p>
-     * The notification contains details such as the failure to read gas or the inactivity of the sensor
-     * //@param //ppm The gas concentration in PPM.
-     * //@param //timestamp The timestamp when the gas level was detected.
-     * //@param //location The user's current location.
+     * This method builds and displays a notification with details about the
+     * error type, description, timestamp, and location. The notification opens
+     * the main activity when tapped, and auto-cancels when the user interacts with it.
+     *
+     * @param errorType    a brief identifier for the type of error (e.g., "SIN_SEÑAL")
+     * @param errorDetails additional details explaining the error
      */
     private void sendSensorErrorNotification(String errorType, String errorDetails) {
         String timestamp = TimeUtils.getCurrentTimestamp();
@@ -260,10 +263,20 @@ public class GasAlertManager {
         notificationManager.notify(ERROR_NOTIFICATION_ID, builder.build());
     }
 
+    /**
+     * Starts the timeout checking process by posting the `timeoutChecker` Runnable
+     * to the handler. This begins the periodic checking for beacon timeouts.
+     */
     private void startTimeoutChecking() {
         timeoutHandler.post(timeoutChecker);
     }
 
+    /**
+     * Checks if a beacon timeout has occurred by comparing the current time
+     * with the timestamp of the last received beacon. If the time difference
+     * exceeds the specified `BEACON_TIMEOUT_MS`, a sensor error notification
+     * is sent, indicating no data has been received for the specified interval.
+     */
     private void checkBeaconTimeout() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastBeaconTimestamp > BEACON_TIMEOUT_MS) {
@@ -273,6 +286,11 @@ public class GasAlertManager {
         }
     }
 
+    /**
+     * Checks if the beacon signal is active by comparing the current time with
+     * the last beacon timestamp. If the difference is less than `BEACON_TIMEOUT_MS`,
+     * the error notification flag is reset, indicating a healthy signal.
+     */
     private void checkBeaconTime() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastBeaconTimestamp < BEACON_TIMEOUT_MS) {
