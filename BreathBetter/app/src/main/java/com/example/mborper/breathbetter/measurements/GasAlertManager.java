@@ -61,6 +61,8 @@ public class GasAlertManager {
     private final Handler timeoutHandler;
     private final Runnable timeoutChecker;
     public boolean isErrorNotified;
+    // To check if inactivity feature is enabled
+    private boolean isRunning = false;
 
     /**
      * Constructor for GasAlertManager
@@ -78,17 +80,20 @@ public class GasAlertManager {
         initializeErrorChannel(); // Set up the error notification channel
         initializeAlertSound(); // Prepare the alert sound
         isErrorNotified = false;
+        isRunning = true;
 
         lastBeaconTimestamp = System.currentTimeMillis();
         timeoutHandler = new Handler(Looper.getMainLooper());
         timeoutChecker = new Runnable() {
             @Override
             public void run() {
-                if (!isErrorNotified) {
-                    checkBeaconTimeout();
+                if (isRunning) {
+                    if (!isErrorNotified) {
+                        checkBeaconTimeout();
+                    }
+                    checkBeaconTime();
+                    timeoutHandler.postDelayed(this, 5000);
                 }
-                checkBeaconTime();
-                timeoutHandler.postDelayed(this, 5000); // Verify every 5 seconds
             }
         };
         startTimeoutChecking();
@@ -305,9 +310,26 @@ public class GasAlertManager {
      * when the GasAlertManager is no longer needed.
      */
     public void cleanup() {
+        isRunning = false;
+        timeoutHandler.removeCallbacks(timeoutChecker);
+
         if (alertSound != null) {
             alertSound.release();
             alertSound = null;
         }
+
+        // Clean notifications
+        notificationManager.cancel(ALERT_NOTIFICATION_ID);
+        notificationManager.cancel(ERROR_NOTIFICATION_ID);
+    }
+
+    /**
+     * Restart monitoring after a pause or stop.
+     */
+    public void restart() {
+        isRunning = true;
+        isErrorNotified = false;
+        lastBeaconTimestamp = System.currentTimeMillis();
+        startTimeoutChecking();
     }
 }
