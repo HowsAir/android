@@ -21,11 +21,12 @@ import androidx.core.content.ContextCompat;
  *
  * @author Alejandro Rosado
  * @since 2024-11-08
- * last updated 2024-11-09
+ * last updated 2024-11-10
  */
 public class BuzzerControl {
     private static final String LOG_TAG = "BuzzerControl";
-    private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 1;
+    private static final byte BUZZER_ON = 0x01;
+    private static final byte BUZZER_OFF = 0x00;
 
     private final Activity activity;
     private BluetoothAdapter bluetoothAdapter;
@@ -58,59 +59,52 @@ public class BuzzerControl {
     }
 
     /**
-     * Checks if the necessary Bluetooth permissions are granted based on Android version.
-     *
-     * @return true if permissions are granted, false otherwise
-     */
-    private boolean checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            return ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_ADVERTISE)
-                    == PackageManager.PERMISSION_GRANTED;
-        } else {
-            return ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-    }
-
-    /**
-     * Requests Bluetooth permissions from the user based on Android version.
-     */
-    private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            ActivityCompat.requestPermissions(
-                    activity,
-                    new String[]{Manifest.permission.BLUETOOTH_ADVERTISE},
-                    BLUETOOTH_PERMISSION_REQUEST_CODE
-            );
-        } else {
-            ActivityCompat.requestPermissions(
-                    activity,
-                    new String[]{Manifest.permission.BLUETOOTH},
-                    BLUETOOTH_PERMISSION_REQUEST_CODE
-            );
-        }
-    }
-
-    /**
      * Sends the BLE advertisement to activate the buzzer on the Arduino.
      * <p>
      * Checks if the device supports BLE advertising and if Bluetooth is enabled,
      * then constructs the advertising settings and manufacturer data with the activation command.
      */
     public void turnOnBuzzer() {
+        sendBuzzerCommand(BUZZER_ON);
+    }
+
+    /**
+     * Sends the BLE advertisement to deactivate the buzzer on the Arduino.
+     * <p>
+     * Configures advertisement settings and manufacturer data with the deactivation command,
+     * and starts the BLE advertising to stop the buzzer.
+     */
+    public void turnOffBuzzer() {
+        sendBuzzerCommand(BUZZER_OFF);
+    }
+
+    /**
+     * Sends a command to control the buzzer via BLE advertisement.
+     * <p>
+     * This method handles the BLE advertisement process to send commands to the Arduino device.
+     * It performs the following checks before sending:
+     * <ul>
+     *   <li> Verifies BLE advertising support
+     *   <li> Checks for necessary Bluetooth permissions
+     *   <li> Confirms Bluetooth is enabled
+     * </ul>
+     * The method constructs and sends a manufacturer-specific data packet with the format:
+     * [0xBE, 0xEE, command], where command is either 0x00 (OFF) or 0x01 (ON).
+     *
+     * @param command the buzzer command to send (BUZZER_ON or BUZZER_OFF)
+     */
+    private void sendBuzzerCommand(byte command) {
         if (advertiser == null) {
-            Log.e(LOG_TAG, "BLE advertising not supported");
             callback.onBluetoothNotSupported();
             return;
         }
 
-        if (!checkPermissions()) {
-            requestPermissions();
+        if (!BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(activity)) {
+            callback.onPermissionDenied();
             return;
         }
 
         if (!bluetoothAdapter.isEnabled()) {
-            Log.e(LOG_TAG, "Bluetooth is not enabled");
             callback.onFailure("Bluetooth is not enabled");
             return;
         }
@@ -125,52 +119,7 @@ public class BuzzerControl {
 
             byte[] manufacturerData = new byte[]{
                     (byte)0xBE, (byte)0xEE, // Identifier
-                    0x01  // Command to activate
-            };
-
-            Log.d(LOG_TAG, "Sending manufacturer data: " +
-                    String.format("0x%02X 0x%02X 0x%02X",
-                            manufacturerData[0],
-                            manufacturerData[1],
-                            manufacturerData[2]));
-
-            AdvertiseData data = new AdvertiseData.Builder()
-                    .addManufacturerData(0x0000, manufacturerData)
-                    .build();
-
-            Log.d(LOG_TAG, "Starting BLE advertisement...");
-            advertiser.startAdvertising(settings, data, advertiseCallback);
-
-        } catch (SecurityException e) {
-            Log.e(LOG_TAG, "Security exception when starting advertising: " + e.getMessage());
-            callback.onFailure("Permission denied: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Sends the BLE advertisement to deactivate the buzzer on the Arduino.
-     * <p>
-     * Configures advertisement settings and manufacturer data with the deactivation command,
-     * and starts the BLE advertising to stop the buzzer.
-     */
-    public void turnOffBuzzer() {
-        if (advertiser == null) {
-            Log.e(LOG_TAG, "BLE advertising not supported");
-            callback.onBluetoothNotSupported();
-            return;
-        }
-
-        try {
-            AdvertiseSettings settings = new AdvertiseSettings.Builder()
-                    .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                    .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                    .setConnectable(false)
-                    .setTimeout(1000)
-                    .build();
-
-            byte[] manufacturerData = new byte[]{
-                    (byte)0xBE, (byte)0xEE, // Identifier
-                    0x00  // Command to deactivate
+                    command  // Command to activate/deactivate
             };
 
             AdvertiseData data = new AdvertiseData.Builder()
@@ -180,7 +129,6 @@ public class BuzzerControl {
             advertiser.startAdvertising(settings, data, advertiseCallback);
 
         } catch (SecurityException e) {
-            Log.e(LOG_TAG, "Security exception when starting advertising: " + e.getMessage());
             callback.onFailure("Permission denied: " + e.getMessage());
         }
     }
@@ -192,7 +140,6 @@ public class BuzzerControl {
     private final AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
         @Override
         public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            Log.d(LOG_TAG, "BLE Advertise Started Successfully");
             callback.onSuccess();
         }
 
@@ -216,25 +163,7 @@ public class BuzzerControl {
                     errorMessage = "Too many advertisers";
                     break;
             }
-            Log.e(LOG_TAG, errorMessage);
             callback.onFailure(errorMessage);
         }
     };
-
-    /**
-     * Processes the result of the permission request for Bluetooth advertising.
-     *
-     * @param requestCode the request code used for permissions
-     * @param permissions the requested permissions
-     * @param grantResults the results of the permission requests
-     */
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == BLUETOOTH_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                turnOnBuzzer();
-            } else {
-                callback.onPermissionDenied();
-            }
-        }
-    }
 }

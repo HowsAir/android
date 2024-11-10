@@ -49,8 +49,9 @@ import com.example.mborper.breathbetter.bluetooth.BuzzerControl;
  * It initializes Bluetooth, binds to the service, listens for measurements, and allows sending data to the API.
  *
  * @author Manuel Borregales
+ * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2024-11-09
+ * last edited: 2024-11-10
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -84,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 2; // Different from REQUEST_ENABLE_BT
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,41 +98,27 @@ public class MainActivity extends AppCompatActivity {
         apiService = ApiClient.getClient(this).create(ApiService.class);
         lastMeasurementLiveData.observe(this, this::updateUI);
 
-        initializeBuzzerControl();
-        setupBuzzerButton();
-    }
-
-    /**
-     * Initializes the BuzzerControl with callback handlers for various Bluetooth control statuses.
-     * <p>
-     * Initializes BuzzerControl -> sets up Callback -> handles responses to permission
-     * and Bluetooth capability checks.
-     */
-    private void initializeBuzzerControl() {
+        // Initialize buzzer control directly
         buzzerControl = new BuzzerControl(this, new BuzzerControl.Callback() {
             @Override
             public void onPermissionDenied() {
-                showToast("Bluetooth advertising permission denied");
                 updateBuzzerButtonState(false);
             }
 
             @Override
             public void onBluetoothNotSupported() {
-                showToast("BLE advertising not supported on this device");
                 updateBuzzerButtonState(false);
             }
 
             @Override
-            public void onSuccess() {
-                Log.d(LOG_TAG, "Buzzer command sent successfully");
-            }
+            public void onSuccess() {}
 
             @Override
             public void onFailure(String error) {
-                showToast("Buzzer control failed: " + error);
                 updateBuzzerButtonState(false);
             }
         });
+        setupBuzzerButton();
     }
 
     /**
@@ -156,8 +142,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupBuzzerButton() {
         Button toggleButton = findViewById(R.id.toggleBuzzer);
         toggleButton.setOnClickListener(v -> {
-            if (!checkBluetoothPermissions()) {
-                requestBluetoothPermissions();
+            if (!BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
                 return;
             }
 
@@ -170,45 +155,6 @@ public class MainActivity extends AppCompatActivity {
             }
             isBuzzerOn = !isBuzzerOn;
         });
-    }
-
-    /**
-     * Checks if the necessary Bluetooth permissions are granted based on Android version.
-     *
-     * @return true if permissions are granted, false otherwise
-     */
-    private boolean checkBluetoothPermissions() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADVERTISE)
-                    == PackageManager.PERMISSION_GRANTED;
-        } else {
-            return ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
-                    == PackageManager.PERMISSION_GRANTED;
-        }
-    }
-
-    /**
-     * Requests the necessary Bluetooth permissions based on the Android version.
-     */
-    private void requestBluetoothPermissions() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            // Request BLUETOOTH_ADVERTISE and BLUETOOTH_CONNECT permissions for Android 12 and above
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{
-                            Manifest.permission.BLUETOOTH_ADVERTISE,
-                            Manifest.permission.BLUETOOTH_CONNECT
-                    },
-                    BLUETOOTH_PERMISSION_REQUEST_CODE
-            );
-        } else {
-            // Request BLUETOOTH permission for Android versions below 12
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.BLUETOOTH},
-                    BLUETOOTH_PERMISSION_REQUEST_CODE
-            );
-        }
     }
 
     /**
