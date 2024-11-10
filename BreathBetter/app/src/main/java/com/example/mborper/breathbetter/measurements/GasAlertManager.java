@@ -13,7 +13,7 @@ import android.os.Looper;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.mborper.breathbetter.MainActivity;
+import com.example.mborper.breathbetter.activities.MainActivity;
 import com.example.mborper.breathbetter.R;
 
 import android.os.Handler;

@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.activities;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
 
 import com.example.mborper.breathbetter.api.ApiClient;
@@ -41,7 +42,7 @@ import retrofit2.Response;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
-import com.example.mborper.breathbetter.BuzzerControl;
+import com.example.mborper.breathbetter.bluetooth.BuzzerControl;
 
 /**
  * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.

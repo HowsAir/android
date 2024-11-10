@@ -37,16 +37,16 @@
 
 
         <activity
-            android:name=".BiometricAuthActivity"
+            android:name=".activities.BiometricAuthActivity"
             android:exported="false">
         </activity>
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".activities.LoginActivity"
             android:exported="false">
         </activity>
 
-        <activity android:name=".MainActivity"
+        <activity android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -56,15 +56,15 @@
         </activity>
 
         <activity
-            android:name=".QRExplanationActivity"
+            android:name=".activities.QRExplanationActivity"
             android:exported="false" />
 
         <activity
-            android:name=".QRScannerActivity"
+            android:name=".activities.QRScannerActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ManualInputActivity"
+            android:name=".activities.ManualInputActivity"
             android:exported="false" />
 
 

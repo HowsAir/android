@@ -20,6 +20,8 @@ import static org.hamcrest.Matchers.is;
 import androidx.test.rule.GrantPermissionRule;
 import android.Manifest;
 
+import com.example.mborper.breathbetter.activities.MainActivity;
+
 /**
  * Instrumented test for verifying the service start functionality in the app.
  * <p>
