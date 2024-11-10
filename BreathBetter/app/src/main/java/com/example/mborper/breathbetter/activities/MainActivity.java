@@ -142,7 +142,10 @@ public class MainActivity extends AppCompatActivity {
     private void setupBuzzerButton() {
         Button toggleButton = findViewById(R.id.toggleBuzzer);
         toggleButton.setOnClickListener(v -> {
+            // Check all permissions including BLUETOOTH_ADVERTISE
             if (!BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
+                showToast("Waiting for all Bluetooth permissions...");
+                updateBuzzerButtonState(false);
                 return;
             }
 
@@ -263,12 +266,17 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Starts the Bluetooth initialization process when the start service button is clicked.
+     * Checks for required permissions before starting the service,
      *
      * @param v The button view that was clicked.
      */
     public void onStartServiceButtonClicked(View v) {
-        startAndBindService();
-        mainHandler.post(runnable);
+        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
+            startAndBindService();
+            mainHandler.post(runnable);
+        } else {
+            showToast("Waiting for permission approval...");
+        }
     }
 
     /**
@@ -286,7 +294,13 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (BluetoothPermissionHandler.handlePermissionResult(requestCode, grantResults)) {
-            beaconService.initializeBluetooth();
+            if (beaconService != null) {
+                beaconService.initializeBluetooth();
+            } else {
+                // If permissions were granted from Start Searching button
+                startAndBindService();
+                mainHandler.post(runnable);
+            }
         } else {
             showToast("Bluetooth and Location permissions are required for this app to function properly");
         }
