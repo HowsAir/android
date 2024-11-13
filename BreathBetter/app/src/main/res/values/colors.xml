@@ -5,4 +5,5 @@
     <color name="black">#001122</color>
     <color name="white">#F5F5F5</color>
     <color name="gray">#E3E3E3</color>
+    <color name="input_background">#F5F5F5</color>
 </resources>

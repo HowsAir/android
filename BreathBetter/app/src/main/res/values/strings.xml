@@ -8,4 +8,7 @@
     <string name="Scan_QR_NO_CAMERA">Vincular sin cámara</string>
     <string name="Find_Node">Encontrar nodo</string>
     <string name="Stop_Find_Node">Parar de buscar</string>
+    <string name="change_pass">Cambiar contraseña</string>
+    <string name="receive_code">Recibir código</string>
+    <string name="back_button">return</string>
 </resources>
