@@ -1,9 +1,22 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.BreathBetter" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+<resources>
+    <style name="Theme.BreathBetter" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary</item>
+        <item name="colorOnPrimary">@color/white</item>
 
-    <style name="Theme.BreathBetter" parent="Base.Theme.BreathBetter" />
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/gray</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Default text appearances -->
+        <item name="textAppearanceHeadline1">@style/TextAppearance.App.Heading1</item>
+        <item name="textAppearanceHeadline2">@style/TextAppearance.App.Heading2</item>
+        <item name="textAppearanceHeadline3">@style/TextAppearance.App.Heading3</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.App.Paragraph</item>
+
+        <!-- Button defaults -->
+        <item name="materialButtonStyle">@style/Widget.App.Button.Primary</item>
+    </style>
 </resources>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text Appearances -->
+    <style name="TextAppearance.App.Heading1" parent="TextAppearance.MaterialComponents.Headline1">
+        <item name="fontFamily">@font/outfit</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TextAppearance.App.Heading2" parent="TextAppearance.MaterialComponents.Headline2">
+        <item name="fontFamily">@font/outfit</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TextAppearance.App.Heading3" parent="TextAppearance.MaterialComponents.Headline3">
+        <item name="fontFamily">@font/outfit</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TextAppearance.App.Paragraph" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="fontFamily">@font/outfit</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="Widget.App.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/primary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="fontFamily">@font/outfit</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+
+    <style name="Widget.App.Button.Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">@color/primary</item>
+        <item name="android:textColor">@color/primary</item>
+        <item name="fontFamily">@font/outfit</item>
+        <item name="cornerRadius">8dp</item>
+    </style>
+</resources>
