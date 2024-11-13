@@ -11,4 +11,12 @@
     <string name="change_pass">Cambiar contraseña</string>
     <string name="receive_code">Recibir código</string>
     <string name="back_button">return</string>
+    <string name="robust_pass_explanation">Al menos 8 caracteres, incluidas letras mayúsculas y minúsculas, números y caracteres especiales.</string>
+    <string name="write_new_pass">Escribe tu nueva contraseña</string>
+    <string name="email">Correo electrónico</string>
+    <string name="verify_pass">Verifica la contraseña</string>
+    <string name="new_pass">Nueva contraseña</string>
+    <string name="write_email_receive_code">Escribe tu correo electrónico para recibir un código y poder cambiar tu contraseña</string>
+    <string name="verification_code">Código de verificación</string>
+    <string name="send">Enviar</string>
 </resources>
