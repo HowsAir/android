@@ -67,6 +67,10 @@
             android:name=".activities.ManualInputActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".activities.TermsAndPrivacyActivity"
+            android:exported="false" />
+
 
         <service
             android:name=".bluetooth.BeaconListeningService"

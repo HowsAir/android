@@ -2,13 +2,18 @@ package com.example.mborper.breathbetter.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
@@ -32,6 +37,7 @@ import retrofit2.Response;
  *
  * @author Manuel Borregales
  * @since 2024-10-28
+ * last edited 2024-11-13
  */
 public class LoginActivity extends AppCompatActivity {
     private EditText emailEdit, passwordEdit;
@@ -84,6 +90,22 @@ public class LoginActivity extends AppCompatActivity {
 
         // Set up login button click listener
         loginButton.setOnClickListener(v -> performLogin());
+
+
+        TextView termsPrivacyTextView = findViewById(R.id.txtbTermsPrivacy);
+        String fullText = getString(R.string.PrivacyText);
+
+        // Apply the custom colors
+        applyColoredText(termsPrivacyTextView, fullText, "Términos de servicio", "Política de Privacidad");
+
+        // Set up terms and privacy text view click listener
+        termsPrivacyTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, TermsAndPrivacyActivity.class));
+            }
+        });
+
     }
 
     /**
@@ -164,5 +186,37 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * This method applies custom colors to specific parts of the provided text.
+     * It changes the color of "Términos de servicio" and "Política de Privacidad"
+     * within the text and applies the specified color to each part.
+     *
+     * @param textView The TextView to which the formatted text will be set.
+     * @param fullText The full text containing the phrases to be colored.
+     * @param terms The phrase that should be colored (e.g., "Términos de servicio").
+     * @param privacy The phrase that should be colored (e.g., "Política de Privacidad").
+     */
+    private void applyColoredText(TextView textView, String fullText, String terms, String privacy) {
+        // Find the start and end indices for the "terms" and "privacy" phrases
+        int termsStart = fullText.indexOf(terms);
+        int termsEnd = termsStart + terms.length();
+        int privacyStart = fullText.indexOf(privacy);
+        int privacyEnd = privacyStart + privacy.length();
+
+        // Create a SpannableString to modify parts of the text
+        SpannableString spannableString = new SpannableString(fullText);
+
+        // Get the color for the terms and privacy sections
+        int termsColor = ContextCompat.getColor(this, R.color.primary);
+        int privacyColor = ContextCompat.getColor(this, R.color.primary);
+
+        // Apply the color to the specific sections of the text
+        spannableString.setSpan(new ForegroundColorSpan(termsColor), termsStart, termsEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(privacyColor), privacyStart, privacyEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Set the modified text to the TextView
+        textView.setText(spannableString);
     }
 }
