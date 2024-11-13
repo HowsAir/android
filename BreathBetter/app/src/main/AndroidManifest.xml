@@ -74,6 +74,10 @@
             android:exported="false"
             android:foregroundServiceType="location" />
 
+        <activity
+            android:name=".activities.ForgotPasswordActivity"
+            android:exported="false">
+        </activity>
 
     </application>
 

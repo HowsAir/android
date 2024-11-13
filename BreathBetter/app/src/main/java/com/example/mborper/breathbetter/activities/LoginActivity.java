@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
-import com.example.mborper.breathbetter.login.ForgotPassword;
 import com.example.mborper.breathbetter.login.SessionManager;
 import com.example.mborper.breathbetter.login.pojo.LoginRequest;
 import com.example.mborper.breathbetter.login.pojo.LoginResponse;
@@ -89,6 +88,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Set up login button click listener
         loginButton.setOnClickListener(v -> performLogin());
+        tvForgotPass.setOnClickListener(v -> onTvForgotPassClicked());
     }
 
     /**
@@ -174,7 +174,7 @@ public class LoginActivity extends AppCompatActivity {
     /**
      * Opens the forgot password activity
      */
-    public void onTvForgotPassClicked(View v) {
-        startActivity(new Intent(LoginActivity.this, ForgotPassword.class));
+    private void onTvForgotPassClicked() {
+        startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
     }
 }
