@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
+import com.example.mborper.breathbetter.login.ForgotPassword;
 import com.example.mborper.breathbetter.login.SessionManager;
 import com.example.mborper.breathbetter.login.pojo.LoginRequest;
 import com.example.mborper.breathbetter.login.pojo.LoginResponse;
@@ -35,6 +37,7 @@ import retrofit2.Response;
  */
 public class LoginActivity extends AppCompatActivity {
     private EditText emailEdit, passwordEdit;
+    private TextView tvForgotPass;
     private Button loginButton;
     private ProgressBar progressBar;
     private SessionManager sessionManager;
@@ -81,6 +84,7 @@ public class LoginActivity extends AppCompatActivity {
         emailEdit = findViewById(R.id.etEmail);
         passwordEdit = findViewById(R.id.etPassword);
         loginButton = findViewById(R.id.btnLogin);
+        tvForgotPass = findViewById(R.id.tvForgotPassword);
         progressBar = findViewById(R.id.progressBar);
 
         // Set up login button click listener
@@ -165,5 +169,12 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Opens the forgot password activity
+     */
+    public void onTvForgotPassClicked(View v) {
+        startActivity(new Intent(LoginActivity.this, ForgotPassword.class));
     }
 }
