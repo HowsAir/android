@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.BreathBetter" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Base.Theme.BreathBetter" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary</item>
