@@ -19,4 +19,11 @@
     <string name="write_email_receive_code">Escribe tu correo electrónico para recibir un código y poder cambiar tu contraseña</string>
     <string name="verification_code">Código de verificación</string>
     <string name="send">Enviar</string>
+    <string name="logo">HowsAir</string>
+    <string name="login_salute">Bienvenido</string>
+    <string name="forgotPassword">¿Has olvidado tu contraseña?</string>
+    <string name="PrivacyText">Al continuar, aceptas nuestros Términos de servicio y Política de Privacidad.</string>
+    <string name="noaccount">¿No tienes una cuenta?</string>
+    <string name="BuyNode">Compra nuestro nodo Breeze</string>
+    <string name="terms_and_privacy_text">Términos y Privacidad</string>
 </resources>

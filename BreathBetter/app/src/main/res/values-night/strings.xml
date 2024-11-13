@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="logo">HowsAir</string>
+    <string name="forgotPassword">¿Has olvidado tu contraseña?</string>
+    <string name="PrivacyText">Al continuar, aceptas nuestros Términos de servicio y Política de Privacidad.</string>
+    <string name="noaccount">¿No tienes una cuenta?</string>
+    <string name="BuyNode">Compra nuestro nodo Breeze</string>
+</resources>
