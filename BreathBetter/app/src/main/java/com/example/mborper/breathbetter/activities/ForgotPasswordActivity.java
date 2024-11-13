@@ -86,9 +86,6 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    // The reset code is valid, display the password reset form
-                    Toast.makeText(ForgotPasswordActivity.this, "Password reset code is valid", Toast.LENGTH_SHORT).show();
-
                     // Navigate to the password reset activity
                     Intent intent = new Intent(ForgotPasswordActivity.this, ResetPasswordActivity.class);
                     intent.putExtra("email", email);
