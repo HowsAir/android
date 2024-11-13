@@ -53,6 +53,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
         android:hint="Email"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
         app:helperTextTextAppearance="@style/TextAppearance.App.Heading3"
         app:layout_constraintTop_toBottomOf="@+id/salute_login"
         tools:layout_editor_absoluteX="16dp">
@@ -61,10 +65,10 @@
             android:id="@+id/etEmailFP"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:alpha="0.6"
             android:inputType="textEmailAddress"
             android:textAppearance="@style/TextAppearance.App.Heading3"
-            android:textSize="16sp"
-            android:alpha="0.6"/>
+            android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -75,6 +79,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:hint="Contraseña"
+        app:boxCornerRadiusBottomEnd="8dp"
+        app:boxCornerRadiusBottomStart="8dp"
+        app:boxCornerRadiusTopEnd="8dp"
+        app:boxCornerRadiusTopStart="8dp"
         app:endIconMode="password_toggle"
         app:layout_constraintTop_toBottomOf="@id/tilEmail"
         tools:layout_editor_absoluteX="16dp">
@@ -83,10 +91,10 @@
             android:id="@+id/etPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:alpha="0.6"
             android:inputType="textPassword"
             android:textAppearance="@style/TextAppearance.App.Heading3"
-            android:textSize="16sp"
-            android:alpha="0.6" />
+            android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
