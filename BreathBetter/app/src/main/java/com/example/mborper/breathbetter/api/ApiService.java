@@ -62,13 +62,32 @@ public interface ApiService {
     @PUT("nodes/{nodeId}/link")
     Call<Void> linkNodeToUser(@Path("nodeId") String nodeId);
 
+    /**
+     * Sends a request to the API to generate a password reset code and send it to the user's email.
+     *
+     * @param requestBody A JSON object containing the email of the user requesting the password reset.
+     * @return Call object encapsulating the response.
+     */
     @POST("auth/forgot-password-code")
-    Call<Void> forgotPasswordCode(@Body JsonObject reqBody);
+    Call<Void> forgotPasswordCode(@Body JsonObject requestBody);
 
+    /**
+     * Verifies the password reset code provided by the user.
+     *
+     * @param email The email of the user requesting the password reset.
+     * @param code The password reset code provided by the user.
+     * @return Call object encapsulating the response.
+     */
     @GET("auth/forgot-password-token")
     Call<Void> forgotPasswordToken(@Query("email") String email, @Query("code") String code);
 
+    /**
+     * Resets the user's password to the new password provided.
+     *
+     * @param requestBody A JSON object containing the new password.
+     * @return Call object encapsulating the response.
+     */
     @PUT("users/reset-password")
-    Call<Void> resetPassword(@Body JsonObject reqBody);
+    Call<Void> resetPassword(@Body JsonObject requestBody);
 }
 
