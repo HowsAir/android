@@ -73,12 +73,11 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
             }
 
-
             finish();
         }
 
         // Initialize UI components
-        emailEdit = findViewById(R.id.etEmail);
+        emailEdit = findViewById(R.id.etEmailFP);
         passwordEdit = findViewById(R.id.etPassword);
         loginButton = findViewById(R.id.btnLogin);
         progressBar = findViewById(R.id.progressBar);
