@@ -20,7 +20,7 @@
     </style>
 
     <style name="TextAppearance.App.Paragraph" parent="TextAppearance.MaterialComponents.Body1">
-        <item name="fontFamily">@font/outfitlight</item>
+        <item name="fontFamily">@font/outfitregular</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/black</item>
     </style>
@@ -46,6 +46,7 @@
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
         <item name="android:textSize">16sp</item>
+        <item name="android:textColorHint">@color/gray_secondary</item>
         <item name="android:textColor">@color/gray</item>
         <item name="android:fontFamily">@font/outfitregular</item>
     </style>

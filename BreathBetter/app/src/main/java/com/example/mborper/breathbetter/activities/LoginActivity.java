@@ -41,6 +41,7 @@ import retrofit2.Response;
  */
 public class LoginActivity extends AppCompatActivity {
     private EditText emailEdit, passwordEdit;
+    private TextView tvForgotPass;
     private Button loginButton;
     private ProgressBar progressBar;
     private SessionManager sessionManager;
@@ -86,10 +87,12 @@ public class LoginActivity extends AppCompatActivity {
         emailEdit = findViewById(R.id.etEmailFP);
         passwordEdit = findViewById(R.id.etPassword);
         loginButton = findViewById(R.id.btnLogin);
+        tvForgotPass = findViewById(R.id.tvForgotPassword);
         progressBar = findViewById(R.id.progressBar);
 
         // Set up login button click listener
         loginButton.setOnClickListener(v -> performLogin());
+        tvForgotPass.setOnClickListener(v -> onTvForgotPassClicked());
 
 
         TextView termsPrivacyTextView = findViewById(R.id.txtbTermsPrivacy);
@@ -186,6 +189,13 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    /**
+     * Opens the forgot password activity
+     */
+    private void onTvForgotPassClicked() {
+        startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
     }
 
     /**

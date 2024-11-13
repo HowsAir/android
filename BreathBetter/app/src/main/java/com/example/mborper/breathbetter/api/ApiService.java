@@ -3,6 +3,7 @@ package com.example.mborper.breathbetter.api;
 import com.example.mborper.breathbetter.login.pojo.LoginRequest;
 import com.example.mborper.breathbetter.login.pojo.LoginResponse;
 import com.example.mborper.breathbetter.measurements.Measurement;
+import com.google.gson.JsonObject;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
  * The ApiService interface defines the API endpoints that the client will interact with.
@@ -59,5 +61,14 @@ public interface ApiService {
      */
     @PUT("nodes/{nodeId}/link")
     Call<Void> linkNodeToUser(@Path("nodeId") String nodeId);
+
+    @POST("auth/forgot-password-code")
+    Call<Void> forgotPasswordCode(@Body JsonObject reqBody);
+
+    @GET("auth/forgot-password-token")
+    Call<Void> forgotPasswordToken(@Query("email") String email, @Query("code") String code);
+
+    @PUT("users/reset-password")
+    Call<Void> resetPassword(@Body JsonObject reqBody);
 }
 
