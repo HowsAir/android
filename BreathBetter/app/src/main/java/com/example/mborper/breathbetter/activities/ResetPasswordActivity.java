@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
+import com.example.mborper.breathbetter.login.SessionManager;
 import com.google.gson.JsonObject;
 
 import retrofit2.Call;
@@ -33,6 +34,7 @@ public class ResetPasswordActivity extends AppCompatActivity {
     private Button btnChangePassFP;
 
     private ApiService apiService;
+    private SessionManager sessionManager;
 
     /**
      * Initializes the activity, setting up the layout and UI components.
@@ -45,6 +47,8 @@ public class ResetPasswordActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
+
+        sessionManager = new SessionManager(this);
 
         etNewPassFP = findViewById(R.id.etNewPassFP);
         etVerifyPassFP = findViewById(R.id.etVerifyPassFP);
@@ -87,6 +91,9 @@ public class ResetPasswordActivity extends AppCompatActivity {
                     Toast.makeText(ResetPasswordActivity.this,
                             "Password reset successfully",
                             Toast.LENGTH_SHORT).show();
+
+                    sessionManager.clearSession();
+
                     startActivity(new Intent(ResetPasswordActivity.this, LoginActivity.class));
                     finish();
                 } else {
