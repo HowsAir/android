@@ -1,4 +1,6 @@
-package com.example.mborper.breathbetter.login.pojo;
+package com.example.mborper.breathbetter.login.pojos;
+
+import com.example.mborper.breathbetter.api.models.User;
 
 /**
  * Represents a response for a login attempt, containing the user details

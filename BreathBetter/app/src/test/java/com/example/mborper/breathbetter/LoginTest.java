@@ -1,9 +1,9 @@
 package com.example.mborper.breathbetter;
 
 import com.example.mborper.breathbetter.api.ApiService;
-import com.example.mborper.breathbetter.login.pojo.LoginRequest;
-import com.example.mborper.breathbetter.login.pojo.LoginResponse;
-import com.example.mborper.breathbetter.login.pojo.User;
+import com.example.mborper.breathbetter.login.pojos.LoginRequest;
+import com.example.mborper.breathbetter.login.pojos.LoginResponse;
+import com.example.mborper.breathbetter.api.models.User;
 
 import org.junit.Before;
 import org.junit.Test;

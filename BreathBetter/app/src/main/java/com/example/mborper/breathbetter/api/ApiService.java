@@ -1,7 +1,8 @@
 package com.example.mborper.breathbetter.api;
 
-import com.example.mborper.breathbetter.login.pojo.LoginRequest;
-import com.example.mborper.breathbetter.login.pojo.LoginResponse;
+import com.example.mborper.breathbetter.api.models.Node;
+import com.example.mborper.breathbetter.login.pojos.LoginRequest;
+import com.example.mborper.breathbetter.login.pojos.LoginResponse;
 import com.example.mborper.breathbetter.measurements.Measurement;
 import com.google.gson.JsonObject;
 

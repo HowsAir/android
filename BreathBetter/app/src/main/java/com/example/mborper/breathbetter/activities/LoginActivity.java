@@ -19,8 +19,8 @@ import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.login.SessionManager;
-import com.example.mborper.breathbetter.login.pojo.LoginRequest;
-import com.example.mborper.breathbetter.login.pojo.LoginResponse;
+import com.example.mborper.breathbetter.login.pojos.LoginRequest;
+import com.example.mborper.breathbetter.login.pojos.LoginResponse;
 
 import java.util.List;
 

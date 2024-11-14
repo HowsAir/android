@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter.login.pojo;
+package com.example.mborper.breathbetter.api.models;
 
 /**
  * Represents a user in the BreathBetter application, storing key information
