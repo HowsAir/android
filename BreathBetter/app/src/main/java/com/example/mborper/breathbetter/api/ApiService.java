@@ -90,5 +90,18 @@ public interface ApiService {
      */
     @PUT("users/reset-password")
     Call<Void> resetPassword(@Body JsonObject requestBody);
+
+    /**
+     * Retrieves the node associated with the authenticated user.
+     *
+     * Sends a GET request to the `/users/node` endpoint and returns the node details
+     * associated with the current user, if available.
+     *
+     * @return Call object encapsulating the response, containing the Node object if the request is successful.
+     *         - 200: Node object with node details.
+     *         - 404: If no node is found for the user.
+     */
+    @GET("users/node")
+    Call<Node> getUserNode();
 }
 
