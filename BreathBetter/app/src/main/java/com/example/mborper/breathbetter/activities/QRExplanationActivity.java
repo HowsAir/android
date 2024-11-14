@@ -39,7 +39,6 @@ public class QRExplanationActivity extends AppCompatActivity {
     private final int MANUAL_INPUT_REQUEST_CODE = 25;
 
     private ApiService apiService;
-    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +48,6 @@ public class QRExplanationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_qr_explanation);
 
         apiService = ApiClient.getClient(this).create(ApiService.class);
-        sessionManager = new SessionManager(this);
 
         // Click listener for the manual input button
         findViewById(R.id.buttonNocamera).setOnClickListener(v -> startManualInput());
@@ -148,7 +146,6 @@ public class QRExplanationActivity extends AppCompatActivity {
 
             if (nodeId != null) {
                 linkNodeToUser(this, nodeId);
-                sessionManager.saveNodeId(nodeId);
                 Toast.makeText(this, "ID del nodo: " + nodeId, Toast.LENGTH_LONG).show();
             }
         }
@@ -170,6 +167,7 @@ public class QRExplanationActivity extends AppCompatActivity {
                             Toast.makeText(context, "Nodo vinculado exitosamente", Toast.LENGTH_SHORT).show();
 
                             startActivity(new Intent(QRExplanationActivity.this, MainActivity.class));
+                            finish();
                         } else {
                             Toast.makeText(context, "Error al vincular el nodo", Toast.LENGTH_SHORT).show();
                         }
