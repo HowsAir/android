@@ -1,5 +1,6 @@
 package com.example.mborper.breathbetter.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -31,33 +32,14 @@ public class BiometricAuthActivity extends AppCompatActivity {
     private Executor executor;
     private BiometricPrompt biometricPrompt;
     private BiometricPrompt.PromptInfo promptInfo;
-    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_biometric_auth);
 
-        sessionManager = new SessionManager(this);
-
-        // Check if user is logged in
-        if (!sessionManager.isLoggedIn()) {
-            // If not logged in, go directly to login activity
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return;
-        }
-
-        // User is logged in, proceed with biometric authentication
-        if (isBiometricAvailable()) {
-            setupBiometricAuth();
-            showBiometricPrompt();
-        } else {
-            // If biometric auth is not available, proceed to LoginActivity
-            // which will handle the navigation logic
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-        }
+        setupBiometricAuth();
+        showBiometricPrompt();
     }
 
     /**
@@ -67,8 +49,8 @@ public class BiometricAuthActivity extends AppCompatActivity {
      *
      * @return true if biometric authentication is available, false otherwise
      */
-    private boolean isBiometricAvailable() {
-        BiometricManager biometricManager = BiometricManager.from(this);
+    public boolean isBiometricAvailable(Context context) {
+        BiometricManager biometricManager = BiometricManager.from(context);
         int result = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG);
 
         switch (result) {
@@ -77,21 +59,21 @@ public class BiometricAuthActivity extends AppCompatActivity {
 
             case BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE:
                 // The device does not have a biometric sensor
-                Toast.makeText(this,
+                Toast.makeText(context,
                         "Este dispositivo no tiene sensor de huellas",
                         Toast.LENGTH_LONG).show();
                 break;
 
             case BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE:
                 // Biometric hardware is not currently available
-                Toast.makeText(this,
+                Toast.makeText(context,
                         "El sensor de huellas no está disponible actualmente",
                         Toast.LENGTH_LONG).show();
                 break;
 
             case BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED:
                 // There are no registered footprints
-                Toast.makeText(this,
+                Toast.makeText(context,
                         "No hay huellas registradas en el dispositivo",
                         Toast.LENGTH_LONG).show();
 
@@ -102,14 +84,14 @@ public class BiometricAuthActivity extends AppCompatActivity {
                 try {
                     startActivity(enrollIntent);
                 } catch (Exception e) {
-                    Toast.makeText(this,
+                    Toast.makeText(context,
                             "No se puede abrir la configuración de huellas: " + e.getMessage(),
                             Toast.LENGTH_LONG).show();
                 }
                 break;
 
             default:
-                Toast.makeText(this,
+                Toast.makeText(context,
                         "Estado de autenticación biométrica desconocido",
                         Toast.LENGTH_LONG).show();
                 break;
@@ -131,8 +113,7 @@ public class BiometricAuthActivity extends AppCompatActivity {
                     public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                         super.onAuthenticationSucceeded(result);
                         // Use LoginActivity's navigation logic
-                        startActivity(new Intent(BiometricAuthActivity.this, LoginActivity.class));
-                        finish();
+                        navigateToMainActivity(true);
                     }
 
                     @Override
@@ -145,18 +126,17 @@ public class BiometricAuthActivity extends AppCompatActivity {
                                     "Error de autenticación: " + errString,
                                     Toast.LENGTH_SHORT).show();
                         }
-                        // On authentication error, log out the user and go to login
-                        sessionManager.clearSession();
-                        startActivity(new Intent(BiometricAuthActivity.this, LoginActivity.class));
-                        finish();
+                        navigateToMainActivity(false);
                     }
 
                     @Override
                     public void onAuthenticationFailed() {
                         super.onAuthenticationFailed();
                         Toast.makeText(BiometricAuthActivity.this,
-                                "Autenticación fallida",
+                                "No eres el usuario autenticado, intentalo otra vez",
                                 Toast.LENGTH_SHORT).show();
+
+                        navigateToMainActivity(false);
                     }
                 });
 
@@ -173,5 +153,19 @@ public class BiometricAuthActivity extends AppCompatActivity {
      */
     private void showBiometricPrompt() {
         biometricPrompt.authenticate(promptInfo);
+    }
+
+    /**
+     * Navigates to the MainActivity and finishes the current activity
+     * to prevent the user from returning to this screen.
+     */
+    private void navigateToMainActivity(boolean authSuccessful) {
+        Intent intent = new Intent();
+        if (authSuccessful) {
+            setResult(RESULT_OK, intent);
+        } else {
+            setResult(RESULT_CANCELED, intent);
+        }
+        finish();
     }
 }

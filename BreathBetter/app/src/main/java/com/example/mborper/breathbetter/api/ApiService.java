@@ -102,6 +102,6 @@ public interface ApiService {
      *         - 404: If no node is found for the user.
      */
     @GET("users/node")
-    Call<Node> getUserNode();
+    Call<JsonObject> getUserNode();
 }
 

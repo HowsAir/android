@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mborper.breathbetter.R;
+import com.example.mborper.breathbetter.api.models.Node;
 import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
 
 import com.example.mborper.breathbetter.api.ApiClient;
@@ -43,6 +44,11 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
 import com.example.mborper.breathbetter.bluetooth.BuzzerControl;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+import java.io.IOException;
+import java.util.Date;
 
 /**
  * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
@@ -85,17 +91,31 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int BLUETOOTH_PERMISSION_REQUEST_CODE = 2; // Different from REQUEST_ENABLE_BT
 
+    private static final int REQUEST_CODE_BIOMETRIC_AUTH = 3;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sessionManager = new SessionManager(this);
+        apiService = ApiClient.getClient(this).create(ApiService.class);
+
+        if(!sessionManager.isLoggedIn()){
+            Log.d("DEBUG","Usuario no loggeado");
+            startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            return;
+        } else if(sessionManager.getNodeId() == null){
+            Log.d("DEBUG","Obteniendo nodo");
+            //Obtain userNode from API in order to check if user has got a node later as well
+            getUserNode();
+        } else{
+            startBiometricAuthIfAvailable();
+        }
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         AdjustPadding();
 
         serviceConnection = new BeaconListeningServiceConnection();
-        apiService = ApiClient.getClient(this).create(ApiService.class);
         lastMeasurementLiveData.observe(this, this::updateUI);
 
         // Initialize buzzer control directly
@@ -119,6 +139,74 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         setupBuzzerButton();
+    }
+
+    /**
+     * Method to start biometric authentication only if it is available.
+     */
+    private void startBiometricAuthIfAvailable() {
+        BiometricAuthActivity biometricAuthActivity = new BiometricAuthActivity();
+
+        if (!biometricAuthActivity.isBiometricAvailable(this)) {
+            showToast("Biometric auth is not available");
+        } else {
+            Log.d("DEBUG", "Starting BiometricAuthActivity");
+            Intent intent = new Intent(this, BiometricAuthActivity.class);
+            startActivityForResult(intent, REQUEST_CODE_BIOMETRIC_AUTH);
+        }
+    }
+
+    /**
+     * Handles the process of retrieving the node associated with the authenticated user.
+     * Sends a request to the backend to fetch the node details and manages the response
+     * or any network errors that may occur during the call.
+     */
+    public void getUserNode() {
+        apiService.getUserNode().enqueue(new Callback<JsonObject>() {
+
+            /**
+             * Handles the response from the getUserNode request. If successful, it processes
+             * the node data. If unsuccessful, it notifies the user about the failure.
+             *
+             * @param call The call to the API that was executed.
+             * @param response The response returned by the API call.
+             */
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().has("node")) {
+                    JsonObject jsonResponse = response.body();
+
+                    JsonObject nodeJson = jsonResponse.getAsJsonObject("node");
+                    Node userNode = new Gson().fromJson(nodeJson, Node.class);
+
+                    sessionManager.saveNodeId(Integer.toString(userNode.getId()));
+                    showToast("Node retrieved successfully: " + userNode.getId());
+
+                    startBiometricAuthIfAvailable();
+                } else if (response.code() == 404) {
+                    sessionManager.clearNodeId();
+                    showToast("Ahora vincula tu nuevo nodo");
+
+                    startActivity(new Intent(MainActivity.this, QRExplanationActivity.class));
+                } else {
+                    showToast("Error desconocido, inténtalo de nuevo o contáctanos");
+                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                }
+            }
+
+            /**
+             * Handles network failures during the node retrieval process.
+             * Displays an error message with details about the failure.
+             *
+             * @param call The call to the API that was attempted.
+             * @param t The throwable representing the network error.
+             */
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                showToast("Error de red, comprueba tu conexión e inténtalo otra vez");
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            }
+        });
     }
 
     /**
@@ -325,6 +413,14 @@ public class MainActivity extends AppCompatActivity {
                 startAndBindService();
             } else {
                 showToast("Bluetooth is required for this app");
+            }
+        }
+        else if(requestCode == REQUEST_CODE_BIOMETRIC_AUTH){
+            if(resultCode == RESULT_OK){
+                showToast("Biometric auth OK, access the app");
+            } else{
+                //Build again MainActivity
+                recreate();
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.mborper.breathbetter.activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -53,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
      * @param savedInstanceState If the activity is being reinitialized after previously being shut down,
      *                           this Bundle contains the data it most recently supplied.
      */
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,31 +62,8 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
 
-        //Si esta loggeado pero no ha vinculado el sensor, , lo mandamos al QRExplanationActivity,
-        // si ya esta vinculado, lo mandamos a MainActivity
-        if (sessionManager.isLoggedIn()) {
-            // Redirects to main activity if the user is already logged in
-
-            //Puede darse que ya haya vinculado el nodo o no lo haya vinculado,
-
-            //SUSTITUIR SPRINT 2 POR LLAMADA A ENDPOINT QUE COMPRUEBE SI ESTE USER YA TIENE NODO
-            //SI NO TIENE NODO LO MANDAMOS A QR SI YA TIENE OBTENEMOS SU NODEID LO GUARDAMOS Y
-            //LO MANDAMOS A MAIN ACTIVITY
-
-            //(eso lo comprobamos llamando a un endpoint
-            // de la api)
-            if(sessionManager.getNodeId() == null){
-                startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
-            }
-            else{
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            }
-
-            finish();
-        }
-
         // Initialize UI components
-        emailEdit = findViewById(R.id.etEmailFP);
+        emailEdit = findViewById(R.id.etEmail);
         passwordEdit = findViewById(R.id.etPassword);
         loginButton = findViewById(R.id.btnLogin);
         tvForgotPass = findViewById(R.id.tvForgotPassword);
@@ -158,13 +137,9 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     if (authToken != null) {
-                        // Save auth token and user email in session manager
                         sessionManager.saveAuthToken(authToken);
 
-                        // Redirects to main activity
-                        //Aqui se ejecutaria la misma comprobacion de la api, que hay en oncreate
-                        //o parecida
-                        startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
                     } else {
                         Toast.makeText(LoginActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
