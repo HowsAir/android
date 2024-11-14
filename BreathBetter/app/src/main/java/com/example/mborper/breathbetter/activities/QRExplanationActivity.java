@@ -146,7 +146,6 @@ public class QRExplanationActivity extends AppCompatActivity {
 
             if (nodeId != null) {
                 linkNodeToUser(this, nodeId);
-                Toast.makeText(this, "ID del nodo: " + nodeId, Toast.LENGTH_LONG).show();
             }
         }
     }
