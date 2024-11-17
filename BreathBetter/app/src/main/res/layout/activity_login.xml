@@ -103,6 +103,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
+        android:onClick="onTvForgotPassClicked"
         android:text="@string/forgotPassword"
         android:textAppearance="@style/TextAppearance.App.Heading3"
         android:textColor="@color/primary"
@@ -152,21 +153,18 @@
         app:layout_constraintEnd_toEndOf="@+id/btnLogin"
         app:layout_constraintStart_toStartOf="@+id/btnLogin"
         app:layout_constraintTop_toBottomOf="@+id/btnLogin" />
-
     <TextView
         android:id="@+id/Noaccount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:onClick="onTvForgotPassClicked"
-        android:text="¿Olvidaste tu contraseña?"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnLogin" />
-        android:layout_marginTop="30dp"
-        android:alpha="0.5"
+        android:layout_marginTop="32dp"
         android:text="@string/noaccount"
         android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/Separator"
         app:layout_constraintTop_toBottomOf="@+id/Separator" />
 
