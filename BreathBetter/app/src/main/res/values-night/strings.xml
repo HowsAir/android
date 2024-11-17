@@ -6,4 +6,9 @@
     <string name="noaccount">¿No tienes una cuenta?</string>
     <string name="BuyNode">Compra nuestro nodo Breeze</string>
     <string name="QrExplanation">Escanea el QR de la caja para vincular tu sensor</string>
+    <string name="ManualNodeLinkExplanation">Introduce el código del sensor incluido en la caja</string>
+    <string name="ManualLinkNodeHelper">Código numérico de 5 cifras, sin letras ni símbolos, con este formato \"00000\"</string>
+    <string name="LinkNode">Vincular Sensor</string>
+    <string name="NoCode">¿No encuentras el código?</string>
+    <string name="ContactSupport">Contacta con soporte</string>
 </resources>
