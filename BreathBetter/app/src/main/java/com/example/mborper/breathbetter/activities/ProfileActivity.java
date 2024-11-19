@@ -86,6 +86,8 @@ public class ProfileActivity extends AppCompatActivity {
     private Uri selectedImageUri = null;  // URI of the image
     private String selectedImageBase64 = null;
 
+    private MaterialButton btnChangePass;
+
     /**
      * onCreate initializes the UI components, sets up listeners, and loads the user profile.
      * It also configures the bottom navigation for easy access to other activities.
@@ -116,6 +118,9 @@ public class ProfileActivity extends AppCompatActivity {
         setupTextWatchers();
         imageViewProfile.setOnClickListener(v -> requestImagePickPermission());
         btnSaveChanges.setOnClickListener(v -> saveProfileChanges());
+
+        btnChangePass = findViewById(R.id.btnChangePass);
+        btnChangePass.setOnClickListener(v -> onTvForgotPassClicked());
 
         // Upload profile data
         loadUserProfile();
@@ -176,6 +181,13 @@ public class ProfileActivity extends AppCompatActivity {
                 showToast("Fallo de conexión al cargar perfil");
             }
         });
+    }
+
+    /**
+     * Opens the forgot password activity
+     */
+    private void onTvForgotPassClicked() {
+        startActivity(new Intent(ProfileActivity.this, ForgotPasswordActivity.class));
     }
 
     /**
