@@ -50,6 +50,9 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.Date;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+
 /**
  * Main activity that handles the interaction between the UI and the Bluetooth beacon listening service.
  * It initializes Bluetooth, binds to the service, listens for measurements, and allows sending data to the API.
@@ -57,30 +60,40 @@ import java.util.Date;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2024-11-10
+ * last edited: 2024-11-19
  */
 public class MainActivity extends AppCompatActivity {
 
-    /** Log tag for debugging. */
+    /**
+     * Log tag for debugging.
+     */
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
 
-    /** UUID for the target Bluetooth device. */
+    /**
+     * UUID for the target Bluetooth device.
+     */
     private static final String TARGET_UUID = "MANU-EPSG-GTI-3A";
     //private static final String TARGET_UUID = "4d414e55-2d45-5053-472d-4754492d3341";
 
 
     private ApiService apiService;
 
-    /** Handles the mutable variable */
+    /**
+     * Handles the mutable variable
+     */
     private Handler mainHandler = new Handler(Looper.getMainLooper());
-    /** LiveData that holds the last received measurement and updates the UI accordingly. */
+    /**
+     * LiveData that holds the last received measurement and updates the UI accordingly.
+     */
     private MutableLiveData<Measurement> lastMeasurementLiveData = new MutableLiveData<>();
 
     private static final int REQUEST_ENABLE_BT = 1;
     private BeaconListeningServiceConnection serviceConnection;
     private BeaconListeningService beaconService;
     private Intent serviceIntent = null;
-    /** Tracks whether the service is bound to the activity. */
+    /**
+     * Tracks whether the service is bound to the activity.
+     */
     private boolean isBound = false;
 
     private SessionManager sessionManager;
@@ -99,21 +112,23 @@ public class MainActivity extends AppCompatActivity {
         sessionManager = new SessionManager(this);
         apiService = ApiClient.getClient(this).create(ApiService.class);
 
-        if(!sessionManager.isLoggedIn()){
-            Log.d("DEBUG","Usuario no loggeado");
+        if (!sessionManager.isLoggedIn()) {
+            Log.d("DEBUG", "Usuario no loggeado");
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
             return;
-        } else if(sessionManager.getNodeId() == null){
-            Log.d("DEBUG","Obteniendo nodo");
+        } else if (sessionManager.getNodeId() == null) {
+            Log.d("DEBUG", "Obteniendo nodo");
             //Obtain userNode from API in order to check if user has got a node later as well
             getUserNode();
-        } else{
+        } else {
             startBiometricAuthIfAvailable();
         }
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        AdjustPadding();
+
+        // Bottom navigation
+        setupBottomNavigation();
 
         serviceConnection = new BeaconListeningServiceConnection();
         lastMeasurementLiveData.observe(this, this::updateUI);
@@ -131,7 +146,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onSuccess() {}
+            public void onSuccess() {
+            }
 
             @Override
             public void onFailure(String error) {
@@ -140,6 +156,38 @@ public class MainActivity extends AppCompatActivity {
         });
         setupBuzzerButton();
     }
+
+    /**
+     * Configures the bottom navigation menu and defines the behavior when each item is selected.
+     * <p>
+     * Each navigation item (home, map, target, profile) will start a new activity or perform a transition
+     * when selected. If the current item is the same as the one already selected, no action is performed.
+     */
+    private void setupBottomNavigation() {
+    BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+
+        bottomNavigationView.setOnItemSelectedListener(item ->
+
+    {
+        if (item.getItemId() == R.id.home) {
+            return true;
+        } else if (item.getItemId() == R.id.map) {
+            startActivity(new Intent(this, MapsActivity.class));
+            overridePendingTransition(0, 0);
+            return true;
+        } else if (item.getItemId() == R.id.target) {
+            startActivity(new Intent(this, GoalActivity.class));
+            overridePendingTransition(0, 0);
+            return true;
+        } else if (item.getItemId() == R.id.profile) {
+            startActivity(new Intent(this, ProfileActivity.class));
+            overridePendingTransition(0, 0);
+            return true;
+        }
+        return false;
+    });
+}
+
 
     /**
      * Method to start biometric authentication only if it is available.
@@ -249,22 +297,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Class to handle the logout button and process its click.
-     */
-    public void onLogoutButtonClicked(View v) {
-        // Stop service and clean up
-        onStopServiceButtonClicked(null);
-
-        // Clear session
-        sessionManager.clearSession();
-
-        // Redirect to login
-        Intent loginIntent = new Intent(this, LoginActivity.class);
-        startActivity(loginIntent);
-        finish();
-    }
-
-    /**
      * Class to handle the connection to the beacon service and retrieving of live changing data.
      */
     private class BeaconListeningServiceConnection implements ServiceConnection {
@@ -304,22 +336,6 @@ public class MainActivity extends AppCompatActivity {
             isBound = false;
             showToast("Service unbound");
         }
-    }
-
-    /**
-     * Adjusts the padding of the main view based on system bar insets.
-     * <p>
-     * This method sets an `OnApplyWindowInsetsListener` to automatically apply
-     * padding to account for the system bars (e.g., status and navigation bars),
-     * ensuring the main view content does not overlap with these UI elements.
-     */
-    private void AdjustPadding() {
-        // Adjusts the padding based on system bars.
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
     }
 
     /**
@@ -477,30 +493,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(LOG_TAG, "Error sending measurement: " + t.getMessage());
             }
         });
-    }
-
-    /**
-     * Stops the service and unbinds it when the stop service button is clicked.
-     *
-     * @param v The button view that was clicked.
-     */
-    public void onStopServiceButtonClicked(View v) {
-        if (serviceIntent != null) {
-            try {
-                if (isBound && beaconService != null) {
-                    beaconService.stopService(); // This will trigger the complete cleanup
-                    unbindService(serviceConnection);
-                    isBound = false;
-                }
-                stopService(serviceIntent);
-                serviceIntent = null;
-                mainHandler.removeCallbacks(runnable);
-                showToast("Service stopped");
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
-                showToast("Error stopping service");
-            }
-        }
     }
 
     /**
