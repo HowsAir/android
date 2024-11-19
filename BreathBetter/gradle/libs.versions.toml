@@ -18,6 +18,7 @@ constraintlayout = "2.1.4"
 mockitoCore = "3.12.4"
 retrofit = "2.9.0"
 runner = "1.0.2"
+glideVersion = "4.16.0"
 
 [libraries]
 android-espresso-core = { module = "com.android.support.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
@@ -42,6 +43,8 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 rules = { module = "androidx.test:rules", version.ref = "core" }
 runner = { module = "com.android.support.test:runner", version.ref = "runner" }
 biometric = { group = "androidx.biometric", name = "biometric", version = "1.1.0" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
+glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
 
 
 [plugins]

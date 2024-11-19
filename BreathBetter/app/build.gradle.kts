@@ -56,4 +56,6 @@ dependencies {
     implementation(libs.lifecycle.livedata)
     implementation (libs.code.scanner)
     implementation(libs.biometric)
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
 }
