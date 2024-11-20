@@ -282,29 +282,40 @@ public class ProfileActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_READ_EXTERNAL_STORAGE && resultCode == RESULT_OK && data != null) {
             selectedImageUri = data.getData();
-            Bitmap bitmap = null;
 
             try {
-                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
-            } catch (IOException e) {
-                Log.e(LOG_TAG, "Error al procesar la imagen: " + e.getMessage());
-                showToast("Error al seleccionar la imagen");
-                return;
-            }
+                // Mostrar la imagen inmediatamente usando Glide
+                Glide.with(ProfileActivity.this)
+                        .load(selectedImageUri)
+                        .placeholder(R.drawable.placeholder_icon)
+                        .error(R.drawable.placeholder_error_icon)
+                        .into(imageViewProfile);
 
-            if (bitmap != null) {
-                // Convert bitmap to Base64 (from first implementation)
+                // Procesar la imagen para su posterior envío
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
                 byte[] imageBytes = byteArrayOutputStream.toByteArray();
                 selectedImageBase64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
 
-                // Check for changes (from second implementation)
+                // Verificar cambios para activar el botón de guardar
                 checkForChanges();
 
                 showToast("Imagen seleccionada correctamente");
-            } else {
-                showToast("No se pudo procesar la imagen");
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error al procesar la imagen: " + e.getMessage());
+                showToast("Error al seleccionar la imagen");
+                selectedImageUri = null; // Resetear en caso de error
+                // Restaurar la imagen anterior si existe
+                if (initialImageUri != null) {
+                    Glide.with(ProfileActivity.this)
+                            .load(initialImageUri)
+                            .placeholder(R.drawable.placeholder_icon)
+                            .error(R.drawable.placeholder_error_icon)
+                            .into(imageViewProfile);
+                } else {
+                    imageViewProfile.setImageResource(R.drawable.placeholder_icon);
+                }
             }
         }
     }
