@@ -141,5 +141,17 @@ public interface ApiService {
             @Part @Nullable MultipartBody.Part photo
     );
 
+    /**
+     * Allows the user to change their current password to a new one.
+     * <p>
+     * Sends a PUT request to the `/users/password` endpoint, requiring the user to be authenticated.
+     * The request body must include the user's current password and the desired new password.
+     *
+     * @param requestBody A JsonObject containing the user's current password and new password.
+     * @return Call<Void> The call to the API endpoint to change the password.
+     */
+    @PUT("users/password")
+    Call<Void> changePassword(@Body JsonObject requestBody);
+
 }
 
