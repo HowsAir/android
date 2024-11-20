@@ -16,4 +16,6 @@
     <string name="ChangePassProfile">Cambiar Contraseña</string>
     <string name="SaveChanges">Guardar Cambios</string>
     <string name="SignOut">Cerrar Sesión</string>
+    <string name="write_old_pass">Escribe tu contraseña actual</string>
+    <string name="current_pass">Contraseña actual</string>
 </resources>

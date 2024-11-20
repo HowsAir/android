@@ -84,14 +84,6 @@
             android:name=".activities.ProfileActivity"
             android:exported="false" />
 
-
-
-        <service
-            android:name=".bluetooth.BeaconListeningService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location" />
-
         <activity
             android:name=".activities.ForgotPasswordActivity"
             android:exported="false">
@@ -102,6 +94,17 @@
             android:exported="false">
         </activity>
 
+        <activity
+            android:name=".activities.ChangePasswordActivity"
+            android:exported="false">
+        </activity>
+
+
+        <service
+            android:name=".bluetooth.BeaconListeningService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
     </application>
 

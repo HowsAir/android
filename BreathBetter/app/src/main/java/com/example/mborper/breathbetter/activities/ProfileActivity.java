@@ -58,7 +58,7 @@ import retrofit2.Response;
  *
  * @author Alejandro Rosado
  * @since  2024-11-18
- * last edited: 2024-11-19
+ * last edited: 2024-11-20
  */
 public class ProfileActivity extends AppCompatActivity {
 
@@ -187,7 +187,7 @@ public class ProfileActivity extends AppCompatActivity {
      * Opens the forgot password activity
      */
     private void onTvForgotPassClicked() {
-        startActivity(new Intent(ProfileActivity.this, ForgotPasswordActivity.class));
+        startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class));
     }
 
     /**
