@@ -3,6 +3,7 @@ package com.example.mborper.breathbetter.activities;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
@@ -60,9 +61,13 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2024-11-19
+ * last edited: 2024-11-20
  */
 public class MainActivity extends AppCompatActivity {
+
+    // Nuevo flag para rastrear el primer lanzamiento
+    private static final String PREFS_NAME = "AppPreferences";
+    private static final String FIRST_LAUNCH_KEY = "isFirstLaunch";
 
     /**
      * Log tag for debugging.
@@ -115,15 +120,47 @@ public class MainActivity extends AppCompatActivity {
         if (!sessionManager.isLoggedIn()) {
             Log.d("DEBUG", "Usuario no loggeado");
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            finish();
             return;
-        } else if (sessionManager.getNodeId() == null) {
-            Log.d("DEBUG", "Obteniendo nodo");
-            //Obtain userNode from API in order to check if user has got a node later as well
-            getUserNode();
-        } else {
-            startBiometricAuthIfAvailable();
         }
 
+        // Check if it is the first start
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean isFirstLaunch = prefs.getBoolean(FIRST_LAUNCH_KEY, true);
+
+        // Always try to get the node if not already retrieved
+        if (sessionManager.getNodeId() == null) {
+            Log.d("DEBUG", "Obteniendo nodo");
+            getUserNode();
+            return;
+        }
+
+        // If you already have node, configure main activity
+        setupMainActivity(isFirstLaunch);
+
+        // Update flag after first launch
+        if (isFirstLaunch) {
+            prefs.edit().putBoolean(FIRST_LAUNCH_KEY, false).apply();
+        }
+    }
+
+    /**
+     * Fully initializes the MainActivity by setting up all UI components,
+     * service connections, and event listeners.
+     * <p>
+     * This method handles:
+     * - Enabling edge-to-edge layout
+     * - Setting the content view
+     * - Configuring bottom navigation
+     * - Setting up service connections for beacon listening
+     * - Initializing buzzer control
+     * - Setting up biometric authentication
+     * <p>
+     * Called after successful login and node linking to ensure all
+     * necessary components are properly configured before displaying
+     * the main application interface.
+     */
+    private void setupMainActivity(boolean shouldAuthenticate) {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
@@ -155,6 +192,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         setupBuzzerButton();
+
+        // Only require biometric authentication on first launch
+        if (shouldAuthenticate) {
+            startBiometricAuthIfAvailable();
+        }
     }
 
     /**
@@ -230,11 +272,15 @@ public class MainActivity extends AppCompatActivity {
                     sessionManager.saveNodeId(Integer.toString(userNode.getId()));
                     showToast("Node retrieved successfully: " + userNode.getId());
 
-                    startBiometricAuthIfAvailable();
+                    runOnUiThread(() -> {
+                        // Get first start status
+                        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                        boolean isFirstLaunch = prefs.getBoolean(FIRST_LAUNCH_KEY, true);
+                        setupMainActivity(isFirstLaunch);
+                    });
                 } else if (response.code() == 404) {
                     sessionManager.clearNodeId();
                     showToast("Ahora vincula tu nuevo nodo");
-
                     startActivity(new Intent(MainActivity.this, QRExplanationActivity.class));
                 } else {
                     showToast("Error desconocido, inténtalo de nuevo o contáctanos");
