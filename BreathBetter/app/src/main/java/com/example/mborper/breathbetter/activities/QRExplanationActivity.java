@@ -31,6 +31,7 @@ import retrofit2.Response;
  *
  * @author Juan Diaz & Manuel Borregales
  * @since  2024-10-26
+ * last updated: 2024-11-20
  */
 public class QRExplanationActivity extends AppCompatActivity {
 
@@ -43,6 +44,17 @@ public class QRExplanationActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Verificar si ya tiene un nodo vinculado
+        SessionManager sessionManager = new SessionManager(this);
+        if (sessionManager.getNodeId() != null) {
+            // Si ya tiene un nodo, ir directamente a MainActivity
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_qr_explanation);
@@ -163,9 +175,8 @@ public class QRExplanationActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (response.isSuccessful()) {
-                            Toast.makeText(context, "Nodo vinculado exitosamente", Toast.LENGTH_SHORT).show();
-
-                            startActivity(new Intent(QRExplanationActivity.this, MainActivity.class));
+                            // Navigate to NodeLinkedActivity instead of showing a Toast
+                            startActivity(new Intent(QRExplanationActivity.this, NodeLinkedActivity.class));
                             finish();
                         } else {
                             Toast.makeText(context, "Error al vincular el nodo", Toast.LENGTH_SHORT).show();

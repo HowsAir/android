@@ -18,4 +18,5 @@
     <string name="SignOut">Cerrar Sesión</string>
     <string name="write_old_pass">Escribe tu contraseña actual</string>
     <string name="current_pass">Contraseña actual</string>
+    <string name="succesful_noke_link">¡Tu Breeze ha sido vinculado con exito!</string>
 </resources>
