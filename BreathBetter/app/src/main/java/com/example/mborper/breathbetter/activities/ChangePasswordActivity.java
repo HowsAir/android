@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -58,6 +59,10 @@ public class ChangePasswordActivity extends AppCompatActivity {
         etNewPassword = findViewById(R.id.etNewPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
         btnChangePassword = findViewById(R.id.btnChangePassword);
+
+        findViewById(R.id.btnBack2).setOnClickListener(v -> {
+            getOnBackPressedDispatcher().onBackPressed();
+        });
 
         sessionManager = new SessionManager(this);
         apiService = ApiClient.getClient(this).create(ApiService.class);

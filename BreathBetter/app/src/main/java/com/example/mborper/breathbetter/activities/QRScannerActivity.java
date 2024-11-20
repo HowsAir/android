@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.budiyev.android.codescanner.CodeScanner;
@@ -46,6 +47,11 @@ public class QRScannerActivity extends AppCompatActivity {
                 setResult(Activity.RESULT_OK, resultIntent); // Set the activity result
                 finish();
             });
+        });
+
+        ImageButton btnBack = findViewById(R.id.btnBack3);
+        btnBack.setOnClickListener(v -> {
+            getOnBackPressedDispatcher().onBackPressed();
         });
 
         codeScanner.setErrorCallback(error -> runOnUiThread(() -> {

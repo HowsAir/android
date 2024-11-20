@@ -55,6 +55,10 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         etVerificationCodeFP = findViewById(R.id.etVerificationCodeFP);
         btnSendCodeFP = findViewById(R.id.btnSendCodeFP);
 
+        findViewById(R.id.btnBack).setOnClickListener(v -> {
+            getOnBackPressedDispatcher().onBackPressed();
+        });
+
         apiService = ApiClient.getClient(this).create(ApiService.class);
 
         btnRequestCodeFP.setOnClickListener(v -> requestPasswordResetCode());
