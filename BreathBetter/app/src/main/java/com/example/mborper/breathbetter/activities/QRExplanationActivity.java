@@ -45,10 +45,10 @@ public class QRExplanationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Verificar si ya tiene un nodo vinculado
+        // Check if the user already has a node linked
         SessionManager sessionManager = new SessionManager(this);
         if (sessionManager.getNodeId() != null) {
-            // Si ya tiene un nodo, ir directamente a MainActivity
+            // If the user already has a node, go directly to MainActivity
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
