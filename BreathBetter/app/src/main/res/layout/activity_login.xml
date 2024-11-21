@@ -99,10 +99,23 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
+        android:id="@+id/tvError"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="45dp"
+        android:layout_marginEnd="45dp"
+        android:textColor="@color/design_default_color_error"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tilPassword" />
+
+    <TextView
         android:id="@+id/tvForgotPassword"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:onClick="onTvForgotPassClicked"
         android:text="@string/forgotPassword"
         android:textAppearance="@style/TextAppearance.App.Heading3"

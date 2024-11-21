@@ -15,7 +15,7 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
@@ -31,7 +31,7 @@ import retrofit2.Response;
  *
  * @author Juan Diaz & Manuel Borregales
  * @since  2024-10-26
- * last updated: 2024-11-20
+ * last updated: 2024-11-21
  */
 public class QRExplanationActivity extends AppCompatActivity {
 
@@ -108,6 +108,9 @@ public class QRExplanationActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        TextView tvError = findViewById(R.id.tvError);
+
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("qr", "Permission granted in result.");
@@ -116,8 +119,8 @@ public class QRExplanationActivity extends AppCompatActivity {
             } else {
                 Log.d("qr", "Permission denied.");
                 // Show a message indicating that camera permission is required
-                Toast.makeText(this, "Camera permission is required to scan QR codes.",
-                        Toast.LENGTH_LONG).show();
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Se necesita el permiso para acceder a la cámara");
             }
         }
     }
@@ -174,18 +177,24 @@ public class QRExplanationActivity extends AppCompatActivity {
                 .enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
+                        TextView tvError = findViewById(R.id.tvError);
+
                         if (response.isSuccessful()) {
                             // Navigate to NodeLinkedActivity instead of showing a Toast
                             startActivity(new Intent(QRExplanationActivity.this, NodeLinkedActivity.class));
                             finish();
                         } else {
-                            Toast.makeText(context, "Error al vincular el nodo", Toast.LENGTH_SHORT).show();
+                            tvError.setVisibility(View.VISIBLE);
+                            tvError.setText("Error al vincular el nodo");
                         }
                     }
 
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
-                        Toast.makeText(context, "Error de conexión", Toast.LENGTH_SHORT).show();
+                        TextView tvError = findViewById(R.id.tvError);
+
+                        tvError.setVisibility(View.VISIBLE);
+                        tvError.setText("Error de conexión");
                     }
                 });
     }

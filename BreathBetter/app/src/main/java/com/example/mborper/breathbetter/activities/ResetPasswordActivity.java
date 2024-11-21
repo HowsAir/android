@@ -2,9 +2,10 @@ package com.example.mborper.breathbetter.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -28,6 +29,7 @@ import retrofit2.Response;
  *
  * @author Manuel
  * @since 2024-11-13
+ * last updated: 2024-11-21
  */
 public class ResetPasswordActivity extends AppCompatActivity {
     private EditText etNewPassFP, etVerifyPassFP;
@@ -67,8 +69,10 @@ public class ResetPasswordActivity extends AppCompatActivity {
         String newPassword = etNewPassFP.getText().toString().trim();
         String verifyPassword = etVerifyPassFP.getText().toString().trim();
 
+        TextView tvMismatchPassword = findViewById(R.id.tvMismatchPassword);
+
         if (!newPassword.equals(verifyPassword)) {
-            Toast.makeText(ResetPasswordActivity.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            tvMismatchPassword.setVisibility(View.VISIBLE);
             return;
         }
 
@@ -87,19 +91,20 @@ public class ResetPasswordActivity extends AppCompatActivity {
              */
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
+                TextView tvMismatchPassword = findViewById(R.id.tvMismatchPassword);
+
                 if (response.isSuccessful()) {
-                    Toast.makeText(ResetPasswordActivity.this,
-                            "Password reset successfully",
-                            Toast.LENGTH_SHORT).show();
+                    tvMismatchPassword.setVisibility(View.VISIBLE);
+                    tvMismatchPassword.setText("Contraseña cambiada correctamente");
+                    tvMismatchPassword.setTextColor(getResources().getColor(R.color.black));
 
                     sessionManager.clearSession();
 
                     startActivity(new Intent(ResetPasswordActivity.this, LoginActivity.class));
                     finish();
                 } else {
-                    Toast.makeText(ResetPasswordActivity.this,
-                            "Failed to reset password",
-                            Toast.LENGTH_SHORT).show();
+                    tvMismatchPassword.setVisibility(View.VISIBLE);
+                    tvMismatchPassword.setText("Las contraseñas deben coincidir");
                 }
             }
 
@@ -112,9 +117,11 @@ public class ResetPasswordActivity extends AppCompatActivity {
              */
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(ResetPasswordActivity.this,
-                        "Network error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                TextView tvMismatchPassword = findViewById(R.id.tvMismatchPassword);
+
+                tvMismatchPassword.setVisibility(View.VISIBLE);
+                tvMismatchPassword.setText("Error de conexión");
+
             }
         });
     }

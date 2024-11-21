@@ -40,4 +40,6 @@
     <string name="write_old_pass">Escribe tu contraseña actual</string>
     <string name="current_pass">Contraseña actual</string>
     <string name="succesful_noke_link">¡Tu Breeze ha sido vinculado con exito!</string>
+    <string name="wrong_password">Contraseña incorrecta</string>
+    <string name="mismatch_passwords">Las contraseñas no coinciden</string>
 </resources>

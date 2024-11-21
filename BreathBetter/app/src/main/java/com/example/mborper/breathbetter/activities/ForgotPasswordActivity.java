@@ -2,9 +2,10 @@ package com.example.mborper.breathbetter.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -86,19 +87,21 @@ public class ForgotPasswordActivity extends AppCompatActivity {
              */
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
+
+                TextView tvEmailSent = findViewById(R.id.tvEmailSent);
+
                 if (response.isSuccessful()) {
-                    Toast.makeText(ForgotPasswordActivity.this,
-                            "Email sent if you have an account",
-                            Toast.LENGTH_SHORT).show();
+                    tvEmailSent.setVisibility(View.VISIBLE);
+                    tvEmailSent.setTextColor(getResources().getColor(R.color.gray));
+                    tvEmailSent.setText("Email enviado con el código de verificación de contraseña");
 
                     // Enable the "Send Code" button and set its active style
                     btnSendCodeFP.setEnabled(true);
                     btnSendCodeFP.setBackgroundColor(getResources().getColor(R.color.primary));
                     btnSendCodeFP.setTextColor(getResources().getColor(R.color.white));
                 } else {
-                    Toast.makeText(ForgotPasswordActivity.this,
-                            "Failed to request password reset code",
-                            Toast.LENGTH_SHORT).show();
+                    tvEmailSent.setVisibility(View.VISIBLE);
+                    tvEmailSent.setText("Escribe tu correo electrónico");
                 }
             }
 
@@ -111,9 +114,10 @@ public class ForgotPasswordActivity extends AppCompatActivity {
              */
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(ForgotPasswordActivity.this,
-                        "Network error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                TextView tvEmailSent = findViewById(R.id.tvEmailSent);
+
+                tvEmailSent.setVisibility(View.VISIBLE);
+                tvEmailSent.setText("Error de conexión");
             }
         });
     }
@@ -136,14 +140,16 @@ public class ForgotPasswordActivity extends AppCompatActivity {
              */
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
+
+                TextView tvCode = findViewById(R.id.tvCode);
+
                 if (response.isSuccessful()) {
                     Intent intent = new Intent(ForgotPasswordActivity.this, ResetPasswordActivity.class);
                     intent.putExtra("email", email);
                     startActivity(intent);
                 } else {
-                    Toast.makeText(ForgotPasswordActivity.this,
-                            "Invalid password reset code",
-                            Toast.LENGTH_SHORT).show();
+                    tvCode.setVisibility(View.VISIBLE);
+                    tvCode.setText("Código de verificación incorrecto");
                 }
             }
 
@@ -156,9 +162,10 @@ public class ForgotPasswordActivity extends AppCompatActivity {
              */
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Toast.makeText(ForgotPasswordActivity.this,
-                        "Network error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                TextView tvCode = findViewById(R.id.tvCode);
+
+                tvCode.setVisibility(View.VISIBLE);
+                tvCode.setText("Error de conexión");
             }
         });
     }

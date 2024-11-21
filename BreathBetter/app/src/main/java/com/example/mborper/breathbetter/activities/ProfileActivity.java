@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -15,10 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -39,7 +35,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -139,6 +134,7 @@ public class ProfileActivity extends AppCompatActivity {
         apiService.getUserProfile().enqueue(new Callback<JsonObject>() {
             @Override
             public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                TextView tvError = findViewById(R.id.tvError);
                 if (response.isSuccessful() && response.body() != null) {
                     JsonObject user = response.body().getAsJsonObject("user");
                     if (user != null) {
@@ -171,14 +167,18 @@ public class ProfileActivity extends AppCompatActivity {
                     }
                 } else {
                     Log.e(LOG_TAG, "Error al cargar perfil: " + response.code());
-                    showToast("Error al cargar perfil");
+                    tvError.setVisibility(View.VISIBLE);
+                    tvError.setText("Error al cargar perfil");
                 }
             }
 
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
+                TextView tvError = findViewById(R.id.tvError);
+
                 Log.e(LOG_TAG, "Fallo de conexión al cargar perfil", t);
-                showToast("Fallo de conexión al cargar perfil");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Error de conexión");
             }
         });
     }
@@ -280,6 +280,8 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        TextView tvError = findViewById(R.id.tvError);
+
         if (requestCode == REQUEST_READ_EXTERNAL_STORAGE && resultCode == RESULT_OK && data != null) {
             selectedImageUri = data.getData();
 
@@ -301,10 +303,15 @@ public class ProfileActivity extends AppCompatActivity {
                 // Verificar cambios para activar el botón de guardar
                 checkForChanges();
 
-                showToast("Imagen seleccionada correctamente");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setTextColor(getResources().getColor(R.color.gray));
+                tvError.setText("Imagen seleccionada correctamente");
+
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error al procesar la imagen: " + e.getMessage());
-                showToast("Error al seleccionar la imagen");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Error al seleccionar la imagen");
+
                 selectedImageUri = null; // Resetear en caso de error
                 // Restaurar la imagen anterior si existe
                 if (initialImageUri != null) {
@@ -325,6 +332,8 @@ public class ProfileActivity extends AppCompatActivity {
      * Handles different permission models for Android versions.
      */
     private void requestImagePickPermission() {
+        TextView tvError = findViewById(R.id.tvError);
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
             // Android 11+: No permission needed
             openImagePicker();
@@ -333,7 +342,8 @@ public class ProfileActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    showToast("Se necesita el permiso para seleccionar imágenes");
+                    tvError.setVisibility(View.VISIBLE);
+                    tvError.setText("Se necesita permiso para acceder a la galería");
                 }
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
@@ -365,12 +375,15 @@ public class ProfileActivity extends AppCompatActivity {
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        TextView tvError = findViewById(R.id.tvError);
+
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_READ_EXTERNAL_STORAGE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openImagePicker();
             } else {
-                showToast("Permiso de almacenamiento denegado");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Permiso de acceso a la galería denegado");
             }
         }
     }
@@ -384,13 +397,16 @@ public class ProfileActivity extends AppCompatActivity {
         String name = etName.getText().toString().trim();
         String surname = etSurname.getText().toString().trim();
 
+        TextView tvError = findViewById(R.id.tvError);
+
         // Check for changes
         boolean hasName = !name.isEmpty();
         boolean hasSurname = !surname.isEmpty();
         boolean hasImage = selectedImageUri != null;
 
         if (!hasName && !hasSurname && !hasImage) {
-            showToast("Proporciona al menos un campo para actualizar");
+            tvError.setVisibility(View.VISIBLE);
+            tvError.setText("Proporciona al menos un campo para actualizar");
             return;
         }
 
@@ -412,7 +428,8 @@ public class ProfileActivity extends AppCompatActivity {
                 photoPart = MultipartBody.Part.createFormData("photo", imageFile.getName(), requestFile);
             } catch (IOException e) {
                 Log.e(LOG_TAG, "Error al procesar la imagen: " + e.getMessage());
-                showToast("Error al preparar la imagen para subir");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Error al preparar la imagen para subir");
                 return;
             }
         }
@@ -422,7 +439,9 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    showToast("Perfil actualizado correctamente");
+                    tvError.setVisibility(View.VISIBLE);
+                    tvError.setTextColor(getResources().getColor(R.color.gray));
+                    tvError.setText("Perfil actualizado correctamente");
 
                     // Update initial values on successful save
                     initialName = name;
@@ -445,14 +464,16 @@ public class ProfileActivity extends AppCompatActivity {
                     checkForChanges();
                 } else {
                     Log.e(LOG_TAG, "Error al actualizar perfil: " + response.code());
-                    showToast("Error al actualizar perfil");
+                    tvError.setVisibility(View.VISIBLE);
+                    tvError.setText("Error al actualizar perfil");
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 Log.e(LOG_TAG, "Fallo de conexión al actualizar perfil", t);
-                showToast("Fallo de conexión al actualizar perfil");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Fallo de conexión al actualizar perfil");
             }
         });
     }
@@ -479,6 +500,8 @@ public class ProfileActivity extends AppCompatActivity {
      * @param v The button view that was clicked.
      */
     public void onStopServiceButtonClicked(View v) {
+        TextView tvError = findViewById(R.id.tvError);
+
         if (serviceIntent != null) {
             try {
                 if (isBound) {
@@ -488,17 +511,9 @@ public class ProfileActivity extends AppCompatActivity {
                 serviceIntent = null;
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
-                showToast("Error stopping service");
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Error al parar el servicio");
             }
         }
-    }
-
-    /**
-     * Shows a temporal message on the screen to let the user know something.
-     *
-     * @param message the message to show on the screen.
-     */
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

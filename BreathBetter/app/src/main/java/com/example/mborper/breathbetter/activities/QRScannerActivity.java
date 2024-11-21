@@ -6,8 +6,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageButton;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
@@ -19,6 +20,7 @@ import com.example.mborper.breathbetter.R;
  *
  * @since 2024-10-26
  * @author Juan Diaz
+ * last updated: 2024-11-21
  */
 public class QRScannerActivity extends AppCompatActivity {
 
@@ -34,6 +36,8 @@ public class QRScannerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr_scanner);
+
+        TextView tvError = findViewById(R.id.tvError);
 
         @SuppressLint({"MissingInflatedId", "LocalSuppress"})
         CodeScannerView scannerView = findViewById(R.id.scanner_view);
@@ -55,8 +59,8 @@ public class QRScannerActivity extends AppCompatActivity {
         });
 
         codeScanner.setErrorCallback(error -> runOnUiThread(() -> {
-            Toast.makeText(this, "Error scanning: " + error.getMessage(),
-                    Toast.LENGTH_SHORT).show();
+            tvError.setVisibility(View.VISIBLE);
+            tvError.setText("Error escaneando");
         }));
     }
 

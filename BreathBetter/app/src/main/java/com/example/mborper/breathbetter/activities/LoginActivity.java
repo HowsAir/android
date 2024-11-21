@@ -11,7 +11,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -99,8 +98,12 @@ public class LoginActivity extends AppCompatActivity {
         String email = emailEdit.getText().toString().trim();
         String password = passwordEdit.getText().toString().trim();
 
+        TextView tvError = findViewById(R.id.tvError);
+
+
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            tvError.setVisibility(View.VISIBLE);
+            tvError.setText("Por favor, completa todos los campos");
             return;
         }
 
@@ -121,6 +124,7 @@ public class LoginActivity extends AppCompatActivity {
              */
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                TextView tvError = findViewById(R.id.tvError);
                 progressBar.setVisibility(View.GONE);
                 loginButton.setEnabled(true);
 
@@ -142,10 +146,12 @@ public class LoginActivity extends AppCompatActivity {
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
                     } else {
-                        Toast.makeText(LoginActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                        tvError.setVisibility(View.VISIBLE);
+                        tvError.setText("Autenticación fallida");
                     }
                 } else {
-                    Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+                    tvError.setVisibility(View.VISIBLE);
+                    tvError.setText("Error de autenticación o credenciales inválidas");
                 }
             }
 
@@ -159,9 +165,11 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                TextView tvError = findViewById(R.id.tvError);
                 loginButton.setEnabled(true);
-                Toast.makeText(LoginActivity.this, "Network error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Error de conexión");
             }
         });
     }
