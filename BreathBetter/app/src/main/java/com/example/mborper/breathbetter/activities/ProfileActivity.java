@@ -286,21 +286,21 @@ public class ProfileActivity extends AppCompatActivity {
             selectedImageUri = data.getData();
 
             try {
-                // Mostrar la imagen inmediatamente usando Glide
+                // Display image immediately using Glide
                 Glide.with(ProfileActivity.this)
                         .load(selectedImageUri)
                         .placeholder(R.drawable.placeholder_icon)
                         .error(R.drawable.placeholder_error_icon)
                         .into(imageViewProfile);
 
-                // Procesar la imagen para su posterior envío
+                // Process the image for later sending
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
                 byte[] imageBytes = byteArrayOutputStream.toByteArray();
                 selectedImageBase64 = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
 
-                // Verificar cambios para activar el botón de guardar
+                // Check changes to activate the save button
                 checkForChanges();
 
                 tvError.setVisibility(View.VISIBLE);
@@ -312,8 +312,8 @@ public class ProfileActivity extends AppCompatActivity {
                 tvError.setVisibility(View.VISIBLE);
                 tvError.setText("Error al seleccionar la imagen");
 
-                selectedImageUri = null; // Resetear en caso de error
-                // Restaurar la imagen anterior si existe
+                selectedImageUri = null; // Reset on error
+                // Restore previous image if it exists
                 if (initialImageUri != null) {
                     Glide.with(ProfileActivity.this)
                             .load(initialImageUri)
