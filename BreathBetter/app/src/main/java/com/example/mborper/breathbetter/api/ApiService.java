@@ -27,9 +27,9 @@ import retrofit2.http.Query;
  * The ApiService interface defines the API endpoints that the client will interact with.
  * It uses Retrofit's annotations to define GET and POST requests for sending and receiving measurements.
  *
- * @author Manuel Borregales
+ * @author Manuel Borregales, Alejandro Rosado
  * @since 2024-10-04
- * last updated 2024-11-19
+ * last updated 2024-11-21
  */
 public interface ApiService {
 
@@ -152,6 +152,19 @@ public interface ApiService {
      */
     @PUT("users/password")
     Call<Void> changePassword(@Body JsonObject requestBody);
+
+    /**
+     * Retrieves the total distance traveled by the authenticated user for the current day.
+     * <p>
+     * Makes a GET request to the `/users/today-total-distance` endpoint to fetch the total
+     * distance in meters that the user has traveled during the current day. This endpoint
+     * requires authentication through the auth_token cookie.
+     *
+     * @return Call<JsonObject> The call to the API endpoint containing the total distance.
+     *         The response includes a message and the totalDistance in meters.
+     */
+    @GET("users/today-total-distance")
+    Call<JsonObject> getTodayTotalDistance();
 
 }
 

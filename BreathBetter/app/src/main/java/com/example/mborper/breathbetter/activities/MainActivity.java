@@ -61,11 +61,11 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2024-11-20
+ * last edited: 2024-11-21
  */
 public class MainActivity extends AppCompatActivity {
 
-    // Nuevo flag para rastrear el primer lanzamiento
+    // New flag to track first release
     private static final String PREFS_NAME = "AppPreferences";
     private static final String FIRST_LAUNCH_KEY = "isFirstLaunch";
 
@@ -80,6 +80,21 @@ public class MainActivity extends AppCompatActivity {
     private static final String TARGET_UUID = "MANU-EPSG-GTI-3A";
     //private static final String TARGET_UUID = "4d414e55-2d45-5053-472d-4754492d3341";
 
+    /**
+     * Handler for updating the distance traveled periodically
+     */
+    private final Handler distanceUpdateHandler = new Handler(Looper.getMainLooper());
+
+    /**
+     * Runnable for periodic distance updates
+     */
+    private final Runnable distanceUpdateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateTotalDistance();
+            distanceUpdateHandler.postDelayed(this, 30000); // Update every 30 seconds
+        }
+    };
 
     private ApiService apiService;
 
@@ -192,6 +207,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         setupBuzzerButton();
+
+        // Start periodic distance updates
+        startDistanceUpdates();
 
         // Only require biometric authentication on first launch
         if (shouldAuthenticate) {
@@ -513,6 +531,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Starts periodic updates of the total distance traveled.
+     */
+    private void startDistanceUpdates() {
+        updateTotalDistance(); // Initial update
+        distanceUpdateHandler.postDelayed(distanceUpdateRunnable, 30000); // Schedule subsequent updates
+    }
+
+    /**
+     * Fetches and updates the total distance traveled for today from the server.
+     * Updates the UI with the new distance value.
+     */
+    private void updateTotalDistance() {
+        apiService.getTodayTotalDistance().enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    JsonObject body = response.body();
+                    if (body.has("totalDistance")) {
+                        int totalDistance = body.get("totalDistance").getAsInt();
+                        TextView distanceText = findViewById(R.id.textDistanceTraveled);
+                        distanceText.setText(totalDistance + " m");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable t) {
+                Log.e(LOG_TAG, "Error fetching total distance: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
      * Sends the provided measurement to the API via HTTP post request.
      * <p>
      *      Measurement { o3Value: Natural
@@ -546,6 +597,10 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onDestroy() {
+        // Remove all callbacks to prevent memory leaks
+        distanceUpdateHandler.removeCallbacks(distanceUpdateRunnable);
+        mainHandler.removeCallbacks(runnable);
+
         try {
             if (isBound && serviceConnection != null) {
                 unbindService(serviceConnection);
@@ -555,7 +610,6 @@ public class MainActivity extends AppCompatActivity {
             Log.e(LOG_TAG, "Error in onDestroy: " + e.getMessage());
         }
         super.onDestroy();
-        mainHandler.removeCallbacks(runnable);
     }
 
     /**
@@ -584,4 +638,6 @@ public class MainActivity extends AppCompatActivity {
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
+
+
 }
