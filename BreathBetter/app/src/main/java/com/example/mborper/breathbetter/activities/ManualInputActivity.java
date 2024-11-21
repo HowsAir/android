@@ -7,6 +7,7 @@ import android.text.InputFilter;
 import android.text.Spanned;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import com.example.mborper.breathbetter.R;
  *
  * @author Alejandro Rosado
  * @since 2024-11-01
+ * last updated: 2024-11-21
  */
 public class ManualInputActivity extends AppCompatActivity {
 
@@ -43,6 +45,11 @@ public class ManualInputActivity extends AppCompatActivity {
 
         nodeIdInput = findViewById(R.id.nodeIdInput);
         Button confirmButton = findViewById(R.id.confirmButton);
+
+        ImageButton btnBack = findViewById(R.id.btnBack4);
+        btnBack.setOnClickListener(v -> {
+            getOnBackPressedDispatcher().onBackPressed();
+        });
 
         // Set up input filters
         InputFilter[] filters = new InputFilter[]{
