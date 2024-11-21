@@ -157,11 +157,11 @@ public class ProfileActivity extends AppCompatActivity {
                         if (initialImageUri != null) {
                             Glide.with(ProfileActivity.this)
                                     .load(initialImageUri)
-                                    .placeholder(R.drawable.placeholder_icon)
+                                    .placeholder(R.mipmap.placeholder_profile_icon_default_foreground)
                                     .error(R.drawable.placeholder_error_icon)
                                     .into(imageViewProfile);
                         } else {
-                            imageViewProfile.setImageResource(R.drawable.placeholder_icon);
+                            imageViewProfile.setImageResource(R.mipmap.placeholder_profile_icon_default_foreground);
                         }
 
                         // Reset button (no change after loading profile)
