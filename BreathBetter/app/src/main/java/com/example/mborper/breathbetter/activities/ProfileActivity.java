@@ -95,6 +95,9 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setSelectedItemId(R.id.profile);
+
         // Start components
         imageViewProfile = findViewById(R.id.ImageViewProfile);
         etName = findViewById(R.id.etName);
@@ -212,7 +215,7 @@ public class ProfileActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
                 return true;
             } else if (item.getItemId() == R.id.profile) {
-                overridePendingTransition(0, 0);
+                overridePendingTransition(4, 4);
                 return true;
             }
             return false;

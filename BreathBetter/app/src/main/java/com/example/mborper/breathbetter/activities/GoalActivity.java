@@ -27,6 +27,9 @@ public class GoalActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_goal);
 
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setSelectedItemId(R.id.target);
+
         // Bottom navigation
         setupBottomNavigation();
     }

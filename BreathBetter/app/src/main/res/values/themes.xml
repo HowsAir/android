@@ -19,4 +19,5 @@
         <!-- Button defaults -->
         <item name="materialButtonStyle">@style/Widget.App.Button.Primary</item>
     </style>
+    <style name="Theme.BreathBetter" parent="Base.Theme.BreathBetter"/>
 </resources>

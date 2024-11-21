@@ -4,21 +4,21 @@
     <item
         android:id="@+id/home"
         android:icon="@drawable/home_icon"
-        android:title="Home"
+        android:title=""
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/map"
         android:icon="@drawable/map_icon"
-        android:title="Map"
+        android:title=""
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/target"
         android:icon="@drawable/goal_icon"
-        android:title="Target"
+        android:title=""
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/profile"
         android:icon="@drawable/profile_icon"
-        android:title="Profile"
+        android:title=""
         app:showAsAction="ifRoom" />
 </menu>

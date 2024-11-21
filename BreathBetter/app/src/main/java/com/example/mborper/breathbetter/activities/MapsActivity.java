@@ -27,6 +27,9 @@ public class MapsActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_maps);
 
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setSelectedItemId(R.id.map);
+
         // Bottom navigation
         setupBottomNavigation();
     }
