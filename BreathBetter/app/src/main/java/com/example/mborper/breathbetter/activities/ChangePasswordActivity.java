@@ -5,7 +5,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.widget.ImageButton;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,7 +33,7 @@ import retrofit2.Response;
  *
  * @author Alejandro Rosado
  * @since 2024-11-20
- * last edited:
+ * last edited: 2024-11-21
  */
 public class ChangePasswordActivity extends AppCompatActivity {
     private static final String LOG_TAG = "CHANGE_PASSWORD_LOG";
@@ -46,7 +47,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
 
     // Password validation pattern
     private static final Pattern PASSWORD_PATTERN = Pattern.compile(
-            "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$"
+            "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!.])(?=\\S+$).{8,}$"
     );
 
     @Override
@@ -97,15 +98,21 @@ public class ChangePasswordActivity extends AppCompatActivity {
      * Validates user inputs and updates the button state.
      */
     private void validateFields() {
+        TextView tvMismatchPassword = findViewById(R.id.tvMismatchPassword);
+
         String currentPassword = etCurrentPassword.getText().toString();
         String newPassword = etNewPassword.getText().toString();
         String confirmPassword = etConfirmPassword.getText().toString();
 
+        boolean passwordsMatch = newPassword.equals(confirmPassword);
         boolean isValid = !currentPassword.isEmpty() &&
                 !newPassword.isEmpty() &&
                 !confirmPassword.isEmpty() &&
-                newPassword.equals(confirmPassword) &&
+                passwordsMatch &&
                 isValidPassword(newPassword);
+
+        // Show/hide mismatch error
+        tvMismatchPassword.setVisibility(passwordsMatch ? View.GONE : View.VISIBLE);
 
         btnChangePassword.setEnabled(isValid);
         btnChangePassword.setBackgroundTintList(
@@ -137,6 +144,8 @@ public class ChangePasswordActivity extends AppCompatActivity {
         String currentPassword = etCurrentPassword.getText().toString();
         String newPassword = etNewPassword.getText().toString();
 
+        TextView tvWrongPassword = findViewById(R.id.tvWrongPassword);
+
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("currentPassword", currentPassword);
         requestBody.addProperty("newPassword", newPassword);
@@ -145,18 +154,19 @@ public class ChangePasswordActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    showToast("Contraseña cambiada exitosamente");
                     logout();
                 } else {
                     Log.e(LOG_TAG, "Error al cambiar contraseña: " + response.code());
-                    showToast("Error al cambiar la contraseña. Verifica tus datos.");
+                    tvWrongPassword.setVisibility(View.VISIBLE);
+                    tvWrongPassword.setText("Error al cambiar la contraseña. Verifica tus datos.");
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
                 Log.e(LOG_TAG, "Fallo de conexión al cambiar contraseña", t);
-                showToast("Error de conexión al cambiar la contraseña");
+                tvWrongPassword.setVisibility(View.VISIBLE);
+                tvWrongPassword.setText("Error de conexión al cambiar la contraseña");
             }
         });
     }
