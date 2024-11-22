@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author Manuel Borregales
  * @since 2024-10-06
- * last updated 2024-11-10
+ * last updated 2024-11-22
  */
 public class BluetoothPermissionHandler {
 
@@ -64,6 +64,14 @@ public class BluetoothPermissionHandler {
         // Location permission is required for Bluetooth scanning on all Android versions
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        // Request notification permission for Android 13 and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+            }
         }
 
         // Request any missing permissions
