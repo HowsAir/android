@@ -645,14 +645,17 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updateUI(Measurement measurement) {
         TextView ppmTextView = findViewById(R.id.ppmTextView);
-        TextView latLongTextView = findViewById(R.id.latLongTextView);
+        TextView latTextView = findViewById(R.id.latTextView);
+        TextView lontextView = findViewById(R.id.lonTextView);
 
         if (measurement != null) {
             ppmTextView.setText("O3 Value (PPM): " + measurement.getO3Value());
-            latLongTextView.setText("Lat: " + measurement.getLatitude() + ", Long: " + measurement.getLongitude());
+            latTextView.setText("Lat: " + measurement.getLatitude());
+            lontextView.setText("Long: " + measurement.getLongitude());
         } else {
             ppmTextView.setText("PPM: N/A");
-            latLongTextView.setText("Lat: N/A, Long: N/A");
+            latTextView.setText("Lat: N/A");
+            lontextView.setText("Long: N/A");
         }
     }
 

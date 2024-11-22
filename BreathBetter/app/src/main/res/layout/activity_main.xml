@@ -11,9 +11,11 @@
         android:id="@+id/startSearching"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="172dp"
+        android:layout_marginTop="150dp"
         android:onClick="onStartServiceButtonClicked"
         android:text="@string/start_searching"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
@@ -26,6 +28,8 @@
         android:layout_marginTop="50dp"
         android:onClick="onStopServiceButtonClicked"
         android:text="@string/stop_searching"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,21 +39,38 @@
         android:id="@+id/ppmTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="80dp"
         android:text="ppm"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/stopSearching" />
 
     <TextView
-        android:id="@+id/latLongTextView"
+        android:id="@+id/latTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
         android:text="latLong"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ppmTextView" />
+
+    <TextView
+        android:id="@+id/lonTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="latLong"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/latTextView" />
 
     <Button
         android:id="@+id/toggleBuzzer"
@@ -58,9 +79,11 @@
         android:layout_marginTop="32dp"
         android:onClick="toggleBuzzer"
         android:text="@string/Find_Node"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/latLongTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/lonTextView" />
 
     <TextView
         android:id="@+id/textView3"
