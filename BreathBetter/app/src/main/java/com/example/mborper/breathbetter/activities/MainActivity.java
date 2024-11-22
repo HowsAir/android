@@ -592,6 +592,32 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    /**
+     * Stops the service and unbinds it when the stop service button is clicked.
+     *
+     * @param v The button view that was clicked.
+     */
+    public void onStopServiceButtonClicked(View v) {
+        if (serviceIntent != null) {
+            try {
+                if (isBound && beaconService != null) {
+                    beaconService.stopService(); // This will trigger the complete cleanup
+                    unbindService(serviceConnection);
+                    isBound = false;
+                }
+                stopService(serviceIntent);
+                serviceIntent = null;
+                mainHandler.removeCallbacks(runnable);
+                showToast("Service stopped");
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
+                showToast("Error stopping service");
+            }
+        }
+    }
+
+
     /**
      * Called when the activity is destroyed. Unbinds the service if it is currently bound.
      */
