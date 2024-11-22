@@ -1,20 +1,26 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.activities;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.login.SessionManager;
-import com.example.mborper.breathbetter.login.pojo.LoginRequest;
-import com.example.mborper.breathbetter.login.pojo.LoginResponse;
+import com.example.mborper.breathbetter.login.pojos.LoginRequest;
+import com.example.mborper.breathbetter.login.pojos.LoginResponse;
 
 import java.util.List;
 
@@ -31,9 +37,11 @@ import retrofit2.Response;
  *
  * @author Manuel Borregales
  * @since 2024-10-28
+ * last edited 2024-11-13
  */
 public class LoginActivity extends AppCompatActivity {
     private EditText emailEdit, passwordEdit;
+    private TextView tvForgotPass;
     private Button loginButton;
     private ProgressBar progressBar;
     private SessionManager sessionManager;
@@ -45,6 +53,7 @@ public class LoginActivity extends AppCompatActivity {
      * @param savedInstanceState If the activity is being reinitialized after previously being shut down,
      *                           this Bundle contains the data it most recently supplied.
      */
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,37 +61,32 @@ public class LoginActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
 
-        //Si esta loggeado pero no ha vinculado el sensor, , lo mandamos al QRExplanationActivity, si ya esta vinculado, lo mandamos a MainActivity
-        if (sessionManager.isLoggedIn()) {
-            // Redirects to main activity if the user is already logged in
-
-            //Puede darse que ya haya vinculado el nodo o no lo haya vinculado,
-
-            //SUSTITUIR SPRINT 2 POR LLAMADA A ENDPOINT QUE COMPRUEBE SI ESTE USER YA TIENE NODO
-            //SI NO TIENE NODO LO MANDAMOS A QR SI YA TIENE OBTENEMOS SU NODEID LO GUARDAMOS Y
-            //LO MANDAMOS A MAIN ACTIVITY
-
-            //(eso lo comprobamos llamando a un endpoint
-            // de la api)
-            if(sessionManager.getNodeId() == null){
-                startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
-            }
-            else{
-                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            }
-
-
-            finish();
-        }
-
         // Initialize UI components
         emailEdit = findViewById(R.id.etEmail);
         passwordEdit = findViewById(R.id.etPassword);
         loginButton = findViewById(R.id.btnLogin);
+        tvForgotPass = findViewById(R.id.tvForgotPassword);
         progressBar = findViewById(R.id.progressBar);
 
         // Set up login button click listener
         loginButton.setOnClickListener(v -> performLogin());
+        tvForgotPass.setOnClickListener(v -> onTvForgotPassClicked());
+
+
+        TextView termsPrivacyTextView = findViewById(R.id.txtbTermsPrivacy);
+        String fullText = getString(R.string.PrivacyText);
+
+        // Apply the custom colors
+        applyColoredText(termsPrivacyTextView, fullText, "Términos de servicio", "Política de Privacidad");
+
+        // Set up terms and privacy text view click listener
+        termsPrivacyTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, TermsAndPrivacyActivity.class));
+            }
+        });
+
     }
 
     /**
@@ -94,8 +98,12 @@ public class LoginActivity extends AppCompatActivity {
         String email = emailEdit.getText().toString().trim();
         String password = passwordEdit.getText().toString().trim();
 
+        TextView tvError = findViewById(R.id.tvError);
+
+
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            tvError.setVisibility(View.VISIBLE);
+            tvError.setText("Por favor, completa todos los campos");
             return;
         }
 
@@ -116,6 +124,7 @@ public class LoginActivity extends AppCompatActivity {
              */
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                TextView tvError = findViewById(R.id.tvError);
                 progressBar.setVisibility(View.GONE);
                 loginButton.setEnabled(true);
 
@@ -132,19 +141,17 @@ public class LoginActivity extends AppCompatActivity {
                     }
 
                     if (authToken != null) {
-                        // Save auth token and user email in session manager
                         sessionManager.saveAuthToken(authToken);
 
-                        // Redirects to main activity
-                        //Aqui se ejecutaria la misma comprobacion de la api, que hay en oncreate
-                        //o parecida
-                        startActivity(new Intent(LoginActivity.this, QRExplanationActivity.class));
+                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
                         finish();
                     } else {
-                        Toast.makeText(LoginActivity.this, "Authentication failed", Toast.LENGTH_SHORT).show();
+                        tvError.setVisibility(View.VISIBLE);
+                        tvError.setText("Autenticación fallida");
                     }
                 } else {
-                    Toast.makeText(LoginActivity.this, "Login failed", Toast.LENGTH_SHORT).show();
+                    tvError.setVisibility(View.VISIBLE);
+                    tvError.setText("Error de autenticación o credenciales inválidas");
                 }
             }
 
@@ -158,10 +165,51 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
+                TextView tvError = findViewById(R.id.tvError);
                 loginButton.setEnabled(true);
-                Toast.makeText(LoginActivity.this, "Network error: " + t.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Error de conexión");
             }
         });
+    }
+
+    /**
+     * Opens the forgot password activity
+     */
+    private void onTvForgotPassClicked() {
+        startActivity(new Intent(LoginActivity.this, ForgotPasswordActivity.class));
+    }
+
+    /**
+     * This method applies custom colors to specific parts of the provided text.
+     * It changes the color of "Términos de servicio" and "Política de Privacidad"
+     * within the text and applies the specified color to each part.
+     *
+     * @param textView The TextView to which the formatted text will be set.
+     * @param fullText The full text containing the phrases to be colored.
+     * @param terms The phrase that should be colored (e.g., "Términos de servicio").
+     * @param privacy The phrase that should be colored (e.g., "Política de Privacidad").
+     */
+    private void applyColoredText(TextView textView, String fullText, String terms, String privacy) {
+        // Find the start and end indices for the "terms" and "privacy" phrases
+        int termsStart = fullText.indexOf(terms);
+        int termsEnd = termsStart + terms.length();
+        int privacyStart = fullText.indexOf(privacy);
+        int privacyEnd = privacyStart + privacy.length();
+
+        // Create a SpannableString to modify parts of the text
+        SpannableString spannableString = new SpannableString(fullText);
+
+        // Get the color for the terms and privacy sections
+        int termsColor = ContextCompat.getColor(this, R.color.primary);
+        int privacyColor = ContextCompat.getColor(this, R.color.primary);
+
+        // Apply the color to the specific sections of the text
+        spannableString.setSpan(new ForegroundColorSpan(termsColor), termsStart, termsEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        spannableString.setSpan(new ForegroundColorSpan(privacyColor), privacyStart, privacyEnd, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        // Set the modified text to the TextView
+        textView.setText(spannableString);
     }
 }

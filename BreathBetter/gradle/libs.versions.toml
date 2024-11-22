@@ -1,6 +1,7 @@
 [versions]
 agp = "8.6.0"
 codeScanner = "2.3.2"
+constraintlayoutVersion = "2.2.0"
 converterGson = "2.9.0com.squareup.retrofit2"
 converterGsonVersion = "2.9.0"
 core = "1.6.1"
@@ -17,10 +18,13 @@ constraintlayout = "2.1.4"
 mockitoCore = "3.12.4"
 retrofit = "2.9.0"
 runner = "1.0.2"
+glideVersion = "4.16.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
 android-espresso-core = { module = "com.android.support.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
 code-scanner = { module = "com.github.yuriy-budiyev:code-scanner", version.ref = "codeScanner" }
+constraintlayout-v220 = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 converter-gson-v290 = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGsonVersion" }
 core = { module = "androidx.test:core", version.ref = "core" }
@@ -39,6 +43,11 @@ mockito-mockito-core = { module = "org.mockito:mockito-core", version.ref = "moc
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 rules = { module = "androidx.test:rules", version.ref = "core" }
 runner = { module = "com.android.support.test:runner", version.ref = "runner" }
+biometric = { group = "androidx.biometric", name = "biometric", version = "1.1.0" }
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
+glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

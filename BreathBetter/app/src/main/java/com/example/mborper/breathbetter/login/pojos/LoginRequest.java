@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter.login.pojo;
+package com.example.mborper.breathbetter.login.pojos;
 
 /**
  * Represents a request to log in, containing the email and password

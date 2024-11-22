@@ -37,10 +37,12 @@ android {
 
 dependencies {
 
+    implementation(libs.constraintlayout.v220)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -54,4 +56,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.livedata)
     implementation (libs.code.scanner)
+    implementation(libs.biometric)
+    implementation(libs.glide)
+    annotationProcessor(libs.glide.compiler)
 }

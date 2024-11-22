@@ -5,16 +5,15 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * @file: Utilities.java
- * @author: Jordi Bataller i Mascarell
- * @description: The Utilities class provides a set of utility functions to handle string and byte conversions,
+ * The Utilities class provides a set of utility functions to handle string and byte conversions,
  * including operations on UUIDs, byte arrays, and hexadecimal representations.
+ *
+ * @author Jordi Bataller i Mascarell
  */
 public class Utilities {
 
     /**
      * Converts a byte array to a string.
-     *
      *      [bytes] ---> bytesToString() ---> Texto
      *
      * @param bytes The byte array to convert.
@@ -34,7 +33,6 @@ public class Utilities {
 
     /**
      * Converts two long values into a byte array.
-     *
      *      Natural:masSignificativos   ---> dosLongToBytes() ---> [byte]
      *      Natural:menosSignificativos
      *
@@ -51,7 +49,6 @@ public class Utilities {
 
     /**
      * Converts a byte array to an integer.
-     *
      *      [bytes] ---> bytesToInt() ---> Natural
      *
      * @param bytes The byte array to convert.
@@ -63,7 +60,6 @@ public class Utilities {
 
     /**
      * Converts a byte array to a long value.
-     *
      *      [bytes] ---> bytesToLong() ---> Natural
      *
      * @param bytes The byte array to convert.
@@ -75,7 +71,6 @@ public class Utilities {
 
     /**
      * Converts a byte array to a hexadecimal string.
-     *
      *      [bytes] ---> bytesToHexString() ---> Texto hexadecimal
      *
      * @param bytes The byte array to convert.
@@ -96,7 +91,6 @@ public class Utilities {
 
     /**
      * Converts a byte array to an integer using safe checks.
-     *
      *      [bytes] ---> bytesToIntOK() ---> Natural
      *
      * @param bytes The byte array to convert.
@@ -126,7 +120,6 @@ public class Utilities {
 
     /**
      * Converts a string to a byte array.
-     *
      *      Texto ---> stringToBytes() ---> [byte]
      *
      * @param texto The string to convert.
@@ -138,7 +131,6 @@ public class Utilities {
 
     /**
      * Converts a 16-character string into a UUID.
-     *
      *      Texto:uuid ---> stringToUUID ---> [Caracteres]:UUID
      *
      * @param uuid The string to convert to a UUID.
@@ -159,7 +151,6 @@ public class Utilities {
 
     /**
      * Converts a UUID to a string.
-     *
      *      [Caracteres]:UUID ---> uuidToString() ---> Texto
      *
      * @param uuid The UUID to convert.
@@ -171,7 +162,6 @@ public class Utilities {
 
     /**
      * Converts a UUID to a hexadecimal string.
-     *
      *      [Caracteres]:UUID ---> uuidToHexString() ---> Texto hexadecimal
      *
      * @param uuid The UUID to convert.

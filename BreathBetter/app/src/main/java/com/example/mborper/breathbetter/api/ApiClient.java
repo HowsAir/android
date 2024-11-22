@@ -23,7 +23,14 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import android.content.Context;
 
 import com.example.mborper.breathbetter.login.SessionManager;
-
+/**
+ * The ApiClient class configures and provides a Retrofit instance to communicate with the API backend.
+ * This class sets up the base URL for the API, logging for HTTP requests, and includes a converter factory
+ * to handle JSON responses using Gson.
+ *
+ * @author Manuel Borregales
+ * @since 2024-10-04
+ */
 public class ApiClient {
 
     private static Retrofit retrofit = null;
@@ -60,7 +67,7 @@ public class ApiClient {
                     .build();
 
             retrofit = new Retrofit.Builder()
-                    .baseUrl("http://192.168.32.237:3000/api/v1/")
+                    .baseUrl("http://192.168.5.132:3000/api/v1/")
                     .addConverterFactory(GsonConverterFactory.create())
                     .client(client)
                     .build();

@@ -5,14 +5,104 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/button"
+    <TextView
+        android:id="@+id/Logo"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="5dp"
+        android:text="@string/logo"
+        android:textAppearance="@style/TextAppearance.App.Heading1"
+        android:textColor="@color/primary"
+        android:textSize="40sp"
+        app:layout_constraintBottom_toBottomOf="@+id/ivLogo"
+        app:layout_constraintStart_toEndOf="@+id/ivLogo" />
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="-20dp"
+        android:layout_marginTop="48dp"
+        android:contentDescription="Logo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.291"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/howsair_logo" />
+
+    <TextView
+        android:id="@+id/QrExplanation"
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:text="@string/QrExplanation"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textColor="@color/primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/imageView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivLogo" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="130dp"
+        app:layout_constraintBottom_toTopOf="@+id/buttonLinkNodeQR"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/QrExplanation"
+        app:srcCompat="@drawable/qrscan" />
+
+    <TextView
+        android:id="@+id/tvError"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="45dp"
+        android:layout_marginEnd="45dp"
+        android:textColor="@color/design_default_color_error"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonLinkNodeQR"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="160dp"
+        android:layout_marginEnd="16dp"
+        android:onClick="startScanner"
+        android:padding="12dp"
+        android:text="@string/Scan_QR"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
+
+    <TextView
+        android:id="@+id/buttonNocamera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="startScanner"
-        android:text="@string/Scan_QR"
+        android:text="@string/Scan_QR_NO_CAMERA"
+        android:textAppearance="@style/TextAppearance.App.Heading3"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/buttonLinkNodeQR"
+        app:layout_constraintVertical_bias="0.408" />
 </androidx.constraintlayout.widget.ConstraintLayout>

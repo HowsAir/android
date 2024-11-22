@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter;
+package com.example.mborper.breathbetter.activities;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,8 +15,9 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
+import android.widget.TextView;
 
+import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.login.SessionManager;
@@ -29,24 +30,40 @@ import retrofit2.Response;
  * It's the activity that asks the user for the permissions needed for qr scanning
  *
  * @author Juan Diaz & Manuel Borregales
- * date:  2024-10-26
+ * @since  2024-10-26
+ * last updated: 2024-11-21
  */
 public class QRExplanationActivity extends AppCompatActivity {
 
     private final int QR_REQUEST_CODE = 24;
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
+    private final int MANUAL_INPUT_REQUEST_CODE = 25;
+
     private ApiService apiService;
-    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Check if the user already has a node linked
+        SessionManager sessionManager = new SessionManager(this);
+        if (sessionManager.getNodeId() != null) {
+            // If the user already has a node, go directly to MainActivity
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_qr_explanation);
 
         apiService = ApiClient.getClient(this).create(ApiService.class);
-        sessionManager = new SessionManager(this);
+
+        // Click listener for the manual input button
+        findViewById(R.id.buttonNocamera).setOnClickListener(v -> startManualInput());
+
     }
 
     /**
@@ -91,6 +108,9 @@ public class QRExplanationActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        TextView tvError = findViewById(R.id.tvError);
+
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("qr", "Permission granted in result.");
@@ -99,10 +119,22 @@ public class QRExplanationActivity extends AppCompatActivity {
             } else {
                 Log.d("qr", "Permission denied.");
                 // Show a message indicating that camera permission is required
-                Toast.makeText(this, "Camera permission is required to scan QR codes.",
-                        Toast.LENGTH_LONG).show();
+                tvError.setVisibility(View.VISIBLE);
+                tvError.setText("Se necesita el permiso para acceder a la cámara");
             }
         }
+    }
+
+    /**
+     * Starts the ManualInputActivity for manual node ID entry. This method is called when
+     * the user chooses to enter the node ID manually instead of scanning a QR code.
+     *
+     * The method creates an intent to launch ManualInputActivity and starts it
+     * with startActivityForResult to receive the entered node ID when the activity finishes.
+     */
+    private void startManualInput() {
+        Intent intent = new Intent(this, ManualInputActivity.class);
+        startActivityForResult(intent, MANUAL_INPUT_REQUEST_CODE);
     }
 
 
@@ -118,15 +150,18 @@ public class QRExplanationActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == QR_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            String nodeId = data.getStringExtra(QRScannerActivity.QR_RESULT);
+        if (resultCode == RESULT_OK && data != null) {
+            String nodeId = null;
 
+            if (requestCode == QR_REQUEST_CODE) {
+                nodeId = data.getStringExtra(QRScannerActivity.QR_RESULT);
+            } else if (requestCode == MANUAL_INPUT_REQUEST_CODE) {
+                nodeId = data.getStringExtra(ManualInputActivity.MANUAL_RESULT);
+            }
 
-            linkNodeToUser(this, nodeId);
-
-            sessionManager.saveNodeId(nodeId);
-            
-            Toast.makeText(this, "QR escaneado: " + nodeId, Toast.LENGTH_LONG).show();
+            if (nodeId != null) {
+                linkNodeToUser(this, nodeId);
+            }
         }
     }
 
@@ -142,22 +177,24 @@ public class QRExplanationActivity extends AppCompatActivity {
                 .enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
+                        TextView tvError = findViewById(R.id.tvError);
+
                         if (response.isSuccessful()) {
-
-                            // El nodo se vinculó exitosamente
-                            Toast.makeText(context, "Nodo vinculado exitosamente", Toast.LENGTH_SHORT).show();
-
-                            startActivity(new Intent(QRExplanationActivity.this, MainActivity.class));
+                            // Navigate to NodeLinkedActivity instead of showing a Toast
+                            startActivity(new Intent(QRExplanationActivity.this, NodeLinkedActivity.class));
+                            finish();
                         } else {
-                            // Manejar error de la API
-                            Toast.makeText(context, "Error al vincular el nodo", Toast.LENGTH_SHORT).show();
+                            tvError.setVisibility(View.VISIBLE);
+                            tvError.setText("Error al vincular el nodo");
                         }
                     }
 
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
-                        // Manejar error de red
-                        Toast.makeText(context, "Error de conexión", Toast.LENGTH_SHORT).show();
+                        TextView tvError = findViewById(R.id.tvError);
+
+                        tvError.setVisibility(View.VISIBLE);
+                        tvError.setText("Error de conexión");
                     }
                 });
     }

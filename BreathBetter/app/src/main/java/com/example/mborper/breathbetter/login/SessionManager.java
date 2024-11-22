@@ -70,6 +70,14 @@ public class SessionManager {
     }
 
     /**
+     * Removes the stored node ID from shared preferences.
+     */
+    public void clearNodeId() {
+        editor.remove(NODE_ID);
+        editor.apply();
+    }
+
+    /**
      * Clears all session data, including the authentication token and node ID.
      */
     public void clearSession() {

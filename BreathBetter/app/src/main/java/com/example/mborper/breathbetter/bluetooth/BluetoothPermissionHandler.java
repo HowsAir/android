@@ -11,12 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Author: Manuel Borregales
- * Date: 06/10/2024
- *
  * The BluetoothPermissionHandler class handles the request and validation of Bluetooth-related permissions
  * in Android. It checks if the necessary permissions are granted, requests them if not, and processes
  * the result of the permission requests.
+ *
+ * @author Manuel Borregales
+ * @since 2024-10-06
+ * last updated 2024-11-22
  */
 public class BluetoothPermissionHandler {
 
@@ -25,7 +26,7 @@ public class BluetoothPermissionHandler {
 
     /**
      * Checks and requests the necessary Bluetooth permissions. For Android 12 and above, it requests
-     * BLUETOOTH_CONNECT and BLUETOOTH_SCAN permissions. For older versions, it requests BLUETOOTH and
+     * BLUETOOTH_CONNECT, BLUETOOTH_SCAN and BLUETOOTH_ADVERTISE permissions. For older versions, it requests BLUETOOTH and
      * BLUETOOTH_ADMIN. Additionally, it always requests location permission for scanning.
      *
      * @param activity The current activity where the permissions are being requested.
@@ -34,21 +35,28 @@ public class BluetoothPermissionHandler {
     public static boolean checkAndRequestBluetoothPermissions(Activity activity) {
         List<String> permissions = new ArrayList<>();
 
-        // Check Bluetooth permissions based on Android version
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             // Android 12 (API 31) and above
-            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.BLUETOOTH_CONNECT);
             }
-            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_SCAN)
+                    != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.BLUETOOTH_SCAN);
+            }
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_ADVERTISE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.BLUETOOTH_ADVERTISE);
             }
         } else {
             // Android 11 (API 30) and below
-            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH)
+                    != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.BLUETOOTH);
             }
-            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_ADMIN)
+                    != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.BLUETOOTH_ADMIN);
             }
         }
@@ -56,6 +64,14 @@ public class BluetoothPermissionHandler {
         // Location permission is required for Bluetooth scanning on all Android versions
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        // Request notification permission for Android 13 and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+            }
         }
 
         // Request any missing permissions
@@ -77,6 +93,7 @@ public class BluetoothPermissionHandler {
      */
     public static boolean handlePermissionResult(int requestCode, int[] grantResults) {
         if (requestCode == REQUEST_BLUETOOTH_PERMISSIONS) {
+            // All permissions must be granted
             for (int result : grantResults) {
                 if (result != PackageManager.PERMISSION_GRANTED) {
                     return false;

@@ -13,7 +13,7 @@ import android.os.Looper;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.mborper.breathbetter.MainActivity;
+import com.example.mborper.breathbetter.activities.MainActivity;
 import com.example.mborper.breathbetter.R;
 
 import android.os.Handler;
@@ -32,23 +32,15 @@ import android.os.Handler;
  * retrieve the user's current location for the notification.
  *
  * @author Manuel Borregales
- * date: 2024-10-23
+ * @since 2024-10-23
+ * last updated 2024-11-09
  */
 
 public class GasAlertManager {
-    // Logging tag for error or info messages
     private static final String LOG_TAG = "GasAlertManager";
-
-    // Channel ID for the gas alert notification
     private static final String ALERT_CHANNEL_ID = "GAS_ALERT_CHANNEL";
-
-    // Channel ID for the error notification
     private static final String ERROR_CHANNEL_ID = "SENSOR_ERROR_CHANNEL";
-
-    // ID for the gas alert notification
     private static final int ALERT_NOTIFICATION_ID = 2;
-
-    // ID for the error notification
     private static final int ERROR_NOTIFICATION_ID = 3;
 
     // Gas concentration threshold in PPM (Parts Per Million) to trigger an alert
@@ -58,7 +50,7 @@ public class GasAlertManager {
     private static final int PPM_MAX_VALID_VALUE = 1000;
 
     // Timeout for the BLE scan to throw error
-    private static final long BEACON_TIMEOUT_MS = 30000;
+    private static final long BEACON_TIMEOUT_MS = 60000;
 
     // Context, NotificationManager, LocationUtils and MediaPlayer instances
     private final Context context;
@@ -69,6 +61,8 @@ public class GasAlertManager {
     private final Handler timeoutHandler;
     private final Runnable timeoutChecker;
     public boolean isErrorNotified;
+    // To check if inactivity feature is enabled
+    private boolean isRunning = false;
 
     /**
      * Constructor for GasAlertManager
@@ -86,17 +80,20 @@ public class GasAlertManager {
         initializeErrorChannel(); // Set up the error notification channel
         initializeAlertSound(); // Prepare the alert sound
         isErrorNotified = false;
+        isRunning = true;
 
         lastBeaconTimestamp = System.currentTimeMillis();
         timeoutHandler = new Handler(Looper.getMainLooper());
         timeoutChecker = new Runnable() {
             @Override
             public void run() {
-                if (!isErrorNotified) {
-                    checkBeaconTimeout();
+                if (isRunning) {
+                    if (!isErrorNotified) {
+                        checkBeaconTimeout();
+                    }
+                    checkBeaconTime();
+                    timeoutHandler.postDelayed(this, 5000);
                 }
-                checkBeaconTime();
-                timeoutHandler.postDelayed(this, 5000); // Verify every 5 seconds
             }
         };
         startTimeoutChecking();
@@ -180,23 +177,17 @@ public class GasAlertManager {
         lastBeaconTimestamp = System.currentTimeMillis();
 
         // Verify errors from the sensor
-        if (o3Value < 0) {
-            sendSensorErrorNotification("LECTURA_INVÁLIDA",
-                    "El sensor está reportando valores negativos: " + o3Value + " PPM");
-            return;
-        }
-
-        if (o3Value > PPM_MAX_VALID_VALUE) {
-            sendSensorErrorNotification("LECTURA_FUERA_DE_RANGO",
-                    "El sensor está reportando valores superiores al máximo válido: " + o3Value + " PPM");
+        if (o3Value < 0 || o3Value > PPM_MAX_VALID_VALUE) {
+            sendSensorErrorNotification("LECTURA_ERRONEA",
+                    "El sensor está reportando valores erroneos");
             return;
         }
 
         // If there are not errors, check if the gas level is dangerous
         if (o3Value > PPM_DANGER_THRESHOLD) {
             String timestamp = TimeUtils.getCurrentTimestamp();
-            String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
-            sendAlert(o3Value, timestamp, location);
+            //String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
+            sendAlert(o3Value, timestamp);
         }
     }
 
@@ -208,9 +199,8 @@ public class GasAlertManager {
      *
      * @param o3Value The gas concentration in PPM.
      * @param timestamp The timestamp when the gas level was detected.
-     * @param location The user's current location.
      */
-    private void sendAlert(int o3Value, String timestamp, String location) {
+    private void sendAlert(int o3Value, String timestamp) {
         // Play alert sound
         if (alertSound != null && !alertSound.isPlaying()) {
             alertSound.start();
@@ -230,8 +220,7 @@ public class GasAlertManager {
                 .setContentText("Nivel de gas peligroso detectado: " + o3Value + " PPM")
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText("Nivel de gas peligroso detectado: " + o3Value + " PPM\n" +
-                                "Hora: " + timestamp + "\n" +
-                                "Ubicación: " + location))
+                                "Hora: " + timestamp))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
@@ -241,16 +230,18 @@ public class GasAlertManager {
     }
 
     /**
-     * Sends a notification and plays an alert sound when the sensor is not working properly.
+     * Sends a notification to inform the user of a sensor error.
      * <p>
-     * The notification contains details such as the failure to read gas or the inactivity of the sensor
-     * //@param //ppm The gas concentration in PPM.
-     * //@param //timestamp The timestamp when the gas level was detected.
-     * //@param //location The user's current location.
+     * This method builds and displays a notification with details about the
+     * error type, description, timestamp, and location. The notification opens
+     * the main activity when tapped, and auto-cancels when the user interacts with it.
+     *
+     * @param errorType    a brief identifier for the type of error (e.g., "SIN_SEÑAL")
+     * @param errorDetails additional details explaining the error
      */
     private void sendSensorErrorNotification(String errorType, String errorDetails) {
         String timestamp = TimeUtils.getCurrentTimestamp();
-        String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
+        //String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -260,14 +251,13 @@ public class GasAlertManager {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ERROR_CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Error en Sensor de Gas")
+                .setContentTitle("Error en tu Nodo Sensor")
                 .setContentText(errorType + ": " + errorDetails)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("Error en el sensor de gas\n" +
+                        .bigText("Error en tu Nodo Sensor\n" +
                                 "Tipo de error: " + errorType + "\n" +
                                 "Detalles: " + errorDetails + "\n" +
-                                "Hora: " + timestamp + "\n" +
-                                "Ubicación: " + location))
+                                "Hora: " + timestamp + "\n"))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
@@ -275,19 +265,34 @@ public class GasAlertManager {
         notificationManager.notify(ERROR_NOTIFICATION_ID, builder.build());
     }
 
+    /**
+     * Starts the timeout checking process by posting the `timeoutChecker` Runnable
+     * to the handler. This begins the periodic checking for beacon timeouts.
+     */
     private void startTimeoutChecking() {
         timeoutHandler.post(timeoutChecker);
     }
 
+    /**
+     * Checks if a beacon timeout has occurred by comparing the current time
+     * with the timestamp of the last received beacon. If the time difference
+     * exceeds the specified `BEACON_TIMEOUT_MS`, a sensor error notification
+     * is sent, indicating no data has been received for the specified interval.
+     */
     private void checkBeaconTimeout() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastBeaconTimestamp > BEACON_TIMEOUT_MS) {
             sendSensorErrorNotification("SIN_SEÑAL",
-                    "No se han recibido datos del sensor en los últimos 30 segundos");
+                    "No se han recibido datos del sensor en los últimos 30 segundos, comprueba la conexion");
             isErrorNotified = true;
         }
     }
 
+    /**
+     * Checks if the beacon signal is active by comparing the current time with
+     * the last beacon timestamp. If the difference is less than `BEACON_TIMEOUT_MS`,
+     * the error notification flag is reset, indicating a healthy signal.
+     */
     private void checkBeaconTime() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastBeaconTimestamp < BEACON_TIMEOUT_MS) {
@@ -302,9 +307,26 @@ public class GasAlertManager {
      * when the GasAlertManager is no longer needed.
      */
     public void cleanup() {
+        isRunning = false;
+        timeoutHandler.removeCallbacks(timeoutChecker);
+
         if (alertSound != null) {
             alertSound.release();
             alertSound = null;
         }
+
+        // Clean notifications
+        notificationManager.cancel(ALERT_NOTIFICATION_ID);
+        notificationManager.cancel(ERROR_NOTIFICATION_ID);
+    }
+
+    /**
+     * Restart monitoring after a pause or stop.
+     */
+    public void restart() {
+        isRunning = true;
+        isErrorNotified = false;
+        lastBeaconTimestamp = System.currentTimeMillis();
+        startTimeoutChecking();
     }
 }

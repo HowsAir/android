@@ -1,4 +1,4 @@
-package com.example.mborper.breathbetter.login.pojo;
+package com.example.mborper.breathbetter.api.models;
 
 /**
  * Represents a user in the BreathBetter application, storing key information
@@ -86,26 +86,22 @@ public class User {
 
     /**
      * Gets the user's password.
-     *
-     * Note: This method currently returns the email instead of the password,
-     * which may be a coding error.
+     * Note: This method currently returns the email instead of the password
      *
      * @return the password of the user.
      */
     public String getPassword() {
-        return email;  // Likely a mistake; should return password instead.
+        return email;
     }
 
     /**
      * Sets the user's password.
-     *
-     * Note: This method currently sets the email instead of the password,
-     * which may be a coding error.
+     * Note: This method currently sets the email instead of the password
      *
      * @param password the password to set for the user.
      */
     public void setPassword(String password) {
-        this.email = email;  // Likely a mistake; should set password instead.
+        this.email = email;
     }
 
     /**

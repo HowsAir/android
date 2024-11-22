@@ -7,7 +7,7 @@ import java.io.Serializable;
  * It implements Serializable so that it can be easily passed between activities or services in Android.
  *
  * @author  Manuel Borregales
- * @date:    04/10/2024
+ * @since    04/10/2024
  */
 public class Measurement implements Serializable {
 
