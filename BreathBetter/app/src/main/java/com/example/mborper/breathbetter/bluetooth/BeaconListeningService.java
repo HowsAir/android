@@ -56,6 +56,7 @@ public class BeaconListeningService extends Service {
     private MeasurementCallback measurementCallback;
     private GasAlertManager gasAlertManager;
     private Measurement lastMeasurement;
+    private LocationUtils locationUtils;
 
     /**
      * Interface for callback when a new measurement is received.
@@ -118,6 +119,16 @@ public class BeaconListeningService extends Service {
         initializeHandlerThread();
         initializeBluetooth();
         startBackgroundService();
+        // Initialize LocationUtils
+        locationUtils = new LocationUtils(this);
+        locationUtils.setLocationUpdateListener(new LocationUtils.LocationUpdateListener() {
+            @Override
+            public void onLocationUpdated(Location location) {
+                // You can handle continuous location updates here if needed
+                Log.d(LOG_TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
+            }
+        });
+        locationUtils.startLocationUpdates();
     }
 
     /**
@@ -162,6 +173,7 @@ public class BeaconListeningService extends Service {
             targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
             keepRunning = true;
             serviceHandler.post(scanRunnable);
+
         }
         return START_NOT_STICKY;
     }
@@ -270,13 +282,8 @@ public class BeaconListeningService extends Service {
             Measurement newMeasurement = new Measurement();
             newMeasurement.setO3Value(Utilities.bytesToInt(tib.getMajor()));
 
-            // Get location for the measurement
-            LocationUtils locationUtils = new LocationUtils(this);
-            Location currentLocation = locationUtils.getCurrentLocation();
-            if (currentLocation != null) {
-                newMeasurement.setLatitude(currentLocation.getLatitude());
-                newMeasurement.setLongitude(currentLocation.getLongitude());
-            }
+            // Fetch the current location
+            setMeasurementLocation(newMeasurement);
 
             //the date is set on the server logic
             if (!newMeasurement.equals(lastMeasurement)) {
@@ -287,10 +294,25 @@ public class BeaconListeningService extends Service {
 
                 gasAlertManager.checkAndAlert(newMeasurement.getO3Value());
 
-                Log.d("main", "ppm" + lastMeasurement.getO3Value());
-                Log.d("main", "lat" + lastMeasurement.getLatitude());
-                Log.d("main", "long" + lastMeasurement.getLongitude());
+                //Log.d("main", "ppm" + lastMeasurement.getO3Value());
+                //Log.d("main", "lat" + lastMeasurement.getLatitude());
+                //Log.d("main", "long" + lastMeasurement.getLongitude());
             }
+        }
+    }
+
+    /**
+     * Sets the location for the given Measurement object.
+     * <p>
+     * This method retrieves the current location from LocationUtils and assigns
+     * the latitude and longitude to the provided Measurement.
+     *
+     * @param measurement The Measurement object to update with location data.
+     */
+    private void setMeasurementLocation(Measurement measurement) {
+        if (measurement != null) {
+            measurement.setLatitude(locationUtils.getCurrentLatitude());
+            measurement.setLongitude(locationUtils.getCurrentLongitude());
         }
     }
 
@@ -344,6 +366,11 @@ public class BeaconListeningService extends Service {
             } catch (InterruptedException e) {
                 Log.e(LOG_TAG, "Error shutting down handler thread: " + e.getMessage());
             }
+        }
+
+        // Stop location updates
+        if (locationUtils != null) {
+            locationUtils.stopLocationUpdates();
         }
 
         super.onDestroy();

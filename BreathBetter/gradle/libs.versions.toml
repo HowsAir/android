@@ -19,6 +19,7 @@ mockitoCore = "3.12.4"
 retrofit = "2.9.0"
 runner = "1.0.2"
 glideVersion = "4.16.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
 android-espresso-core = { module = "com.android.support.test.espresso:espresso-core", version.ref = "espressoCoreVersion" }
@@ -45,6 +46,7 @@ runner = { module = "com.android.support.test:runner", version.ref = "runner" }
 biometric = { group = "androidx.biometric", name = "biometric", version = "1.1.0" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glideVersion" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glideVersion" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 
 [plugins]

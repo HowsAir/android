@@ -186,8 +186,8 @@ public class GasAlertManager {
         // If there are not errors, check if the gas level is dangerous
         if (o3Value > PPM_DANGER_THRESHOLD) {
             String timestamp = TimeUtils.getCurrentTimestamp();
-            String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
-            sendAlert(o3Value, timestamp, location);
+            //String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
+            sendAlert(o3Value, timestamp);
         }
     }
 
@@ -199,9 +199,8 @@ public class GasAlertManager {
      *
      * @param o3Value The gas concentration in PPM.
      * @param timestamp The timestamp when the gas level was detected.
-     * @param location The user's current location.
      */
-    private void sendAlert(int o3Value, String timestamp, String location) {
+    private void sendAlert(int o3Value, String timestamp) {
         // Play alert sound
         if (alertSound != null && !alertSound.isPlaying()) {
             alertSound.start();
@@ -221,8 +220,7 @@ public class GasAlertManager {
                 .setContentText("Nivel de gas peligroso detectado: " + o3Value + " PPM")
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText("Nivel de gas peligroso detectado: " + o3Value + " PPM\n" +
-                                "Hora: " + timestamp + "\n" +
-                                "Ubicación: " + location))
+                                "Hora: " + timestamp))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
@@ -243,7 +241,7 @@ public class GasAlertManager {
      */
     private void sendSensorErrorNotification(String errorType, String errorDetails) {
         String timestamp = TimeUtils.getCurrentTimestamp();
-        String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
+        //String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
 
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -259,8 +257,7 @@ public class GasAlertManager {
                         .bigText("Error en tu Nodo Sensor\n" +
                                 "Tipo de error: " + errorType + "\n" +
                                 "Detalles: " + errorDetails + "\n" +
-                                "Hora: " + timestamp + "\n" +
-                                "Ubicación: " + location))
+                                "Hora: " + timestamp + "\n"))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);

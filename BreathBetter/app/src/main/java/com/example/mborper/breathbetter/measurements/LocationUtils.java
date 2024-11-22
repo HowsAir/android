@@ -4,100 +4,98 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.location.LocationManager;
-import androidx.core.app.ActivityCompat;
+import android.os.Looper;
 import android.util.Log;
-
-/**
- * LocationUtils
- * <p>
- * Utility class that handles location services in the app. It provides methods
- * to retrieve the user's current location using GPS or network, and formats
- * the location data into a human-readable string. Ensures that location
- * permissions are checked before attempting to access the device's location.
- *
- * @author Manuel Borregales
- * @since 2024-10-23
- */
+import androidx.core.app.ActivityCompat;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 
 public class LocationUtils {
-    // Tag used for logging errors and important events related to location services
-    private static final String LOG_TAG = "LocationUtils";
+    private static final String TAG = "LocationUtils";
+    private static final long UPDATE_INTERVAL = 10000; // 10 seconds
+    private static final long FASTEST_UPDATE_INTERVAL = 5000; // 5 seconds
 
-    // Application context and LocationManager to interact with location services
     private final Context context;
-    private final LocationManager locationManager;
+    private final FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+    private Location currentLocation;
+    private LocationUpdateListener locationUpdateListener;
 
-    /**
-     * Constructor for LocationUtils
-     *
-     * @param context Application context used to get the LocationManager service.
-     */
+    public interface LocationUpdateListener {
+        void onLocationUpdated(Location location);
+    }
+
     public LocationUtils(Context context) {
         this.context = context;
-        // Retrieves the system's location service
-        this.locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        setupLocationCallback();
     }
 
-    /**
-     * Retrieves the current location of the device.
-     * <p>
-     * This method first checks if the LocationManager is available and if the
-     * location permissions have been granted. If permissions are missing or an
-     * error occurs, it logs an error and returns null. The location is retrieved
-     * using either GPS or the network provider, depending on availability.
-     *
-     * @return the current Location object, or null if unavailable.
-     */
-    public Location getCurrentLocation() {
-        if (locationManager == null) {
-            // Logs an error if LocationManager is not initialized
-            Log.e(LOG_TAG, "LocationManager is null");
-            return null;
+    public void setLocationUpdateListener(LocationUpdateListener listener) {
+        this.locationUpdateListener = listener;
+    }
+
+    private void setupLocationCallback() {
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    Log.w(TAG, "Location result is null");
+                    return;
+                }
+
+                currentLocation = locationResult.getLastLocation();
+                if (currentLocation != null && locationUpdateListener != null) {
+                    locationUpdateListener.onLocationUpdated(currentLocation);
+                }
+            }
+        };
+    }
+
+    public void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Location permission not granted");
+            return;
         }
+
+        LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY)
+                .setIntervalMillis(UPDATE_INTERVAL)
+                .setMinUpdateIntervalMillis(FASTEST_UPDATE_INTERVAL)
+                .build();
 
         try {
-            // Checks if the app has permission to access fine location
-            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-                Log.e(LOG_TAG, "Location permission not granted");
-                return null;
-            }
-
-            // Attempts to retrieve the last known GPS location
-            Location gpsLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (gpsLocation != null) {
-                return gpsLocation;
-            }
-
-            // Attempts to retrieve the last known network-based location
-            Location networkLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            return networkLocation;
-
+            fusedLocationClient.requestLocationUpdates(locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper());
+            Log.d(TAG, "Location updates started");
         } catch (Exception e) {
-            // Logs any exceptions that occur while fetching the location
-            Log.e(LOG_TAG, "Error getting location: " + e.getMessage());
-            return null;
+            Log.e(TAG, "Error starting location updates: " + e.getMessage());
         }
     }
 
-    /**
-     * Converts a Location object into a readable string format.
-     * <p>
-     * If the location is null, it returns "Location not available". Otherwise,
-     * it returns a formatted string with latitude and longitude values.
-     *
-     * @param location Location object containing latitude and longitude.
-     * @return A string representation of the location, or a message if unavailable.
-     */
-    public String getLocationString(Location location) {
-        if (location == null) {
-            return "Location not available";
+    public void stopLocationUpdates() {
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+            Log.d(TAG, "Location updates stopped");
+        } catch (Exception e) {
+            Log.e(TAG, "Error stopping location updates: " + e.getMessage());
         }
-        return String.format(
-                "Lat: %.6f, Long: %.6f",
-                location.getLatitude(),
-                location.getLongitude()
-        );
+    }
+
+    public Location getCurrentLocation() {
+        return currentLocation;
+    }
+
+    public double getCurrentLatitude() {
+        return currentLocation != null ? currentLocation.getLatitude() : 0.0;
+    }
+
+    public double getCurrentLongitude() {
+        return currentLocation != null ? currentLocation.getLongitude() : 0.0;
     }
 }
