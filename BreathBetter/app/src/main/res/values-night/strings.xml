@@ -21,4 +21,7 @@
     <string name="succesful_noke_link">¡Tu Breeze ha sido vinculado con exito!</string>
     <string name="wrong_password">Contraseña incorrecta</string>
     <string name="mismatch_passwords">Las contraseñas no coinciden</string>
+    <string name="your_node">Tu nodo hoy</string>
+    <string name="last_measurement">Última medición</string>
+    <string name="Movement">Recorrido</string>
 </resources>

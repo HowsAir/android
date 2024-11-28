@@ -61,7 +61,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2024-11-21
+ * last edited: 2024-11-28
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
         sessionManager = new SessionManager(this);
         apiService = ApiClient.getClient(this).create(ApiService.class);
 
+        // If not logged in, redirect to login
         if (!sessionManager.isLoggedIn()) {
             Log.d("DEBUG", "Usuario no loggeado");
             startActivity(new Intent(MainActivity.this, LoginActivity.class));
@@ -182,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
         // Bottom navigation
         setupBottomNavigation();
 
+        // Automatically start and bind the Bluetooth service
+        startAndBindServiceAutomatically();
+
         serviceConnection = new BeaconListeningServiceConnection();
         lastMeasurementLiveData.observe(this, this::updateUI);
 
@@ -218,35 +222,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Automatically starts and binds the Bluetooth service without manual intervention.
+     * Checks for necessary permissions before starting the service.
+     */
+    private void startAndBindServiceAutomatically() {
+        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
+            startAndBindService();
+            mainHandler.post(runnable);
+        } else {
+            showToast("Permisos necesarios...");
+        }
+    }
+
+    /**
      * Configures the bottom navigation menu and defines the behavior when each item is selected.
      * <p>
      * Each navigation item (home, map, target, profile) will start a new activity or perform a transition
      * when selected. If the current item is the same as the one already selected, no action is performed.
      */
     private void setupBottomNavigation() {
-    BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
-        bottomNavigationView.setOnItemSelectedListener(item ->
-
-    {
-        if (item.getItemId() == R.id.home) {
-            return true;
-        } else if (item.getItemId() == R.id.map) {
-            startActivity(new Intent(this, MapsActivity.class));
-            overridePendingTransition(0, 0);
-            return true;
-        } else if (item.getItemId() == R.id.target) {
-            startActivity(new Intent(this, GoalActivity.class));
-            overridePendingTransition(0, 0);
-            return true;
-        } else if (item.getItemId() == R.id.profile) {
-            startActivity(new Intent(this, ProfileActivity.class));
-            overridePendingTransition(0, 0);
-            return true;
-        }
-        return false;
-    });
-}
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            if (item.getItemId() == R.id.home) {
+                return true;
+            } else if (item.getItemId() == R.id.map) {
+                startActivity(new Intent(this, MapsActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (item.getItemId() == R.id.target) {
+                startActivity(new Intent(this, GoalActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (item.getItemId() == R.id.profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return false;
+        });
+    }
 
 
     /**
@@ -433,21 +448,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Starts the Bluetooth initialization process when the start service button is clicked.
-     * Checks for required permissions before starting the service,
-     *
-     * @param v The button view that was clicked.
-     */
-    public void onStartServiceButtonClicked(View v) {
-        if (BluetoothPermissionHandler.checkAndRequestBluetoothPermissions(this)) {
-            startAndBindService();
-            mainHandler.post(runnable);
-        } else {
-            showToast("Waiting for permission approval...");
-        }
-    }
-
-    /**
      * Handles the result of the permission request, it's called after accepting or rejecting a permission request.
      * <p>
      *      Natural: requestCode
@@ -551,7 +551,7 @@ public class MainActivity extends AppCompatActivity {
                     if (body.has("totalDistance")) {
                         int totalDistance = body.get("totalDistance").getAsInt();
                         TextView distanceText = findViewById(R.id.textDistanceTraveled);
-                        distanceText.setText(totalDistance + " m");
+                        distanceText.setText(String.valueOf(totalDistance));
                     }
                 }
             }
@@ -592,32 +592,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-    /**
-     * Stops the service and unbinds it when the stop service button is clicked.
-     *
-     * @param v The button view that was clicked.
-     */
-    public void onStopServiceButtonClicked(View v) {
-        if (serviceIntent != null) {
-            try {
-                if (isBound && beaconService != null) {
-                    beaconService.stopService(); // This will trigger the complete cleanup
-                    unbindService(serviceConnection);
-                    isBound = false;
-                }
-                stopService(serviceIntent);
-                serviceIntent = null;
-                mainHandler.removeCallbacks(runnable);
-                showToast("Service stopped");
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
-                showToast("Error stopping service");
-            }
-        }
-    }
-
-
     /**
      * Called when the activity is destroyed. Unbinds the service if it is currently bound.
      */
@@ -648,12 +622,14 @@ public class MainActivity extends AppCompatActivity {
         TextView latTextView = findViewById(R.id.latTextView);
         TextView lontextView = findViewById(R.id.lonTextView);
 
+        String o3Value = String.valueOf(measurement.getO3Value());
+
         if (measurement != null) {
-            ppmTextView.setText("O3 Value (PPM): " + measurement.getO3Value());
+            ppmTextView.setText(o3Value);
             latTextView.setText("Lat: " + measurement.getLatitude());
             lontextView.setText("Long: " + measurement.getLongitude());
         } else {
-            ppmTextView.setText("PPM: N/A");
+            ppmTextView.setText("N/A");
             latTextView.setText("Lat: N/A");
             lontextView.setText("Long: N/A");
         }
