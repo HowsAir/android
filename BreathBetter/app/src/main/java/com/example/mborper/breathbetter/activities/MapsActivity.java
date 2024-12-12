@@ -4,13 +4,21 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager2.widget.ViewPager2;
+
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
@@ -21,6 +29,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -57,6 +68,9 @@ public class MapsActivity extends AppCompatActivity {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.map);
         setupBottomNavigation();
+
+        Button showPopupButton = findViewById(R.id.show_popup_button); // Este botón debe estar definido en el layout XML
+        showPopupButton.setOnClickListener(v -> showPopupDialog());
 
         // Configurar WebView
         webView = findViewById(R.id.webview_mapa);
@@ -166,24 +180,139 @@ public class MapsActivity extends AppCompatActivity {
 
         bottomNavigationView.setOnItemSelectedListener(item ->
 
-    {
-        if (item.getItemId() == R.id.home) {
-            startActivity(new Intent(this, MainActivity.class));
-            return true;
-        } else if (item.getItemId() == R.id.map) {
-            overridePendingTransition(0, 0);
-            return true;
-        } else if (item.getItemId() == R.id.target) {
-            startActivity(new Intent(this, GoalActivity.class));
-            overridePendingTransition(0, 0);
-            return true;
-        } else if (item.getItemId() == R.id.profile) {
-            startActivity(new Intent(this, ProfileActivity.class));
-            overridePendingTransition(0, 0);
-            return true;
+        {
+            if (item.getItemId() == R.id.home) {
+                startActivity(new Intent(this, MainActivity.class));
+                return true;
+            } else if (item.getItemId() == R.id.map) {
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (item.getItemId() == R.id.target) {
+                startActivity(new Intent(this, GoalActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            } else if (item.getItemId() == R.id.profile) {
+                startActivity(new Intent(this, ProfileActivity.class));
+                overridePendingTransition(0, 0);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void showPopupDialog() {
+        // Inflate the popup layout (which contains ViewPager2 and paginator)
+        LayoutInflater inflater = getLayoutInflater();
+        View popupView = inflater.inflate(R.layout.gas_info_popup, null);
+
+        // Create the dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setView(popupView);
+        AlertDialog dialog = builder.create();
+
+        // Setup the ViewPager2 and paginator dots
+        ViewPager2 viewPager = popupView.findViewById(R.id.viewpager_content);
+        viewPager.post(() -> {
+            // Asegúrate de que el ViewPager2 se ajuste correctamente
+            viewPager.requestLayout();
+        });
+
+        LinearLayout dotsLayout = popupView.findViewById(R.id.dots_paginator);
+
+        // Create example page content (texts, icons, and titles)
+        List<PageContent> pages = new ArrayList<>();
+
+        // Page 1
+        pages.add(new PageContent(
+                "Ozono (O3)",  // Title for Page 1
+                Arrays.asList(
+                        "Origen: vehículos, fábricas tras reaccionar con la luz del sol. ",
+                        "Efectos: Dificultad para respirar, agrava el asma. ",
+                        "Tip: Evita actividades al aire libre de 10:00 a 17:00."
+                ),
+                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip)
+        ));
+
+        // Page 2
+        pages.add(new PageContent(
+                "Monóxido de Carbono (CO2)",  // Title for Page 2
+                Arrays.asList(
+                        "Origen: Calefacción y combustión de gasolina y diesel. ",
+                        "Efectos: Mareos, fatiga; peligro en alta exposición",
+                        "Tip: Evita motores encendidos en espacios cerrados."
+                ),
+                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip)
+        ));
+
+        // Page 3
+        pages.add(new PageContent(
+                "Dióxido de nitrógeno (NO2)",  // Title for Page 3
+                Arrays.asList(
+                        "Origen: Tráfico y combustibles fósiles. ",
+                        "Efectos: Irrita las vías respiratorias, reduce función pulmonar. ",
+                        "Tip: Mantén ventanas cerradas en horas pico."
+                ),
+                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip)
+        ));
+
+        // Page 4
+        pages.add(new PageContent(
+                "Tips generales",  // Title for Page 3
+                Arrays.asList(
+                        "Ventila tu casa temprano o tarde, y usa purificadores",
+                        "Opta por rutas con menos trafico",
+                        "Usa mascarillas en días de alta contaminación."
+                ),
+                Arrays.asList(R.drawable.circle, R.drawable.circle, R.drawable.circle)
+        ));
+
+        // Set up the adapter for ViewPager2 using the pageContent list
+        PopupPagerAdapter adapter = new PopupPagerAdapter(pages);
+        viewPager.setAdapter(adapter);
+
+        // Set up the paginator dots
+        setupDots(pages.size(), dotsLayout, viewPager);
+
+        // Set up the close button
+        Button closeButton = popupView.findViewById(R.id.close_popup_button);
+        closeButton.setOnClickListener(v -> dialog.dismiss());
+
+        // Show the dialog
+        dialog.show();
+    }
+
+
+
+
+
+    private void setupDots(int numPages, LinearLayout dotsLayout, ViewPager2 viewPager) {
+        dotsLayout.removeAllViews();
+        ImageView[] dots = new ImageView[numPages];
+
+        for (int i = 0; i < numPages; i++) {
+            dots[i] = new ImageView(this);
+            dots[i].setImageResource(R.drawable.dot_inactive);  // Asegúrate de tener este recurso en tus drawable
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(8, 0, 8, 0);
+            dots[i].setLayoutParams(params);
+            dotsLayout.addView(dots[i]);
         }
-        return false;
-    });
-}
+
+        // Cambiar el estado activo al deslizar
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageSelected(int position) {
+                for (int i = 0; i < numPages; i++) {
+                    dots[i].setImageResource(i == position ? R.drawable.dot_active : R.drawable.dot_inactive);
+                }
+            }
+        });
+
+        // Configurar el estado inicial
+        dots[0].setImageResource(R.drawable.dot_active);  // Asegúrate de tener este recurso en tus drawable
+    }
 
 }
