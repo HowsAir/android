@@ -29,17 +29,9 @@ import retrofit2.http.Query;
  *
  * @author Manuel Borregales, Alejandro Rosado
  * @since 2024-10-04
- * last updated 2024-11-21
+ * last updated 2024-12-01
  */
 public interface ApiService {
-
-    /**
-     * Fetches the list of measurements from the API using a GET request.
-     *
-     * @return Call object encapsulating a List of Measurement objects.
-     */
-    @GET("measurements/")
-    Call<List<Measurement>> getMeasurements();
 
     /**
      * Sends a new measurement to the API using a POST request.
@@ -154,17 +146,38 @@ public interface ApiService {
     Call<Void> changePassword(@Body JsonObject requestBody);
 
     /**
-     * Retrieves the total distance traveled by the authenticated user for the current day.
+     * Retrieves dashboard data for the user, including air quality and distance traveled.
      * <p>
-     * Makes a GET request to the `/users/today-total-distance` endpoint to fetch the total
-     * distance in meters that the user has traveled during the current day. This endpoint
-     * requires authentication through the auth_token cookie.
+     * This method sends a GET request to the `/users/dashboard` endpoint and returns a JSON object containing:
+     * - Last air quality reading
+     * - Distance traveled today
+     * - Historical air quality readings
+     * </p>
      *
-     * @return Call<JsonObject> The call to the API endpoint containing the total distance.
-     *         The response includes a message and the totalDistance in meters.
+     * @return Call object encapsulating the response, containing dashboard data.
      */
-    @GET("users/today-total-distance")
-    Call<JsonObject> getTodayTotalDistance();
+    @GET("users/dashboard")
+    Call<JsonObject> getDashboardData();
+
+    /**
+     * Retrieves the total distance traveled in the current month.
+     * <p>
+     * This method sends a GET request to the `/users/current-month-distance` endpoint
+     * and returns a JSON object containing the total distance.
+     * </p>
+     *
+     * @return Call object encapsulating the response, containing current month's distance.
+     */
+    @GET("users/current-month-distance")
+    Call<JsonObject> getCurrentMonthDistance();
+
+    /**
+     * Retrieves the current air quality map URL and timestamp.
+     *
+     * @return Call object containing a JsonObject with 'url' and 'timestamp' keys
+     */
+    @GET("air-quality-maps/current")
+    Call<JsonObject> getCurrentAirQualityMap();
 
 }
 
