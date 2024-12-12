@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.icu.text.SimpleDateFormat;
 import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -17,6 +18,10 @@ import com.example.mborper.breathbetter.activities.MainActivity;
 import com.example.mborper.breathbetter.R;
 
 import android.os.Handler;
+import android.util.Log;
+
+import java.util.Date;
+import java.util.Locale;
 
 
 /**
@@ -32,8 +37,9 @@ import android.os.Handler;
  * retrieve the user's current location for the notification.
  *
  * @author Manuel Borregales
+ * @author Alejandro Rosado
  * @since 2024-10-23
- * last updated 2024-11-09
+ * last updated 2024-12-12
  */
 
 public class GasAlertManager {
@@ -49,8 +55,19 @@ public class GasAlertManager {
     // Gas concentration threshold in PPM (Parts Per Million) to trigger an error
     private static final int PPM_MAX_VALID_VALUE = 1000;
 
-    // Timeout for the BLE scan to throw error
-    private static final long BEACON_TIMEOUT_MS = 60000;
+    // New constants for different notifications error scenarios
+    private static final String ERROR_NO_NODE = "NODO_NO_ENCONTRADO";
+    private static final String ERROR_CONNECTION_LOST = "CONEXION_PERDIDA";
+
+
+    // Existing timeout for beacon scan
+    private static final long BEACON_TIMEOUT_MS = 40000; // 40 seconds
+    private static final long MEASUREMENT_LOSS_TIMEOUT_MS = 40000;
+
+    // Threshold for consecutive missed measurements
+    private static final int MAX_CONSECUTIVE_MISSED_MEASUREMENTS = 3;
+
+    private long lastSuccessfulMeasurementTimestamp = 0;
 
     // Context, NotificationManager, LocationUtils and MediaPlayer instances
     private final Context context;
@@ -59,10 +76,12 @@ public class GasAlertManager {
     private MediaPlayer alertSound;
     private long lastBeaconTimestamp;
     private final Handler timeoutHandler;
-    private final Runnable timeoutChecker;
     public boolean isErrorNotified;
     // To check if inactivity feature is enabled
     private boolean isRunning = false;
+
+    private boolean isFirstRun = true;
+    private NodeConnectionState connectionState;
 
     /**
      * Constructor for GasAlertManager
@@ -81,22 +100,10 @@ public class GasAlertManager {
         initializeAlertSound(); // Prepare the alert sound
         isErrorNotified = false;
         isRunning = true;
+        this.connectionState = NodeConnectionState.getInstance();
 
         lastBeaconTimestamp = System.currentTimeMillis();
         timeoutHandler = new Handler(Looper.getMainLooper());
-        timeoutChecker = new Runnable() {
-            @Override
-            public void run() {
-                if (isRunning) {
-                    if (!isErrorNotified) {
-                        checkBeaconTimeout();
-                    }
-                    checkBeaconTime();
-                    timeoutHandler.postDelayed(this, 5000);
-                }
-            }
-        };
-        startTimeoutChecking();
     }
 
     /**
@@ -201,6 +208,10 @@ public class GasAlertManager {
      * @param timestamp The timestamp when the gas level was detected.
      */
     private void sendAlert(int o3Value, String timestamp) {
+
+        // Parse and format the timestamp
+        String formattedTimestamp = formatTimestamp(timestamp);
+
         // Play alert sound
         if (alertSound != null && !alertSound.isPlaying()) {
             alertSound.start();
@@ -215,18 +226,42 @@ public class GasAlertManager {
 
         // Build the notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ALERT_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.howsair_logo)
                 .setContentTitle("¡Alerta de Gas!")
                 .setContentText("Nivel de gas peligroso detectado: " + o3Value + " PPM")
                 .setStyle(new NotificationCompat.BigTextStyle()
                         .bigText("Nivel de gas peligroso detectado: " + o3Value + " PPM\n" +
-                                "Hora: " + timestamp))
+                                "Hora: " + formattedTimestamp))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
 
         // Issue the notification
         notificationManager.notify(ALERT_NOTIFICATION_ID, builder.build());
+    }
+
+    /**
+     * Formats the timestamp into a human-readable format.
+     * <p>
+     * Converts the timestamp from the ISO 8601 format into a user-friendly format
+     * for display in notifications.
+     *
+     * @param timestamp The original timestamp to format.
+     * @return The formatted timestamp.
+     */
+    private String formatTimestamp(String timestamp) {
+        try {
+            // Assuming the timestamp is in ISO 8601 format: "yyyy-MM-dd'T'HH:mm:ss"
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+            Date date = inputFormat.parse(timestamp);
+
+            // Output format: "HH:mm dd/MM/yyyy"
+            SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault());
+            return outputFormat.format(date);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return timestamp; // Return original if parsing fails
+        }
     }
 
     /**
@@ -241,50 +276,90 @@ public class GasAlertManager {
      */
     private void sendSensorErrorNotification(String errorType, String errorDetails) {
         String timestamp = TimeUtils.getCurrentTimestamp();
-        //String location = locationUtils.getLocationString(locationUtils.getCurrentLocation());
+        String formattedTimestamp = formatTimestamp(timestamp);
 
+        // Intent para abrir MainActivity al hacer clic en la notificación
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context, 0, intent, PendingIntent.FLAG_IMMUTABLE
         );
 
+        // Construcción de la notificación
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ERROR_CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.howsair_logo)
                 .setContentTitle("Error en tu Nodo Sensor")
                 .setContentText(errorType + ": " + errorDetails)
                 .setStyle(new NotificationCompat.BigTextStyle()
-                        .bigText("Error en tu Nodo Sensor\n" +
-                                "Tipo de error: " + errorType + "\n" +
+                        .bigText("Tipo de error: " + errorType + "\n" +
                                 "Detalles: " + errorDetails + "\n" +
-                                "Hora: " + timestamp + "\n"))
+                                "Hora: " + formattedTimestamp))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
 
+        // Emitir la notificación
         notificationManager.notify(ERROR_NOTIFICATION_ID, builder.build());
     }
 
     /**
-     * Starts the timeout checking process by posting the `timeoutChecker` Runnable
-     * to the handler. This begins the periodic checking for beacon timeouts.
+     * Resets the 'isFirstRun' flag, allowing the system to reinitialize.
+     * This can be used to trigger reinitialization if necessary after the first run.
      */
-    private void startTimeoutChecking() {
-        timeoutHandler.post(timeoutChecker);
+    public void resetFirstRunState() {
+        isFirstRun = true;
     }
 
     /**
-     * Checks if a beacon timeout has occurred by comparing the current time
-     * with the timestamp of the last received beacon. If the time difference
-     * exceeds the specified `BEACON_TIMEOUT_MS`, a sensor error notification
-     * is sent, indicating no data has been received for the specified interval.
+     * Updates the timestamp of the last received beacon.
+     * This is useful for tracking the time when the last beacon was received.
      */
-    private void checkBeaconTimeout() {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastBeaconTimestamp > BEACON_TIMEOUT_MS) {
-            sendSensorErrorNotification("SIN_SEÑAL",
-                    "No se han recibido datos del sensor en los últimos 30 segundos, comprueba la conexion");
-            isErrorNotified = true;
+    public void updateLastBeaconTimestamp() {
+        lastBeaconTimestamp = System.currentTimeMillis();
+    }
+
+    /**
+     * Handles the measurement received from the sensor.
+     * <p>
+     * This method validates the received measurement and processes it if valid.
+     * If the measurement is valid, it checks and triggers an alert if necessary.
+     * Otherwise, it sends a sensor error notification.
+     *
+     * @param o3Value The received gas concentration measurement in PPM.
+     */
+    public void onMeasurementReceived(int o3Value) {
+        boolean isValidMeasurement = isValidMeasurement(o3Value);
+        connectionState.updateConnectionState(isValidMeasurement);
+
+        if (isValidMeasurement) {
+            checkAndAlert(o3Value);
+        } else {
+            sendSensorErrorNotification("MEDICION_INVALIDA", "Medición fuera de rango");
+        }
+    }
+
+    /**
+     * Validates if the received measurement is within the acceptable range.
+     * <p>
+     * A valid measurement is a non-negative value and must be less than or equal to the maximum allowable PPM value.
+     *
+     * @param o3Value The gas concentration value in PPM to validate.
+     * @return true if the measurement is valid, false otherwise.
+     */
+    private boolean isValidMeasurement(int o3Value) {
+        return o3Value >= 0 && o3Value <= PPM_MAX_VALID_VALUE;
+    }
+
+    /**
+     * Handles reconnection logic if the connection state is in the "reconnecting" state.
+     * <p>
+     * If the connection state indicates that the system is in the process of reconnecting, it sends a notification
+     * about the reconnection attempt and can trigger further reconnection logic if needed.
+     */
+    private void handleReconnectionIfNeeded() {
+        if (connectionState.getConnectionStatus() == NodeConnectionState.ConnectionStatus.RECONNECTING) {
+            sendReconnectionNotification();
+            // Lógica adicional de reconexión si es necesario
         }
     }
 
@@ -308,7 +383,6 @@ public class GasAlertManager {
      */
     public void cleanup() {
         isRunning = false;
-        timeoutHandler.removeCallbacks(timeoutChecker);
 
         if (alertSound != null) {
             alertSound.release();
@@ -321,12 +395,19 @@ public class GasAlertManager {
     }
 
     /**
-     * Restart monitoring after a pause or stop.
+     * Sends a notification to inform the user that the node has reconnected and is sending measurements again.
+     * <p>
+     * This method uses Android's NotificationManager to create and show a high-priority notification that alerts the user
+     * when the system has re-established the connection and is receiving measurements.
      */
-    public void restart() {
-        isRunning = true;
-        isErrorNotified = false;
-        lastBeaconTimestamp = System.currentTimeMillis();
-        startTimeoutChecking();
+    private void sendReconnectionNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ERROR_CHANNEL_ID)
+                .setSmallIcon(R.drawable.howsair_logo)
+                .setContentTitle("Conexión restaurada")
+                .setContentText("El nodo ha vuelto a enviar medidas.")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        notificationManager.notify(ERROR_NOTIFICATION_ID, builder.build());
     }
 }
