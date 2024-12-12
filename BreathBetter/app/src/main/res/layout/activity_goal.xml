@@ -5,20 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="400dp"
-        android:text="Futura Actividad Objetivos"
+    <com.example.mborper.breathbetter.graphs.SemicircleProgressView
+        android:id="@+id/semicircle_progress"
+        android:layout_width="match_parent"
+        android:layout_height="125dp"
+        android:layout_marginStart="85dp"
+        android:layout_marginTop="45dp"
+        android:layout_marginEnd="85dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/text_Goal_Title" />
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:id="@+id/coordinatorLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:visibility="visible"
         tools:context=".activities.ProfileActivity">
 
         <FrameLayout
@@ -28,11 +31,92 @@
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
+            style="@style/Widget.App.BottomNavigationView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            style="@style/Widget.App.BottomNavigationView"
             app:menu="@menu/bottom_navigation_menu" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <TextView
+        android:id="@+id/text_Goal_Title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="45dp"
+        android:text="@string/text_goal"
+        android:textAppearance="@style/TextAppearance.App.Heading1"
+        app:layout_constraintEnd_toStartOf="@+id/text_monthly_objective"
+        app:layout_constraintHorizontal_bias="0.51"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/text_monthly_objective"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="20km"
+        android:textAppearance="@style/TextAppearance.App.Heading1"
+        android:textSize="34sp"
+        app:layout_constraintBottom_toBottomOf="@+id/text_Goal_Title"
+        app:layout_constraintStart_toEndOf="@+id/text_Goal_Title" />
+
+    <TextView
+        android:id="@+id/text_total_distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="-75dp"
+        android:text="20km"
+        android:textAppearance="@style/TextAppearance.App.Heading2"
+        android:textColor="@color/gray_secondary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.486"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/semicircle_progress" />
+
+    <TextView
+        android:id="@+id/text_progress_percentage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="100%"
+        android:textAppearance="@style/TextAppearance.App.Heading2"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_total_distance" />
+
+    <include
+        android:id="@+id/monthly_objectives_table"
+        layout="@layout/monthly_objectives_table"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/objectives_rewards_title" />
+
+    <TextView
+        android:id="@+id/objectives_rewards_title"
+        style="@style/TextAppearance.App.Heading3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        android:text="@string/objective_rewards_tile"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_progress_percentage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layout_marginTop="16dp"
+    android:layout_marginHorizontal="16dp">
+
+    <include
+        layout="@layout/monthly_objectives_header"
+        android:background="@drawable/table_header_border"/>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <TableLayout
+            android:id="@+id/table_monthly_objectives"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/table_body_border">
+
+            <TableRow
+                android:layout_width="wrap_content"
+                android:background="#F5F5F5"
+                android:paddingVertical="8dp"
+                android:layout_marginHorizontal="1dp">
+
+                <TextView
+                    android:id="@+id/header_premio"
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Premio ▼"
+                    android:textColor="#666666"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/header_ciudad"
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Ciudad ▼"
+                    android:textColor="#666666"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/header_fecha"
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Fecha ▼"
+                    android:textColor="#666666"
+                    android:textSize="14sp" />
+                <TextView
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text=""
+                    android:textColor="#666666"
+                    android:textSize="14sp"/>
+            </TableRow>
+
+            <TableRow
+                android:layout_width="wrap_content"
+                android:background="@android:color/white"
+                android:paddingVertical="8dp"
+                android:layout_marginHorizontal="2dp"
+                android:layout_marginVertical="4dp">
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="-10% Olimpia"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Valencia"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="12/11/2024"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+                <Button
+                    style="@style/Widget.App.Button.Primary"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginRight="5dp"
+                    android:text="Canjear"
+                    android:textAllCaps="false"
+                    android:textAppearance="@style/TextAppearance.App.Heading3"
+                    android:textColor="@color/gray"
+                    android:textStyle="bold"
+                    app:cornerRadius="10dp" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="wrap_content"
+                android:background="@android:color/white"
+                android:paddingVertical="8dp"
+                android:layout_marginHorizontal="2dp"
+                android:layout_marginVertical="4dp">
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="-20% Teatro"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Valencia"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="119dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="12/11/2024"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <Button
+                    style="@style/Widget.App.Button.Primary"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginRight="5dp"
+                    android:text="Canjear"
+                    android:textAllCaps="false"
+                    android:textAppearance="@style/TextAppearance.App.Heading3"
+                    android:textColor="@color/gray"
+                    android:textStyle="bold"
+                    app:cornerRadius="10dp" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="wrap_content"
+                android:background="@android:color/white"
+                android:paddingVertical="8dp"
+                android:layout_marginHorizontal="2dp"
+                android:layout_marginVertical="4dp">
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="60dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Entrada cine"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="Valencia"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+
+                <TextView
+                    style="@style/TextAppearance.App.Heading3"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:text="12/11/2024"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp" />
+                <Button
+                    style="@style/Widget.App.Button.Primary"
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    android:paddingHorizontal="16dp"
+                    android:layout_marginRight="5dp"
+                    android:text="Canjear"
+                    android:textAllCaps="false"
+                    android:textAppearance="@style/TextAppearance.App.Heading3"
+                    android:textColor="@color/gray"
+                    android:textStyle="bold"
+                    app:cornerRadius="10dp" />
+            </TableRow>
+
+        </TableLayout>
+    </HorizontalScrollView>
+</LinearLayout>
