@@ -4,15 +4,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.mborper.breathbetter.R;
+import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
 import com.example.mborper.breathbetter.login.SessionManager;
 
 import java.util.concurrent.Executor;
@@ -24,10 +29,13 @@ import java.util.concurrent.Executor;
  * it will automatically proceed to the next activity.
  *
  * @since 2024-11-01
- * last edited: 2024-11-02
+ * last edited: 2024-12-12
  * @author Alejandro Rosado
  */
 public class BiometricAuthActivity extends AppCompatActivity {
+    private static final String LOG_TAG = "BiometricAuthActivity";
+    private static final int MAX_AUTHENTICATION_ATTEMPTS = 3;
+    private int authenticationAttempts = 0;
 
     private Executor executor;
     private BiometricPrompt biometricPrompt;
@@ -112,31 +120,55 @@ public class BiometricAuthActivity extends AppCompatActivity {
                     @Override
                     public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
                         super.onAuthenticationSucceeded(result);
-                        // Use LoginActivity's navigation logic
+                        // Reset attempts on successful authentication
+                        authenticationAttempts = 0;
                         navigateToMainActivity(true);
                     }
 
                     @Override
                     public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
                         super.onAuthenticationError(errorCode, errString);
-                        // If the error is not user cancellation, show the error
+
+                        // Don't increment attempts for user cancellation or negative button
                         if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
                                 errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+
+                            authenticationAttempts++;
+
+                            // Show error message
                             Toast.makeText(BiometricAuthActivity.this,
                                     "Error de autenticación: " + errString,
                                     Toast.LENGTH_SHORT).show();
+
+                            // Check if max attempts reached
+                            if (authenticationAttempts >= MAX_AUTHENTICATION_ATTEMPTS) {
+                                // Logout and return to login screen
+                                logoutAndReturnToLogin();
+                            } else {
+                                // Retry authentication
+                                showBiometricPrompt();
+                            }
+                        } else {
+                            navigateToMainActivity(false);
                         }
-                        navigateToMainActivity(false);
                     }
 
                     @Override
                     public void onAuthenticationFailed() {
                         super.onAuthenticationFailed();
+
+                        authenticationAttempts++;
+
                         Toast.makeText(BiometricAuthActivity.this,
                                 "No eres el usuario autenticado, intentalo otra vez",
                                 Toast.LENGTH_SHORT).show();
 
-                        navigateToMainActivity(false);
+                        // Check if max attempts reached
+                        if (authenticationAttempts >= MAX_AUTHENTICATION_ATTEMPTS) {
+                            // Logout and return to login screen
+                            biometricPrompt.cancelAuthentication();
+                            logoutAndReturnToLogin();
+                        }
                     }
                 });
 
@@ -149,15 +181,54 @@ public class BiometricAuthActivity extends AppCompatActivity {
     }
 
     /**
-     * Shows the biometric authentication prompt to the user.
+     * Logs out the user by clearing the session, stopping services, canceling notifications,
+     * and redirecting to the login screen.
+     * <p>
+     * Int -> logoutAndReturnToLogin() -> void
+     */
+    private void logoutAndReturnToLogin() {
+        // Clear session
+        SessionManager sessionManager = new SessionManager(this);
+        sessionManager.clearSession();
+
+        // Stop any running services
+        stopBeaconListeningService();
+
+        // Cancel all notifications
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.cancelAll();
+
+        // Redirect to login screen
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
+                Intent.FLAG_ACTIVITY_CLEAR_TASK |
+                Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    /**
+     * Stops the BeaconListeningService if it's running.
+     * <p>
+     * Void -> stopBeaconListeningService() -> void
+     */
+    private void stopBeaconListeningService() {
+        Intent serviceIntent = new Intent(this, BeaconListeningService.class);
+        stopService(serviceIntent);
+    }
+
+    /**
+     * Initiates a biometric authentication prompt for the user.
      */
     private void showBiometricPrompt() {
         biometricPrompt.authenticate(promptInfo);
     }
 
     /**
-     * Navigates to the MainActivity and finishes the current activity
-     * to prevent the user from returning to this screen.
+     * Navigates to the main activity based on authentication success or failure.
+     * <p>
+     * Boolean -> navigateToMainActivity(authSuccessful) -> void
+     * @param authSuccessful indicates if authentication was successful
      */
     private void navigateToMainActivity(boolean authSuccessful) {
         Intent intent = new Intent();
