@@ -18,7 +18,6 @@ import com.example.mborper.breathbetter.activities.MainActivity;
 import com.example.mborper.breathbetter.R;
 
 import android.os.Handler;
-import android.util.Log;
 
 import java.util.Date;
 import java.util.Locale;
@@ -179,7 +178,7 @@ public class GasAlertManager {
      *
      * @param o3Value The detected gas concentration in PPM.
      */
-    public void checkAndAlert(int o3Value) {
+    public void checkAndAlert(float o3Value) {
         // Update timestamp from the last measurement
         lastBeaconTimestamp = System.currentTimeMillis();
 
@@ -207,7 +206,7 @@ public class GasAlertManager {
      * @param o3Value The gas concentration in PPM.
      * @param timestamp The timestamp when the gas level was detected.
      */
-    private void sendAlert(int o3Value, String timestamp) {
+    private void sendAlert(float o3Value, String timestamp) {
 
         // Parse and format the timestamp
         String formattedTimestamp = formatTimestamp(timestamp);
@@ -327,7 +326,7 @@ public class GasAlertManager {
      *
      * @param o3Value The received gas concentration measurement in PPM.
      */
-    public void onMeasurementReceived(int o3Value) {
+    public void onMeasurementReceived(float o3Value) {
         boolean isValidMeasurement = isValidMeasurement(o3Value);
         connectionState.updateConnectionState(isValidMeasurement);
 
@@ -346,7 +345,7 @@ public class GasAlertManager {
      * @param o3Value The gas concentration value in PPM to validate.
      * @return true if the measurement is valid, false otherwise.
      */
-    private boolean isValidMeasurement(int o3Value) {
+    private boolean isValidMeasurement(float o3Value) {
         return o3Value >= 0 && o3Value <= PPM_MAX_VALID_VALUE;
     }
 

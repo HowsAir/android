@@ -292,8 +292,8 @@ public class BeaconListeningService extends Service {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
         if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
             Measurement newMeasurement = new Measurement();
-            newMeasurement.setO3Value(Utilities.bytesToInt(tib.getMajor()));
-            setMeasurementLocation(newMeasurement);
+            newMeasurement.setO3Value(Utilities.bytesToFloat(tib.getMajor()) / 100); //To convert integers to decimal ppm
+            setMeasurementLocation(newMeasurement);                                // (manageable numbers for the O3 thresholds)
 
             if (isValidMeasurement(newMeasurement)) {
                 if (!newMeasurement.equals(lastMeasurement)) {
