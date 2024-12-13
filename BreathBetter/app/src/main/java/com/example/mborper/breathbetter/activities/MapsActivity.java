@@ -3,11 +3,15 @@ package com.example.mborper.breathbetter.activities;
 import static com.example.mborper.breathbetter.activities.BaseActivity.setCurrentScreen;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -189,6 +193,9 @@ public class MapsActivity extends BaseActivity {
         LayoutInflater inflater = getLayoutInflater();
         View popupView = inflater.inflate(R.layout.gas_info_popup, null);
 
+        // Aplicar bordes redondeados directamente al diseño del popup
+        popupView.setBackgroundResource(R.drawable.rounded_dialog_background);
+
         // Create the dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setView(popupView);
@@ -241,10 +248,10 @@ public class MapsActivity extends BaseActivity {
 
         // Page 4
         pages.add(new PageContent(
-                "Tips generales",  // Title for Page 3
+                "Tips generales",  // Title for Page 4
                 Arrays.asList(
                         "Ventila tu casa temprano o tarde, y usa purificadores",
-                        "Opta por rutas con menos trafico",
+                        "Opta por rutas con menos tráfico",
                         "Usa mascarillas en días de alta contaminación."
                 ),
                 Arrays.asList(R.drawable.circle, R.drawable.circle, R.drawable.circle)
@@ -263,7 +270,32 @@ public class MapsActivity extends BaseActivity {
 
         // Show the dialog
         dialog.show();
+
+        if (dialog.getWindow() != null) {
+            // Fondo transparente para el Window
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        // Ajustar tamaño del diálogo manualmente
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams();
+        params.copyFrom(dialog.getWindow().getAttributes());
+        // Convertir 320dp a píxeles
+        int heightInPixels = (int) TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_DIP,
+                420,
+                getResources().getDisplayMetrics()
+        );
+
+        // Usar el valor convertido para la altura del diálogo
+        params.width = heightInPixels; // Ajusta según tus necesidades
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT; // Ajusta según tus necesidades
+        dialog.getWindow().setAttributes(params);
+
+        // Agregar márgenes al popup
+        int marginHorizontal = getResources().getDimensionPixelSize(R.dimen.popup_margin_horizontal); // Define en dimens.xml
+        dialog.getWindow().getDecorView().setPadding(marginHorizontal, 0, marginHorizontal, 0);
     }
+
 
     private void setupDots(int numPages, LinearLayout dotsLayout, ViewPager2 viewPager) {
         dotsLayout.removeAllViews();
