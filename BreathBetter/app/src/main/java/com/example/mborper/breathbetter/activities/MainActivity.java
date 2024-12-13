@@ -1,23 +1,17 @@
 package com.example.mborper.breathbetter.activities;
 
-import static com.example.mborper.breathbetter.activities.BaseActivity.setCurrentScreen;
-
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
@@ -29,9 +23,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageView;
@@ -56,19 +48,7 @@ import retrofit2.Response;
 import com.example.mborper.breathbetter.bluetooth.BuzzerControl;
 import com.example.mborper.breathbetter.measurements.NodeConnectionState;
 import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.LimitLine;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
 import com.github.mikephil.charting.data.BarEntry;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.ValueFormatter;
-import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -78,10 +58,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
-import java.util.Calendar;
 
 
 /**
@@ -403,13 +379,13 @@ public class MainActivity extends BaseActivity
                         // Check for null or empty objects before accessing
                         if (lastAirQuality != null &&
                                 lastAirQuality.has("timestamp") &&
-                                lastAirQuality.has("proportionalValue") &&
+                                lastAirQuality.has("ppmValue") &&
                                 lastAirQuality.has("gas")) {
 
                             // Update the UI dashboard data
                             updateUIDashboardData(
                                     lastAirQuality.get("timestamp").getAsString(),
-                                    lastAirQuality.get("proportionalValue").getAsInt(),
+                                    lastAirQuality.get("ppmValue").getAsFloat(),
                                     lastAirQuality.get("gas").getAsString(),
                                     todayDistance
                             );
@@ -861,7 +837,7 @@ public class MainActivity extends BaseActivity
      * @param gas The type of gas detected.
      * @param todayDistance The distance traveled today.
      */
-    private void updateUIDashboardData(String timestamp, int proportionalValue, String gas, int todayDistance) {
+    private void updateUIDashboardData(String timestamp, float proportionalValue, String gas, int todayDistance) {
         TextView ppmTextView = findViewById(R.id.ppmTextView);
         TextView textPpm = findViewById(R.id.text_ppm);
         TextView textLastDate = findViewById(R.id.text_last_date);
@@ -896,7 +872,7 @@ public class MainActivity extends BaseActivity
      * This method adjusts the position and color of the slider indicator based on the air quality (PPM value).
      * @param ppmValue The air quality proportional value (PPM).
      */
-    private void updateAirQualityGradientSlider(int ppmValue) {
+    private void updateAirQualityGradientSlider(float ppmValue) {
         View gradientSlider = findViewById(R.id.air_quality_gradient_slider);
         View sliderIndicator = findViewById(R.id.slider_indicator);
 
@@ -924,7 +900,7 @@ public class MainActivity extends BaseActivity
      * @param indicatorWidth The width of the indicator.
      * @return The position of the indicator in pixels.
      */
-    private int calculateIndicatorPosition(int ppmValue, int sliderWidth, int indicatorWidth) {
+    private int calculateIndicatorPosition(float ppmValue, int sliderWidth, int indicatorWidth) {
         return (int) ((ppmValue / 100f) * sliderWidth) - (indicatorWidth / 2);
     }
 
@@ -935,7 +911,7 @@ public class MainActivity extends BaseActivity
      * @param ppmValue The air quality proportional value (PPM).
      * @return The interpolated color.
      */
-    private int interpolateColorBasedOnPPM(int ppmValue) {
+    private int interpolateColorBasedOnPPM(float ppmValue) {
         if (ppmValue <= 50) {
             float ratio = ppmValue / 50f;
             return interpolateColor(
