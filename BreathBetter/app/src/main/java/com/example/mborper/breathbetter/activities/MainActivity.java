@@ -93,7 +93,7 @@ import java.util.Calendar;
  * @since  2024-10-07
  * last edited: 2024-12-12
  */
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseActivity
         implements NodeConnectionState.ConnectionStatusListener {
 
     private NotificationManager notificationManager;
@@ -239,7 +239,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setCurrentScreen("HOME");
+        setupBottomNavigation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupBottomNavigation();
     }
 
     /**
@@ -524,40 +530,6 @@ public class MainActivity extends AppCompatActivity
         } else {
             showToast("Permisos necesarios...");
         }
-    }
-
-    /**
-     * Configures the bottom navigation menu and defines the behavior when each item is selected.
-     * <p>
-     * Each navigation item (home, map, target, profile) will start a new activity or perform a transition
-     * when selected. If the current item is the same as the one already selected, no action is performed.
-     */
-    private void setupBottomNavigation() {
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Intent intent = null;
-            if (item.getItemId() == R.id.home) {
-                return true; // Ya estás en home
-            } else if (item.getItemId() == R.id.map) {
-                intent = new Intent(this, MapsActivity.class);
-            } else if (item.getItemId() == R.id.target) {
-                intent = new Intent(this, GoalActivity.class);
-            } else if (item.getItemId() == R.id.profile) {
-                intent = new Intent(this, ProfileActivity.class);
-            }
-
-            if (intent != null) {
-                // Añadir flags para evitar recrear la actividad
-                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
-            }
-            return true;
-        });
-
-        bottomNavigationView.setSelectedItemId(R.id.home);
     }
 
     /**

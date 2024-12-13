@@ -1,5 +1,7 @@
 package com.example.mborper.breathbetter.activities;
 
+import static com.example.mborper.breathbetter.activities.BaseActivity.setCurrentScreen;
+
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,7 +49,7 @@ import retrofit2.Response;
  * @since  2024-12-11
  * last updated 2024-12-12
  */
-public class MapsActivity extends AppCompatActivity {
+public class MapsActivity extends BaseActivity {
 
     private WebView webView;
     private ExecutorService executorService;
@@ -65,9 +67,11 @@ public class MapsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setSelectedItemId(R.id.map);
+        //BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        //bottomNavigationView.setSelectedItemId(R.id.map);
+        setCurrentScreen("MAP");
         setupBottomNavigation();
+
 
         Button showPopupButton = findViewById(R.id.show_popup_button); // Este botón debe estar definido en el layout XML
         showPopupButton.setOnClickListener(v -> showPopupDialog());
@@ -108,6 +112,18 @@ public class MapsActivity extends AppCompatActivity {
 
         // Cargar el HTML directamente
         loadHtmlContent();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setupBottomNavigation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupBottomNavigation();
     }
 
     /**
@@ -165,38 +181,6 @@ public class MapsActivity extends AppCompatActivity {
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 Log.e(TAG, "Error fetching map URL: " + t.getMessage());
             }
-        });
-    }
-
-
-    /**
-     * Configures the bottom navigation menu and defines the behavior when each item is selected.
-     * <p>
-     * Each navigation item (home, map, target, profile) will start a new activity or perform a transition
-     * when selected. If the current item is the same as the one already selected, no action is performed.
-     */
-    private void setupBottomNavigation() {
-    BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-
-        bottomNavigationView.setOnItemSelectedListener(item ->
-
-        {
-            if (item.getItemId() == R.id.home) {
-                startActivity(new Intent(this, MainActivity.class));
-                return true;
-            } else if (item.getItemId() == R.id.map) {
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (item.getItemId() == R.id.target) {
-                startActivity(new Intent(this, GoalActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (item.getItemId() == R.id.profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            }
-            return false;
         });
     }
 
@@ -280,10 +264,6 @@ public class MapsActivity extends AppCompatActivity {
         // Show the dialog
         dialog.show();
     }
-
-
-
-
 
     private void setupDots(int numPages, LinearLayout dotsLayout, ViewPager2 viewPager) {
         dotsLayout.removeAllViews();

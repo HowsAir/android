@@ -1,5 +1,7 @@
 package com.example.mborper.breathbetter.activities;
 
+import static com.example.mborper.breathbetter.activities.BaseActivity.setCurrentScreen;
+
 import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -58,7 +60,7 @@ import retrofit2.Response;
  * @since  2024-11-18
  * last edited: 2024-12-12
  */
-public class ProfileActivity extends AppCompatActivity {
+public class ProfileActivity extends BaseActivity {
 
     /** Log tag for debugging. */
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
@@ -98,8 +100,8 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setSelectedItemId(R.id.profile);
+        //BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        //bottomNavigationView.setSelectedItemId(R.id.profile);
 
         // Start components
         imageViewProfile = findViewById(R.id.ImageViewProfile);
@@ -125,6 +127,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Upload profile data
         loadUserProfile();
+
+        setCurrentScreen("PROFILE");
 
         // Bottom navigation
         setupBottomNavigation();
@@ -196,33 +200,16 @@ public class ProfileActivity extends AppCompatActivity {
         startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class));
     }
 
-    /**
-     * Configures the bottom navigation menu and defines the behavior when each item is selected.
-     * <p>
-     * Each navigation item (home, map, target, profile) will start a new activity or perform a transition
-     * when selected. If the current item is the same as the one already selected, no action is performed.
-     */
-    private void setupBottomNavigation() {
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setupBottomNavigation();
+    }
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.home) {
-                startActivity(new Intent(this, MainActivity.class));
-                return true;
-            } else if (item.getItemId() == R.id.map) {
-                startActivity(new Intent(this, MapsActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (item.getItemId() == R.id.target) {
-                startActivity(new Intent(this, GoalActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (item.getItemId() == R.id.profile) {
-                overridePendingTransition(4, 4);
-                return true;
-            }
-            return false;
-        });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupBottomNavigation();
     }
 
     /**
