@@ -1,5 +1,7 @@
 package com.example.mborper.breathbetter.activities;
 
+import static com.example.mborper.breathbetter.activities.BaseActivity.setCurrentScreen;
+
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
@@ -119,6 +121,9 @@ public class MainActivity extends AppCompatActivity
 
     private ApiService apiService;
 
+    private Handler dashboardUpdateHandler = new Handler(Looper.getMainLooper());
+    private Runnable dashboardUpdateRunnable;
+
     /**
      * Handles the mutable variable
      */
@@ -211,6 +216,13 @@ public class MainActivity extends AppCompatActivity
         // If permissions are granted, proceed with setup
         setupMainActivity(isFirstLaunch);
 
+        setCurrentScreen("HOME");
+
+        // Bottom navigation
+        setupBottomNavigation();
+
+
+
         cautionAirIcon = findViewById(R.id.caution_air_icon);
         textCaution = findViewById(R.id.text_caution);
         ppmTextView = findViewById(R.id.ppmTextView);
@@ -222,6 +234,12 @@ public class MainActivity extends AppCompatActivity
         View airQualityGradientSlider = findViewById(R.id.air_quality_gradient_slider);
         View sliderIndicator = findViewById(R.id.slider_indicator);
 
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setCurrentScreen("HOME");
     }
 
     /**
@@ -295,9 +313,6 @@ public class MainActivity extends AppCompatActivity
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // Bottom navigation
-        setupBottomNavigation();
-
         // Automatically start and bind the Bluetooth service
         startAndBindServiceAutomatically();
 
@@ -326,7 +341,15 @@ public class MainActivity extends AppCompatActivity
         });
         setupBuzzerButton();
 
-        fetchDashboardData();
+        // Setup periodic dashboard data fetch
+        dashboardUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                fetchDashboardData();
+                dashboardUpdateHandler.postDelayed(this, 30000); // 30 seconds
+            }
+        };
+        dashboardUpdateHandler.post(dashboardUpdateRunnable);
 
         // Initialize line chart
         barChart = findViewById(R.id.barChart);
@@ -513,24 +536,28 @@ public class MainActivity extends AppCompatActivity
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         bottomNavigationView.setOnItemSelectedListener(item -> {
+            Intent intent = null;
             if (item.getItemId() == R.id.home) {
-                overridePendingTransition(0, 0);
-                return true;
+                return true; // Ya estás en home
             } else if (item.getItemId() == R.id.map) {
-                startActivity(new Intent(this, MapsActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
+                intent = new Intent(this, MapsActivity.class);
             } else if (item.getItemId() == R.id.target) {
-                startActivity(new Intent(this, GoalActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
+                intent = new Intent(this, GoalActivity.class);
             } else if (item.getItemId() == R.id.profile) {
-                startActivity(new Intent(this, ProfileActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
+                intent = new Intent(this, ProfileActivity.class);
             }
-            return false;
+
+            if (intent != null) {
+                // Añadir flags para evitar recrear la actividad
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                overridePendingTransition(0, 0);
+            }
+            return true;
         });
+
+        bottomNavigationView.setSelectedItemId(R.id.home);
     }
 
     /**
@@ -836,6 +863,11 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         // Remove all callbacks to prevent memory leaks
         mainHandler.removeCallbacks(runnable);
+
+        // Remove dashboard update callbacks to prevent memory leaks
+        if (dashboardUpdateHandler != null && dashboardUpdateRunnable != null) {
+            dashboardUpdateHandler.removeCallbacks(dashboardUpdateRunnable);
+        }
 
         try {
             if (isBound && serviceConnection != null) {
