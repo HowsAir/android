@@ -379,7 +379,7 @@ public class MainActivity extends BaseActivity
                         // Check for null or empty objects before accessing
                         if (lastAirQuality != null &&
                                 lastAirQuality.has("timestamp") &&
-                                lastAirQuality.has("ppmValue") &&
+                                lastAirQuality.has("proportionalValue") &&
                                 lastAirQuality.has("gas")) {
 
                             // Update the UI dashboard data
@@ -387,7 +387,8 @@ public class MainActivity extends BaseActivity
                                     lastAirQuality.get("timestamp").getAsString(),
                                     lastAirQuality.get("ppmValue").getAsFloat(),
                                     lastAirQuality.get("gas").getAsString(),
-                                    todayDistance
+                                    todayDistance,
+                                    lastAirQuality.get("proportionalValue").getAsFloat()
                             );
 
                             // Update chart only if there are readings
@@ -837,7 +838,7 @@ public class MainActivity extends BaseActivity
      * @param gas The type of gas detected.
      * @param todayDistance The distance traveled today.
      */
-    private void updateUIDashboardData(String timestamp, float proportionalValue, String gas, int todayDistance) {
+    private void updateUIDashboardData(String timestamp, float ppmValue, String gas, int todayDistance, float proportionalValue) {
         TextView ppmTextView = findViewById(R.id.ppmTextView);
         TextView textPpm = findViewById(R.id.text_ppm);
         TextView textLastDate = findViewById(R.id.text_last_date);
@@ -846,7 +847,7 @@ public class MainActivity extends BaseActivity
         TextView textMeters = findViewById(R.id.text_meters);
 
         // Actualiza los valores
-        ppmTextView.setText(String.valueOf(proportionalValue));
+        ppmTextView.setText(String.valueOf(ppmValue));
         textPpm.setText(gas != null ? "ppm\n" + gas : "N/A");
 
         // Convierte la marca de tiempo a hora y fecha local
