@@ -219,20 +219,22 @@ public class MapsActivity extends BaseActivity {
                 Arrays.asList(
                         "Origen: vehículos, fábricas tras reaccionar con la luz del sol. ",
                         "Efectos: Dificultad para respirar, agrava el asma. ",
-                        "Tip: Evita actividades al aire libre de 10:00 a 17:00."
+                        "Tip: Evita actividades al aire libre de 10:00 a 17:00.",
+                        "Límite/hora: 0.2 ppm"
                 ),
-                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip)
+                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 2
         pages.add(new PageContent(
                 "Monóxido de Carbono (CO2)",  // Title for Page 2
                 Arrays.asList(
-                        "Origen: Calefacción y combustión de gasolina y diesel. ",
+                        "Origen: Calefacción y combustión de carburantes. ",
                         "Efectos: Mareos, fatiga; peligro en alta exposición",
-                        "Tip: Evita motores encendidos en espacios cerrados."
+                        "Tip: Evita motores encendidos en espacios cerrados.",
+                        "Límite/hora: 20 ppm"
                 ),
-                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip)
+                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 3
@@ -241,9 +243,10 @@ public class MapsActivity extends BaseActivity {
                 Arrays.asList(
                         "Origen: Tráfico y combustibles fósiles. ",
                         "Efectos: Irrita las vías respiratorias, reduce función pulmonar. ",
-                        "Tip: Mantén ventanas cerradas en horas pico."
+                        "Tip: Mantén ventanas cerradas en horas pico.",
+                        "Límite/hora: 0.2 ppm"
                 ),
-                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip)
+                Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 4
@@ -252,9 +255,10 @@ public class MapsActivity extends BaseActivity {
                 Arrays.asList(
                         "Ventila tu casa temprano o tarde, y usa purificadores",
                         "Opta por rutas con menos tráfico",
-                        "Usa mascarillas en días de alta contaminación."
+                        "Usa mascarillas en días de alta contaminación.",
+                        ""
                 ),
-                Arrays.asList(R.drawable.circle, R.drawable.circle, R.drawable.circle)
+                Arrays.asList(R.drawable.circle, R.drawable.circle, R.drawable.circle, R.drawable.invisible)
         ));
 
         // Set up the adapter for ViewPager2 using the pageContent list
