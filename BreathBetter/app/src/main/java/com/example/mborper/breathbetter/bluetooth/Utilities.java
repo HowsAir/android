@@ -2,6 +2,7 @@ package com.example.mborper.breathbetter.bluetooth;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.UUID;
 
 /**
@@ -56,6 +57,17 @@ public class Utilities {
      */
     public static int bytesToInt(byte[] bytes) {
         return new BigInteger(bytes).intValue();
+    }
+
+    /**
+     * Converts a byte array to an integer.
+     *      [bytes] ---> bytesToFloat() ---> Float
+     *
+     * @param bytes The byte array to convert.
+     * @return The integer representation of the byte array.
+     */
+    public static float bytesToFloat(byte[] bytes) {
+        return new BigInteger(bytes).floatValue();
     }
 
     /**

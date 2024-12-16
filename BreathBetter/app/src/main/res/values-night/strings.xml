@@ -21,4 +21,12 @@
     <string name="succesful_noke_link">¡Tu Breeze ha sido vinculado con exito!</string>
     <string name="wrong_password">Contraseña incorrecta</string>
     <string name="mismatch_passwords">Las contraseñas no coinciden</string>
+    <string name="your_node">Tu nodo hoy</string>
+    <string name="last_measurement">Última medición</string>
+    <string name="Movement">Recorrido</string>
+    <string name="text_goal">Objetivo mensual:</string>
+    <string name="bad_measurement">Ver medida peligrosa</string>
+    <string name="today_air_quality">Media hoy</string>
+    <string name="remember_turn_on">¡Recuerda encender el nodo!</string>
+    <string name="objective_rewards_tile">Completa el objetivo y escoje uno de los premios</string>
 </resources>

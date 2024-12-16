@@ -28,15 +28,16 @@ import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.measurements.GasAlertManager;
 import com.example.mborper.breathbetter.measurements.LocationUtils;
 import com.example.mborper.breathbetter.measurements.Measurement;
+import com.example.mborper.breathbetter.measurements.NodeConnectionState;
 
 /**
  * BeaconListeningService is an Android Service that scans for Bluetooth Low Energy (BLE) devices using
  * BluetoothLeScanner. It operates in the background as a foreground service and continuously scans for
  * devices based on a provided target UUID. When a matching device is found, it generates a Measurement object.
  *
- * @author Manuel Borregales
+ * @author Alejandro Rosado & Manuel Borregales
  * @since 2024-10-07
- * last edited: 2024-10-23
+ * last edited: 2024-12-12
  */
 public class BeaconListeningService extends Service {
 
@@ -58,6 +59,9 @@ public class BeaconListeningService extends Service {
     private Measurement lastMeasurement;
     private LocationUtils locationUtils;
 
+    private boolean measurementSentInCycle = false;
+    private NodeConnectionState connectionState;
+
     /**
      * Interface for callback when a new measurement is received.
      */
@@ -71,18 +75,13 @@ public class BeaconListeningService extends Service {
     private final Runnable scanRunnable = new Runnable() {
         @Override
         public void run() {
-            if (!keepRunning) {
-                return;
-            }
-
+            // Siempre continúa escaneando, independientemente del estado de conexión
+            measurementSentInCycle = false;
             startScan();
 
-            // Schedule scan stop after SCAN_PERIOD
             serviceHandler.postDelayed(() -> {
                 stopScan();
-
                 if (keepRunning) {
-                    //Log.d(LOG_TAG, "Scheduling next scan cycle");
                     serviceHandler.postDelayed(scanRunnable, SCAN_INTERVAL - SCAN_PERIOD);
                 }
             }, SCAN_PERIOD);
@@ -129,6 +128,8 @@ public class BeaconListeningService extends Service {
             }
         });
         locationUtils.startLocationUpdates();
+        this.connectionState = NodeConnectionState.getInstance();
+
     }
 
     /**
@@ -143,12 +144,20 @@ public class BeaconListeningService extends Service {
                 "BLE Service Channel",
                 NotificationManager.IMPORTANCE_LOW
         );
-        notificationManager.createNotificationChannel(channel);
+        if (notificationManager.getNotificationChannel("BLE_CHANNEL_ID") == null) {
+            notificationManager.createNotificationChannel(channel);
+        }
 
         Notification notification = new NotificationCompat.Builder(this, "BLE_CHANNEL_ID")
-                .setContentTitle("BLE Service")
-                .setContentText("Scanning for BLE devices...")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("Howsair")
+                .setContentText("Buscando medidas de tu nodo...")
+                .setSmallIcon(R.drawable.howsair_logo)
+                .setOngoing(true) // Hace que sea permanente
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setAutoCancel(false) // No se puede cancelar manualmente
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setSilent(true)
+
                 .build();
 
         startForeground(NOTIFICATION_ID, notification);
@@ -276,28 +285,55 @@ public class BeaconListeningService extends Service {
      * @param result The result of the BLE scan containing device information.
      */
     private void processScanResult(ScanResult result) {
+        if (measurementSentInCycle) {
+            return;
+        }
+
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
         if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
-            // Get ppm an temperature
             Measurement newMeasurement = new Measurement();
-            newMeasurement.setO3Value(Utilities.bytesToInt(tib.getMajor()));
+            newMeasurement.setO3Value(Utilities.bytesToFloat(tib.getMajor()) / 100); //To convert integers to decimal ppm
+            setMeasurementLocation(newMeasurement);                                // (manageable numbers for the O3 thresholds)
 
-            // Fetch the current location
-            setMeasurementLocation(newMeasurement);
-
-            //the date is set on the server logic
-            if (!newMeasurement.equals(lastMeasurement)) {
-                lastMeasurement = newMeasurement;
-                if (measurementCallback != null) {
-                    measurementCallback.onMeasurementReceived(newMeasurement);
+            if (isValidMeasurement(newMeasurement)) {
+                if (!newMeasurement.equals(lastMeasurement)) {
+                    processMeasurement(newMeasurement);
                 }
-
-                gasAlertManager.checkAndAlert(newMeasurement.getO3Value());
-
-                //Log.d("main", "ppm" + lastMeasurement.getO3Value());
-                //Log.d("main", "lat" + lastMeasurement.getLatitude());
-                //Log.d("main", "long" + lastMeasurement.getLongitude());
             }
+        }
+    }
+
+    /**
+     * isValidMeasurement checks if the given measurement is valid.
+     * A valid measurement must not be null, and its O3 value must be between 0 and 1000 inclusive.
+     *
+     * @param measurement The Measurement object to validate.
+     * @return True if the measurement is valid, otherwise false.
+     */
+    private boolean isValidMeasurement(Measurement measurement) {
+        return measurement != null &&
+                measurement.getO3Value() >= 0 &&
+                measurement.getO3Value() <= 1000;
+    }
+
+    /**
+     * processMeasurement processes the given measurement.
+     * It first checks if the measurement is valid. If valid, it triggers the corresponding actions.
+     * This includes updating the connection state, notifying the measurement callback,
+     * and handling gas alerts.
+     *
+     * @param newMeasurement The new Measurement object to process.
+     */
+    private void processMeasurement(Measurement newMeasurement) {
+        boolean isValidMeasurement = isValidMeasurement(newMeasurement);
+        connectionState.updateConnectionState(isValidMeasurement);
+
+        if (isValidMeasurement) {
+            if (measurementCallback != null) {
+                measurementCallback.onMeasurementReceived(newMeasurement);
+            }
+
+            gasAlertManager.onMeasurementReceived(newMeasurement.getO3Value());
         }
     }
 
@@ -339,6 +375,8 @@ public class BeaconListeningService extends Service {
         stopForeground(true);
         stopSelf();
     }
+
+
 
     /**
      * Called when the service is destroyed. Cleans up resources such as stopping the scan and terminating the handler thread.

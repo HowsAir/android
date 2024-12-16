@@ -1,6 +1,10 @@
 package com.example.mborper.breathbetter.activities;
 
+import static com.example.mborper.breathbetter.activities.BaseActivity.setCurrentScreen;
+
 import android.Manifest;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -25,6 +29,7 @@ import com.bumptech.glide.Glide;
 import com.example.mborper.breathbetter.R;
 import com.example.mborper.breathbetter.api.ApiClient;
 import com.example.mborper.breathbetter.api.ApiService;
+import com.example.mborper.breathbetter.bluetooth.BeaconListeningService;
 import com.example.mborper.breathbetter.login.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.button.MaterialButton;
@@ -53,9 +58,9 @@ import retrofit2.Response;
  *
  * @author Alejandro Rosado
  * @since  2024-11-18
- * last edited: 2024-11-20
+ * last edited: 2024-12-12
  */
-public class ProfileActivity extends AppCompatActivity {
+public class ProfileActivity extends BaseActivity {
 
     /** Log tag for debugging. */
     private static final String LOG_TAG = "DEVELOPMENT_LOG";
@@ -95,8 +100,8 @@ public class ProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setSelectedItemId(R.id.profile);
+        //BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        //bottomNavigationView.setSelectedItemId(R.id.profile);
 
         // Start components
         imageViewProfile = findViewById(R.id.ImageViewProfile);
@@ -122,6 +127,8 @@ public class ProfileActivity extends AppCompatActivity {
 
         // Upload profile data
         loadUserProfile();
+
+        setCurrentScreen("PROFILE");
 
         // Bottom navigation
         setupBottomNavigation();
@@ -193,33 +200,16 @@ public class ProfileActivity extends AppCompatActivity {
         startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class));
     }
 
-    /**
-     * Configures the bottom navigation menu and defines the behavior when each item is selected.
-     * <p>
-     * Each navigation item (home, map, target, profile) will start a new activity or perform a transition
-     * when selected. If the current item is the same as the one already selected, no action is performed.
-     */
-    private void setupBottomNavigation() {
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setupBottomNavigation();
+    }
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            if (item.getItemId() == R.id.home) {
-                startActivity(new Intent(this, MainActivity.class));
-                return true;
-            } else if (item.getItemId() == R.id.map) {
-                startActivity(new Intent(this, MapsActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (item.getItemId() == R.id.target) {
-                startActivity(new Intent(this, GoalActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (item.getItemId() == R.id.profile) {
-                overridePendingTransition(4, 4);
-                return true;
-            }
-            return false;
-        });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupBottomNavigation();
     }
 
     /**
@@ -485,11 +475,17 @@ public class ProfileActivity extends AppCompatActivity {
      * Class to handle the logout button and process its click.
      */
     public void onLogoutButtonClicked(View v) {
-        // Stop service and clean up
-        onStopServiceButtonClicked(null);
+        // Stop beacon listening service
+        stopBeaconListeningService();
+
+        // Clear all notifications
+        clearAllNotifications();
 
         // Clear session
         sessionManager.clearSession();
+
+        // Reset biometric authentication flag
+        MainActivity.resetBiometricAuthenticationFlag();
 
         // Redirect to login
         Intent loginIntent = new Intent(this, LoginActivity.class);
@@ -498,25 +494,30 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     /**
-     * Stops the service and unbinds it when the stop service button is clicked.
-     *
-     * @param v The button view that was clicked.
+     * stopBeaconListeningService stops the BeaconListeningService if it is currently running.
+     * This method creates an intent to stop the service and then calls stopService() to stop it.
+     * <p>
+     * Flow: ProfileActivity -> stopBeaconListeningService() -> service stopped
      */
-    public void onStopServiceButtonClicked(View v) {
-        TextView tvError = findViewById(R.id.tvError);
+    private void stopBeaconListeningService() {
+        // Stop the BeaconListeningService if it's running
+        Intent serviceIntent = new Intent(this, BeaconListeningService.class);
+        stopService(serviceIntent);
+    }
 
-        if (serviceIntent != null) {
-            try {
-                if (isBound) {
-                    isBound = false;
-                }
-                stopService(serviceIntent);
-                serviceIntent = null;
-            } catch (Exception e) {
-                Log.e(LOG_TAG, "Error stopping service: " + e.getMessage());
-                tvError.setVisibility(View.VISIBLE);
-                tvError.setText("Error al parar el servicio");
-            }
+    /**
+     * clearAllNotifications clears all notifications that have been shown by the app.
+     * This method retrieves the NotificationManager system service and calls cancelAll() to remove all notifications.
+     * <p>
+     * Flow: ProfileActivity -> clearAllNotifications() -> all notifications cleared
+     */
+    private void clearAllNotifications() {
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (notificationManager != null) {
+            // Cancel all previously shown notifications
+            notificationManager.cancelAll();
         }
     }
 }

@@ -10,19 +10,22 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:src="@android:drawable/ic_dialog_alert"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/text_fingerprint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Autenticación Biométrica"
         android:textSize="18sp"
-        android:layout_marginTop="16dp"
+        android:visibility="invisible"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/fingerprint_icon"/>
+        app:layout_constraintTop_toBottomOf="@id/fingerprint_icon" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

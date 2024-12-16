@@ -11,18 +11,18 @@ import java.io.Serializable;
  */
 public class Measurement implements Serializable {
 
-    private int o3Value;
+    private float o3Value;
     private double latitude;
     private double longitude;
 
     /**
      * Returns the O3 Value (parts per million) value of the measurement.
      * <p>
-     *      getO3Value() ---> Natural:o3Value
+     * getO3Value() ---> Natural:o3Value
      *
      * @return o3Value as a double.
      */
-    public int getO3Value() {
+    public float getO3Value() {
         return o3Value;
     }
 
@@ -33,7 +33,7 @@ public class Measurement implements Serializable {
      *
      * @param o3Value The o3Value to be set.
      */
-    public void setO3Value(int o3Value) {
+    public void setO3Value(float o3Value) {
         this.o3Value = o3Value;
     }
 

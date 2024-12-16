@@ -59,4 +59,5 @@ dependencies {
     implementation(libs.biometric)
     implementation(libs.glide)
     annotationProcessor(libs.glide.compiler)
+    implementation(libs.mpandroidchart)
 }
