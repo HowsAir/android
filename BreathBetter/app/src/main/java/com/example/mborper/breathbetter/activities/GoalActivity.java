@@ -4,6 +4,8 @@ import static com.example.mborper.breathbetter.activities.BaseActivity.setCurren
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -51,6 +53,9 @@ public class GoalActivity extends BaseActivity {
     private boolean isAscendingCiudad = false;
     private boolean isAscendingFecha = false;
 
+    private Handler dashboardUpdateHandler = new Handler(Looper.getMainLooper());
+    private Runnable dashboardUpdateRunnable;
+
     /**
      * Called when the activity is created.
      * <p>
@@ -89,14 +94,31 @@ public class GoalActivity extends BaseActivity {
 
         // Fetch current month's distance
         getCurrentMonthDistance();
+
+
+        // Setup periodic month distance data fetch
+        dashboardUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                getCurrentMonthDistance();
+                dashboardUpdateHandler.postDelayed(this, 30000); // 30 seconds
+            }
+        };
+        dashboardUpdateHandler.post(dashboardUpdateRunnable);
     }
 
+    /**
+     * Handles new intents and reinitializes bottom navigation
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setupBottomNavigation();
     }
 
+    /**
+     * Reinitializes bottom navigation when the activity resumes
+     */
     @Override
     protected void onResume() {
         super.onResume();
