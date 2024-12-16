@@ -100,9 +100,6 @@ public class ProfileActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
 
-        //BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-        //bottomNavigationView.setSelectedItemId(R.id.profile);
-
         // Start components
         imageViewProfile = findViewById(R.id.ImageViewProfile);
         etName = findViewById(R.id.etName);
@@ -200,12 +197,18 @@ public class ProfileActivity extends BaseActivity {
         startActivity(new Intent(ProfileActivity.this, ChangePasswordActivity.class));
     }
 
+    /**
+     * Handles new intents and reinitializes bottom navigation
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setupBottomNavigation();
     }
 
+    /**
+     * Reinitializes bottom navigation when the activity resumes
+     */
     @Override
     protected void onResume() {
         super.onResume();
