@@ -194,11 +194,6 @@ public class MainActivity extends BaseActivity
 
         setCurrentScreen("HOME");
 
-        // Bottom navigation
-        setupBottomNavigation();
-
-
-
         cautionAirIcon = findViewById(R.id.caution_air_icon);
         textCaution = findViewById(R.id.text_caution);
         ppmTextView = findViewById(R.id.ppmTextView);
@@ -361,7 +356,9 @@ public class MainActivity extends BaseActivity
                         JsonObject lastAirQuality = responseData.getAsJsonObject("lastAirQualityReading");
                         JsonObject airQualityReadingsInfo = responseData.getAsJsonObject("airQualityReadingsInfo");
 
-                        if (airQualityReadingsInfo != null && airQualityReadingsInfo.has("overallAirQuality")) {
+                        if (airQualityReadingsInfo != null &&
+                                airQualityReadingsInfo.has("overallAirQuality") &&
+                                !airQualityReadingsInfo.get("overallAirQuality").isJsonNull()) {
                             String overallAirQuality = airQualityReadingsInfo.get("overallAirQuality").getAsString();
 
                             // Call the new method to update air quality display
@@ -378,9 +375,10 @@ public class MainActivity extends BaseActivity
 
                         // Check for null or empty objects before accessing
                         if (lastAirQuality != null &&
-                                lastAirQuality.has("timestamp") &&
-                                lastAirQuality.has("proportionalValue") &&
-                                lastAirQuality.has("gas")) {
+                                lastAirQuality.has("timestamp") && !lastAirQuality.get("timestamp").isJsonNull() &&
+                                lastAirQuality.has("ppmValue") && !lastAirQuality.get("ppmValue").isJsonNull() &&
+                                lastAirQuality.has("gas") && !lastAirQuality.get("gas").isJsonNull() &&
+                                lastAirQuality.has("proportionalValue") && !lastAirQuality.get("proportionalValue").isJsonNull()) {
 
                             // Update the UI dashboard data
                             updateUIDashboardData(
