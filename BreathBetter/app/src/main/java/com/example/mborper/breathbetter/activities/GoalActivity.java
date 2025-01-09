@@ -37,7 +37,7 @@ import java.util.Locale;
  *
  * @author Alejandro Rosado
  * @since  2024-11-19
- * last updated: 2024-12-12
+ * last updated: 2025-01-08
  */
 public class GoalActivity extends BaseActivity {
 
@@ -146,8 +146,8 @@ public class GoalActivity extends BaseActivity {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 // Handle network error
-                textTotalDistance.setText("Network error");
-                textProgressPercentage.setText("0%");
+                textTotalDistance.setText("Error conexión");
+                textProgressPercentage.setText("x%");
             }
         });
     }
