@@ -33,11 +33,12 @@ import com.example.mborper.breathbetter.measurements.NodeConnectionState;
 /**
  * BeaconListeningService is an Android Service that scans for Bluetooth Low Energy (BLE) devices using
  * BluetoothLeScanner. It operates in the background as a foreground service and continuously scans for
- * devices based on a provided target UUID. When a matching device is found, it generates a Measurement object.
+ * devices based on a provided target UUID. When a matching device is found, it generates a Measurement object
+ * with location data.
  *
  * @author Alejandro Rosado & Manuel Borregales
  * @since 2024-10-07
- * last edited: 2024-12-12
+ * last edited: 2025-01-08
  */
 public class BeaconListeningService extends Service {
 
@@ -58,6 +59,7 @@ public class BeaconListeningService extends Service {
     private GasAlertManager gasAlertManager;
     private Measurement lastMeasurement;
     private LocationUtils locationUtils;
+    private Location currentLocation; // Stores the most recent location update
 
     private boolean measurementSentInCycle = false;
     private NodeConnectionState connectionState;
@@ -75,7 +77,6 @@ public class BeaconListeningService extends Service {
     private final Runnable scanRunnable = new Runnable() {
         @Override
         public void run() {
-            // Siempre continúa escaneando, independientemente del estado de conexión
             measurementSentInCycle = false;
             startScan();
 
@@ -98,10 +99,12 @@ public class BeaconListeningService extends Service {
     }
 
     /**
-     * Called when the service is bound to a client.
+     * Provides a binder for the service to communicate with the client.
+     * <p>
+     * Intent -> onBind() -> IBinder
      *
-     * @param intent The intent that was used to bind to this service.
-     * @return The IBinder interface that clients use to communicate with the service.
+     * @param intent The intent used to bind the service.
+     * @return The IBinder instance for communication with the service.
      */
     @Override
     public IBinder onBind(Intent intent) {
@@ -118,18 +121,35 @@ public class BeaconListeningService extends Service {
         initializeHandlerThread();
         initializeBluetooth();
         startBackgroundService();
-        // Initialize LocationUtils
+        initializeLocationUtils();
+        this.connectionState = NodeConnectionState.getInstance();
+    }
+
+    /**
+     * Initializes the LocationUtils component and sets up location updates listener.
+     * When a location update is received, it stores the current location and updates
+     * any pending measurements with the new location data.
+     */
+    private void initializeLocationUtils() {
         locationUtils = new LocationUtils(this);
-        locationUtils.setLocationUpdateListener(new LocationUtils.LocationUpdateListener() {
-            @Override
-            public void onLocationUpdated(Location location) {
-                // You can handle continuous location updates here if needed
-                Log.d(LOG_TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
-            }
+        locationUtils.setLocationUpdateListener(location -> {
+            currentLocation = location;
+            Log.d(LOG_TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
         });
         locationUtils.startLocationUpdates();
-        this.connectionState = NodeConnectionState.getInstance();
+    }
 
+    /**
+     * Updates a measurement with the current location data if available.
+     * This ensures that each measurement has the most accurate location information.
+     *
+     * @param measurement The Measurement object to update with location data
+     */
+    private void updateMeasurementWithLocation(Measurement measurement) {
+        if (currentLocation != null) {
+            measurement.setLatitude(currentLocation.getLatitude());
+            measurement.setLongitude(currentLocation.getLongitude());
+        }
     }
 
     /**
@@ -142,7 +162,7 @@ public class BeaconListeningService extends Service {
         NotificationChannel channel = new NotificationChannel(
                 "BLE_CHANNEL_ID",
                 "BLE Service Channel",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
         );
         if (notificationManager.getNotificationChannel("BLE_CHANNEL_ID") == null) {
             notificationManager.createNotificationChannel(channel);
@@ -152,12 +172,11 @@ public class BeaconListeningService extends Service {
                 .setContentTitle("Howsair")
                 .setContentText("Buscando medidas de tu nodo...")
                 .setSmallIcon(R.drawable.howsair_logo)
-                .setOngoing(true) // Hace que sea permanente
+                .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setAutoCancel(false) // No se puede cancelar manualmente
+                .setAutoCancel(false)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSilent(true)
-
                 .build();
 
         startForeground(NOTIFICATION_ID, notification);
@@ -165,10 +184,6 @@ public class BeaconListeningService extends Service {
 
     /**
      * Called when the service is started with a start command. It receives the target device UUID to scan for.
-     * <p>
-     *          Intent
-     *      Natural: flags  ---> onStartCommand() --->  Natural
-     *      Natural: startId
      *
      * @param intent The intent that starts the service.
      * @param flags Additional flags about the start request.
@@ -182,7 +197,6 @@ public class BeaconListeningService extends Service {
             targetDeviceUUID = intent.getStringExtra("targetDeviceUUID");
             keepRunning = true;
             serviceHandler.post(scanRunnable);
-
         }
         return START_NOT_STICKY;
     }
@@ -264,12 +278,39 @@ public class BeaconListeningService extends Service {
         if (scanner != null && scanCallback != null) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
                     != PackageManager.PERMISSION_GRANTED) {
-                // empty body because on old android versions wouldnt work
+                return;
+            }
+
+            if (locationUtils != null) {
+                locationUtils.startLocationUpdates(); // force update
             }
 
             try {
                 scanner.stopScan(scanCallback);
                 Log.d(LOG_TAG, "Scan stopped successfully");
+
+                if (locationUtils != null) {
+                    if (!locationUtils.isTrackingLocation()) {
+                        Log.w(LOG_TAG, "Reiniciando actualizaciones de ubicación.");
+                        locationUtils.startLocationUpdates();
+                    }
+                }
+
+                // Generate and send the measurement after scan
+                if (currentLocation != null) {
+                    Measurement measurement = new Measurement();
+                    measurement.setLatitude(currentLocation.getLatitude());
+                    measurement.setLongitude(currentLocation.getLongitude());
+
+                    if (isValidMeasurement(measurement)) {
+                        processMeasurement(measurement);
+                    } else {
+                        Log.w(LOG_TAG, "Medida inválida ignorada.");
+                    }
+                } else {
+                    Log.w(LOG_TAG, "Ubicación no disponible para la medida.");
+                }
+
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Error stopping scan: " + e.getMessage());
             }
@@ -277,10 +318,8 @@ public class BeaconListeningService extends Service {
     }
 
     /**
-     * Processes the result of a BLE device scan. If a device with the matching UUID obtained in onStartCommand()
-     * is found, a new Measurement is created.
-     * <p>
-     *    ScanResult:result ---> processScanResult()
+     * Processes the result of a BLE device scan. If a device with the matching UUID is found,
+     * creates a new Measurement with location data and processes it if valid.
      *
      * @param result The result of the BLE scan containing device information.
      */
@@ -292,23 +331,23 @@ public class BeaconListeningService extends Service {
         IBeaconFrame tib = new IBeaconFrame(result.getScanRecord().getBytes());
         if (Utilities.bytesToString(tib.getUUID()).equals(targetDeviceUUID)) {
             Measurement newMeasurement = new Measurement();
-            newMeasurement.setO3Value(Utilities.bytesToFloat(tib.getMajor()) / 100); //To convert integers to decimal ppm
-            setMeasurementLocation(newMeasurement);                                // (manageable numbers for the O3 thresholds)
+            newMeasurement.setO3Value(Utilities.bytesToFloat(tib.getMajor()) / 100);
+            updateMeasurementWithLocation(newMeasurement);
 
             if (isValidMeasurement(newMeasurement)) {
                 if (!newMeasurement.equals(lastMeasurement)) {
                     processMeasurement(newMeasurement);
+                    lastMeasurement = newMeasurement;
                 }
             }
         }
     }
 
     /**
-     * isValidMeasurement checks if the given measurement is valid.
-     * A valid measurement must not be null, and its O3 value must be between 0 and 1000 inclusive.
+     * Validates that a measurement contains valid data within acceptable ranges.
      *
-     * @param measurement The Measurement object to validate.
-     * @return True if the measurement is valid, otherwise false.
+     * @param measurement The Measurement object to validate
+     * @return boolean indicating if the measurement is valid
      */
     private boolean isValidMeasurement(Measurement measurement) {
         return measurement != null &&
@@ -317,12 +356,10 @@ public class BeaconListeningService extends Service {
     }
 
     /**
-     * processMeasurement processes the given measurement.
-     * It first checks if the measurement is valid. If valid, it triggers the corresponding actions.
-     * This includes updating the connection state, notifying the measurement callback,
-     * and handling gas alerts.
+     * Processes a valid measurement by updating connection state and notifying listeners.
+     * Also triggers gas alerts if necessary.
      *
-     * @param newMeasurement The new Measurement object to process.
+     * @param newMeasurement The new Measurement to process
      */
     private void processMeasurement(Measurement newMeasurement) {
         boolean isValidMeasurement = isValidMeasurement(newMeasurement);
@@ -338,28 +375,12 @@ public class BeaconListeningService extends Service {
     }
 
     /**
-     * Sets the location for the given Measurement object.
-     * <p>
-     * This method retrieves the current location from LocationUtils and assigns
-     * the latitude and longitude to the provided Measurement.
-     *
-     * @param measurement The Measurement object to update with location data.
-     */
-    private void setMeasurementLocation(Measurement measurement) {
-        if (measurement != null) {
-            measurement.setLatitude(locationUtils.getCurrentLatitude());
-            measurement.setLongitude(locationUtils.getCurrentLongitude());
-        }
-    }
-
-    /**
-     * Called when the activity wants to stop the service. Cleans up resources such as stopping the scan and terminating the handler thread.
+     * Stops the service, cleaning up resources and removing notifications.
      */
     public void stopService() {
         Log.d(LOG_TAG, "stopService called");
         keepRunning = false;
 
-        // Remove any pending scan runnables
         if (serviceHandler != null) {
             serviceHandler.removeCallbacks(scanRunnable);
         }
@@ -368,25 +389,20 @@ public class BeaconListeningService extends Service {
             gasAlertManager.cleanup();
         }
 
-        // Stop current scan if active
         stopScan();
-
-        // Stop foreground service and self
         stopForeground(true);
         stopSelf();
     }
 
-
-
     /**
-     * Called when the service is destroyed. Cleans up resources such as stopping the scan and terminating the handler thread.
+     * Called when the service is destroyed. Cleans up all resources including location updates,
+     * Bluetooth scanning, and background threads.
      */
     @Override
     public void onDestroy() {
         Log.d(LOG_TAG, "onDestroy called");
         keepRunning = false;
 
-        // Remove any pending scan runnables
         if (serviceHandler != null) {
             serviceHandler.removeCallbacks(scanRunnable);
         }
@@ -396,17 +412,15 @@ public class BeaconListeningService extends Service {
             gasAlertManager.cleanup();
         }
 
-        // Clean up handler thread
         if (handlerThread != null) {
             handlerThread.quitSafely();
             try {
-                handlerThread.join(1000); // Wait for thread to finish
+                handlerThread.join(1000);
             } catch (InterruptedException e) {
                 Log.e(LOG_TAG, "Error shutting down handler thread: " + e.getMessage());
             }
         }
 
-        // Stop location updates
         if (locationUtils != null) {
             locationUtils.stopLocationUpdates();
         }
