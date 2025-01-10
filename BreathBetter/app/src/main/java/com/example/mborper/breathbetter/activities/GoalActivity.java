@@ -180,12 +180,12 @@ public class GoalActivity extends BaseActivity {
         TextView headerCiudad = findViewById(R.id.header_ciudad);
         TextView headerFecha = findViewById(R.id.header_fecha);
 
-        // Configura los indicadores iniciales para las columnas
+        // Set initial indicators for columns
         setInitialHeaderState(headerPremio, isAscendingPremio);
         setInitialHeaderState(headerCiudad, isAscendingCiudad);
         setInitialHeaderState(headerFecha, isAscendingFecha);
 
-        // Asigna los listeners de clic
+        // Assign click listeners
         headerPremio.setOnClickListener(v -> {
             isAscendingPremio = !isAscendingPremio;
             updateHeaderState(headerPremio, isAscendingPremio);
@@ -206,7 +206,7 @@ public class GoalActivity extends BaseActivity {
     }
 
     /**
-     * Configura el estado inicial del encabezado con los indicadores de orden ▲ o ▼.
+     * Set the initial state of the header with the ▲ or ▼ order indicators.
      */
     private void setInitialHeaderState(TextView header, boolean isAscending) {
         String text = header.getText().toString();
@@ -216,7 +216,7 @@ public class GoalActivity extends BaseActivity {
     }
 
     /**
-     * Actualiza el indicador visual del encabezado tras un cambio de orden.
+     * Updates the header visual indicator after a sort change.
      */
     private void updateHeaderState(TextView header, boolean isAscending) {
         String text = header.getText().toString();
