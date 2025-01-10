@@ -28,9 +28,13 @@ import com.google.android.gms.location.Priority;
 public class LocationUtils {
     private static final String TAG = "LocationUtils";
     // Reduced intervals for more frequent updates
-    private static final long UPDATE_INTERVAL = 5000; // 5 seconds
-    private static final long FASTEST_UPDATE_INTERVAL = 1000; // 1 second
-    private static final float MIN_DISTANCE_CHANGE = 0f; // 0 meters
+    private static final long UPDATE_INTERVAL = 10000; // 10 seconds
+    private static final long FASTEST_UPDATE_INTERVAL = 5000; // 5 seconds
+    private static final float MIN_DISTANCE_CHANGE = 5f; // 5 meters
+
+    private static final float MAX_ACCURACY_THRESHOLD = 10.0f; // 10 meters of maximum accuracy acceptable
+    private static final double SIGNIFICANT_CHANGE_THRESHOLD = 0.0001; // Approx 10 meters in coordinates
+
 
     private final Context context;
     private final FusedLocationProviderClient fusedLocationClient;
@@ -82,16 +86,46 @@ public class LocationUtils {
 
                 Location location = locationResult.getLastLocation();
                 if (location != null) {
-                    currentLocation = location;
-                    if (locationUpdateListener != null) {
-                        locationUpdateListener.onLocationUpdated(location);
+                    // Check for accuracy and whether the change is significant
+                    if (isLocationAcceptable(location)) {
+                        currentLocation = location;
+                        if (locationUpdateListener != null) {
+                            locationUpdateListener.onLocationUpdated(location);
+                        }
+                        Log.d(TAG, String.format("Location updated - Lat: %.7f, Lon: %.7f, Accuracy: %.2fm",
+                                location.getLatitude(), location.getLongitude(), location.getAccuracy()));
+                    } else {
+                        Log.d(TAG, String.format("Location descartada - Precisión: %.2fm o cambio insignificante",
+                                location.getAccuracy()));
                     }
-                    Log.d(TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
                 } else {
-                    Log.w(TAG, "Null location received.");
+                    Log.w(TAG, "Ubicación recibida es null.");
                 }
             }
         };
+    }
+
+    /**
+     * Checks if the new location meets the quality and significant change criteria.
+     * @param newLocation The new location to check
+     * @return true if the location is acceptable, false otherwise
+     */
+    private boolean isLocationAcceptable(Location newLocation) {
+        // Verify precision and significant change
+        if (newLocation.getAccuracy() > MAX_ACCURACY_THRESHOLD) {
+            return false;
+        }
+
+        // If there is no previous location, accept the new one if it has good accuracy
+        if (currentLocation == null) {
+            return true;
+        }
+
+        // Calculate if the change is significant
+        double latDiff = Math.abs(newLocation.getLatitude() - currentLocation.getLatitude());
+        double lonDiff = Math.abs(newLocation.getLongitude() - currentLocation.getLongitude());
+
+        return latDiff > SIGNIFICANT_CHANGE_THRESHOLD || lonDiff > SIGNIFICANT_CHANGE_THRESHOLD;
     }
 
     /**
@@ -100,6 +134,7 @@ public class LocationUtils {
      * Flow: WakeLock -> check permissions -> LocationRequest -> requestLocationUpdates()
      */
     public void startLocationUpdates() {
+
         if (!wakeLock.isHeld()) {
             wakeLock.acquire(24 * 60 * 60 * 1000L); // 24 h
             Log.d(TAG, "WakeLock acquired");
@@ -123,22 +158,23 @@ public class LocationUtils {
                     locationCallback,
                     Looper.getMainLooper());
 
-            // Get immediate location
+            // Get immediate location with an accuracy check
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                     .addOnSuccessListener(location -> {
-                        if (location != null) {
+                        if (location != null && isLocationAcceptable(location)) {
                             currentLocation = location;
                             if (locationUpdateListener != null) {
                                 locationUpdateListener.onLocationUpdated(location);
                             }
-                            Log.d(TAG, "Initial location: " + location.getLatitude() + ", " + location.getLongitude());
+                            Log.d(TAG, String.format("Ubicación inicial - Lat: %.7f, Lon: %.7f, Precisión: %.2fm",
+                                    location.getLatitude(), location.getLongitude(), location.getAccuracy()));
                         }
                     });
 
             isTracking = true;
-            Log.d(TAG, "Location updates started");
+            Log.d(TAG, "Actualizaciones de ubicación iniciadas");
         } catch (Exception e) {
-            Log.e(TAG, "Error starting location updates: " + e.getMessage());
+            Log.e(TAG, "Error al iniciar actualizaciones de ubicación: " + e.getMessage());
         }
     }
 

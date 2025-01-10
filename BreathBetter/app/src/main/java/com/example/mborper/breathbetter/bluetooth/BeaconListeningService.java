@@ -134,7 +134,7 @@ public class BeaconListeningService extends Service {
         locationUtils = new LocationUtils(this);
         locationUtils.setLocationUpdateListener(location -> {
             currentLocation = location;
-            Log.d(LOG_TAG, "Location updated: " + location.getLatitude() + ", " + location.getLongitude());
+            Log.d(LOG_TAG, "Location retrieved from LocationUtils: " + location.getLatitude() + ", " + location.getLongitude());
         });
         locationUtils.startLocationUpdates();
     }
@@ -283,6 +283,7 @@ public class BeaconListeningService extends Service {
 
             if (locationUtils != null) {
                 locationUtils.startLocationUpdates(); // force update
+                Log.w(LOG_TAG, "The location updates have stopped, restarting location updates...");
             }
 
             try {
@@ -291,7 +292,7 @@ public class BeaconListeningService extends Service {
 
                 if (locationUtils != null) {
                     if (!locationUtils.isTrackingLocation()) {
-                        Log.w(LOG_TAG, "Reiniciando actualizaciones de ubicación.");
+                        Log.w(LOG_TAG, "The scan has stopped, restarting location updates...");
                         locationUtils.startLocationUpdates();
                     }
                 }

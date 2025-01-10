@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -853,23 +854,68 @@ public class MainActivity extends BaseActivity
      * @param measurement The measurement to send.
      */
     private void sendMeasurementToApi(Measurement measurement) {
+        // Check if we have a valid location
+        LocationUtils locationUtils = new LocationUtils(this);
+        Location currentLocation = locationUtils.getCurrentLocation();
+
+        if (currentLocation == null) {
+            Log.d(LOG_TAG, "Esperando ubicación actualizada antes de enviar medición...");
+            // Setting up a listener to wait for location
+            locationUtils.setLocationUpdateListener(new LocationUtils.LocationUpdateListener() {
+                @Override
+                public void onLocationUpdated(Location location) {
+                    // Update measurement with new location
+                    measurement.setLatitude(location.getLatitude());
+                    measurement.setLongitude(location.getLongitude());
+
+                    // Send the updated measurement
+                    performApiCall(measurement);
+
+                    // Remove listener after sending
+                    locationUtils.setLocationUpdateListener(null);
+                }
+            });
+            // Start location updates if they are not active
+            if (!locationUtils.isTrackingLocation()) {
+                locationUtils.startLocationUpdates();
+            }
+        } else {
+            // If we already have a valid location, update and send immediately
+            measurement.setLatitude(currentLocation.getLatitude());
+            measurement.setLongitude(currentLocation.getLongitude());
+            performApiCall(measurement);
+        }
+    }
+
+    /**
+     * Sends a measurement with location data to the API.
+     * <p>
+     * Measurement -> sendMeasurement() -> Callback handling response or failure.
+     *
+     * @param measurement The measurement object containing location and other relevant data.
+     */
+    private void performApiCall(Measurement measurement) {
+        Log.d(LOG_TAG, "Enviando medición con ubicación - Lat: " + measurement.getLatitude() +
+                " Lon: " + measurement.getLongitude());
+
         Call<Measurement> postCall = apiService.sendMeasurement(measurement);
         postCall.enqueue(new Callback<Measurement>() {
             @Override
             public void onResponse(@NonNull Call<Measurement> call, @NonNull Response<Measurement> response) {
                 if (response.isSuccessful()) {
-                    Log.d(LOG_TAG, "Measurement sent successfully.");
+                    Log.d(LOG_TAG, "Medición enviada exitosamente.");
                 } else {
-                    Log.e(LOG_TAG, "API returned error: " + response.code());
+                    Log.e(LOG_TAG, "Error en la API: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<Measurement> call, @NonNull Throwable t) {
-                Log.e(LOG_TAG, "Failed to send measurement: " + t.getMessage());
+                Log.e(LOG_TAG, "Error al enviar medición: " + t.getMessage());
             }
         });
     }
+
 
     /**
      * Called when the activity is destroyed. Unbinds the service if it is currently bound.
