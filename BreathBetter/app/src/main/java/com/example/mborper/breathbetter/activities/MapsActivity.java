@@ -230,19 +230,21 @@ public class MapsActivity extends BaseActivity {
                         "Origen: vehículos, fábricas tras reaccionar con la luz del sol. ",
                         "Efectos: Dificultad para respirar, agrava el asma. ",
                         "Tip: Evita actividades al aire libre de 10:00 a 17:00.",
-                        "Límite/hora: 0.2 ppm"
+                        "Regular: 0.1-0.2 ppm " +
+                                "Peligroso: > 0.2 ppm "
                 ),
                 Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 2
         pages.add(new PageContent(
-                "Monóxido de Carbono (CO2)",
+                "Monóxido de Carbono (CO)",
                 Arrays.asList(
                         "Origen: Calefacción y combustión de carburantes. ",
                         "Efectos: Mareos, fatiga; peligro en alta exposición",
                         "Tip: Evita motores encendidos en espacios cerrados.",
-                        "Límite/hora: 20 ppm"
+                        "Regular: 10-20 ppm " +
+                                "Peligroso: > 20 ppm"
                 ),
                 Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
@@ -254,7 +256,8 @@ public class MapsActivity extends BaseActivity {
                         "Origen: Tráfico y combustibles fósiles. ",
                         "Efectos: Irrita las vías respiratorias, reduce función pulmonar. ",
                         "Tip: Mantén ventanas cerradas en horas pico.",
-                        "Límite/hora: 0.2 ppm"
+                        "Regular: 0.1-0.2 ppm " +
+                                "Peligroso: > 0.2 ppm"
                 ),
                 Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
