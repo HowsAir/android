@@ -161,7 +161,7 @@ public class ChartConfigHelper {
      * @param context             Context for showing Toast messages
      */
     public static void updateBarChart(BarChart barChart, JsonArray airQualityReadings, Context context) {
-        // Null check for airQualityReadings
+        // Verificar si los datos están disponibles
         if (airQualityReadings == null || airQualityReadings.size() == 0) {
             Log.e("ChartConfigHelper", "No air quality readings available");
             clearChart(barChart);
@@ -172,11 +172,11 @@ public class ChartConfigHelper {
         ArrayList<Integer> colorList = new ArrayList<>();
         ArrayList<String> hours = new ArrayList<>();
 
-        // Determine the full range of hours from the first and last timestamp
+        // Determinar rango de tiempo desde el primer y último timestamp
         LocalDateTime startTime = parseTimestamp(airQualityReadings.get(0).getAsJsonObject().get("timestamp").getAsString());
         LocalDateTime endTime = parseTimestamp(airQualityReadings.get(airQualityReadings.size() - 1).getAsJsonObject().get("timestamp").getAsString());
 
-        // Create a map to store readings by hour
+        // Crear un mapa para almacenar lecturas por hora
         Map<String, JsonObject> readingsByHour = new HashMap<>();
         for (int i = 0; i < airQualityReadings.size(); i++) {
             JsonObject reading = airQualityReadings.get(i).getAsJsonObject();
@@ -184,10 +184,10 @@ public class ChartConfigHelper {
             readingsByHour.put(hour, reading);
         }
 
-        // Generate entries for all hours, using default values for missing data
+        // Generar las barras para cada intervalo de 2 horas
         LocalDateTime currentTime = startTime;
         int index = 0;
-        while (!currentTime.isAfter(endTime)) {
+        while (currentTime.isBefore(endTime)) { // Excluir endTime del bucle
             String hour = currentTime.format(DateTimeFormatter.ofPattern("HH'h'"));
             hours.add(hour);
 
@@ -204,16 +204,16 @@ public class ChartConfigHelper {
                 entries.add(new BarEntry(index, proportionalValue));
                 colorList.add(getColorForAirQuality(airQuality));
             } else {
-                // Add a minimal gray bar for hours without data
-                entries.add(new BarEntry(index, 0.1f)); // Small value to show a minimal bar
-                colorList.add(Color.parseColor("#E0E0E0")); // Light gray color
+                // Agregar una barra mínima para las horas sin datos
+                entries.add(new BarEntry(index, 0.1f)); // Valor mínimo
+                colorList.add(Color.parseColor("#E0E0E0")); // Gris claro
             }
 
-            currentTime = currentTime.plusHours(2);
+            currentTime = currentTime.plusHours(2); // Incrementar por 2 horas
             index++;
         }
 
-        // Create dataset
+        // Crear y configurar el dataset
         BarDataSet dataSet = new BarDataSet(entries, "Air Quality");
         dataSet.setColors(colorList);
         dataSet.setDrawValues(false);
@@ -221,19 +221,20 @@ public class ChartConfigHelper {
         BarData barData = new BarData(dataSet);
         barData.setBarWidth(0.8f);
 
-        // Configure chart
+        // Configurar el gráfico
         barChart.setData(barData);
         barChart.setFitBars(true);
 
-        // Configure X and Y axes
+        // Configurar ejes
         configureXAxis(barChart, hours);
         configureYAxis(barChart);
 
-        // Assign custom renderer with rounded corners
+        // Asignar un renderer personalizado para esquinas redondeadas
         RoundedBarChartRenderer roundedRenderer = new RoundedBarChartRenderer(barChart, 20f);
         barChart.setRenderer(roundedRenderer);
 
-        boolean hasDangerousMeasurement = colorList.contains(Color.parseColor("#DC2626")); // Red color
+        // Mostrar advertencias si hay mediciones peligrosas
+        boolean hasDangerousMeasurement = colorList.contains(Color.parseColor("#DC2626")); // Rojo
 
         if (context instanceof MainActivity) {
             ((MainActivity) context).runOnUiThread(() -> {
@@ -250,13 +251,14 @@ public class ChartConfigHelper {
             });
         }
 
-        barChart.moveViewToX(0);  // Reset view to start
+        barChart.moveViewToX(0); // Restablecer la vista al inicio
 
         barChart.invalidate();
 
-        // Optional: Add chart interaction
+        // Configurar interacción con la gráfica
         setupChartInteraction(barChart, hours, context);
     }
+
 
     /**
      * Helper method to parse a timestamp string into LocalDateTime.
