@@ -23,7 +23,7 @@ import com.google.android.gms.location.Priority;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-24
- * last edited: 2025-01-08
+ * last edited: 2025-01-10
  */
 public class LocationUtils {
     private static final String TAG = "LocationUtils";

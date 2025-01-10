@@ -51,7 +51,7 @@ import retrofit2.Response;
  *
  * @author Alejandro Rosado
  * @since  2024-12-11
- * last updated 2024-12-12
+ * last updated 2025-01-10
  */
 public class MapsActivity extends BaseActivity {
 

@@ -38,7 +38,7 @@ import java.util.Locale;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since 2024-10-23
- * last updated 2024-12-12
+ * last updated 2025-01-10
  */
 
 public class GasAlertManager {

@@ -40,7 +40,7 @@ import com.example.mborper.breathbetter.measurements.NodeConnectionState;
  *
  * @author Alejandro Rosado & Manuel Borregales
  * @since 2024-10-07
- * last edited: 2025-01-08
+ * last edited: 2025-01-10
  */
 public class BeaconListeningService extends Service {
 

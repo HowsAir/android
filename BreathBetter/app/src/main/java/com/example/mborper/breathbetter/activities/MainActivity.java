@@ -78,7 +78,7 @@ import java.util.ArrayList;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2025-01-08
+ * last edited: 2025-01-10
  */
 public class MainActivity extends BaseActivity
         implements NodeConnectionState.ConnectionStatusListener {

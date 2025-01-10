@@ -37,7 +37,7 @@ import java.util.Locale;
  *
  * @author Alejandro Rosado
  * @since  2024-11-19
- * last updated: 2025-01-08
+ * last updated: 2025-01-10
  */
 public class GoalActivity extends BaseActivity {
 

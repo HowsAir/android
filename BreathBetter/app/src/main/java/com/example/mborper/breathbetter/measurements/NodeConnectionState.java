@@ -11,7 +11,7 @@ import android.os.Handler;
  *
  * @author Alejandro Rosado
  * @since  2024-12-11
- * last edited: 2024-12-12
+ * last edited: 2025-01-10
  */
 public class NodeConnectionState {
     private static final String LOG_TAG = "NodeConnectionState";

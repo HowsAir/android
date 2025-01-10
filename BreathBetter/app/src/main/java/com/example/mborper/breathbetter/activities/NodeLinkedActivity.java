@@ -11,7 +11,7 @@ import com.example.mborper.breathbetter.R;
 /**
  * Activity to show a confirmation screen after successfully linking a node
  *
- * @author Assistant
+ * @author Alejandro Rosado
  * @since 2024-11-20
  */
 public class NodeLinkedActivity extends AppCompatActivity {

@@ -42,7 +42,7 @@ import java.util.Map;
  *
  * @author Alejandro Rosado
  * @since  2024-11-10
- * last edited: 2024-12-12
+ * last edited: 2025-01-10
  */
 public class ChartConfigHelper {
     private static final String LOG_TAG = "ChartConfigHelper";
