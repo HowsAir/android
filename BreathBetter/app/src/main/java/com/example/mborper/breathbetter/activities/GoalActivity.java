@@ -180,18 +180,51 @@ public class GoalActivity extends BaseActivity {
         TextView headerCiudad = findViewById(R.id.header_ciudad);
         TextView headerFecha = findViewById(R.id.header_fecha);
 
+        // Configura los indicadores iniciales para las columnas
+        setInitialHeaderState(headerPremio, isAscendingPremio);
+        setInitialHeaderState(headerCiudad, isAscendingCiudad);
+        setInitialHeaderState(headerFecha, isAscendingFecha);
+
+        // Asigna los listeners de clic
         headerPremio.setOnClickListener(v -> {
-            rotateHeader(headerPremio, isAscendingPremio);
-            sortTable(0, isAscendingPremio = !isAscendingPremio);
+            isAscendingPremio = !isAscendingPremio;
+            updateHeaderState(headerPremio, isAscendingPremio);
+            sortTable(0, isAscendingPremio);
         });
+
         headerCiudad.setOnClickListener(v -> {
-            rotateHeader(headerCiudad, isAscendingCiudad);
-            sortTable(1, isAscendingCiudad = !isAscendingCiudad);
+            isAscendingCiudad = !isAscendingCiudad;
+            updateHeaderState(headerCiudad, isAscendingCiudad);
+            sortTable(1, isAscendingCiudad);
         });
+
         headerFecha.setOnClickListener(v -> {
-            rotateHeader(headerFecha, isAscendingFecha);
-            sortTable(2, isAscendingFecha = !isAscendingFecha);
+            isAscendingFecha = !isAscendingFecha;
+            updateHeaderState(headerFecha, isAscendingFecha);
+            sortTable(2, isAscendingFecha);
         });
+    }
+
+    /**
+     * Configura el estado inicial del encabezado con los indicadores de orden ▲ o ▼.
+     */
+    private void setInitialHeaderState(TextView header, boolean isAscending) {
+        String text = header.getText().toString();
+        if (!text.contains("▲") && !text.contains("▼")) {
+            header.setText(String.format("%s %s", text, isAscending ? "▲" : "▼"));
+        }
+    }
+
+    /**
+     * Actualiza el indicador visual del encabezado tras un cambio de orden.
+     */
+    private void updateHeaderState(TextView header, boolean isAscending) {
+        String text = header.getText().toString();
+        if (text.contains("▲") || text.contains("▼")) {
+            header.setText(text.replace(isAscending ? "▼" : "▲", isAscending ? "▲" : "▼"));
+        } else {
+            header.setText(String.format("%s %s", text, isAscending ? "▲" : "▼"));
+        }
     }
 
     /**
