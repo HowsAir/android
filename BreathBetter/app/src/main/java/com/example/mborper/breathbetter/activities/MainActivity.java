@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
@@ -257,13 +258,25 @@ public class MainActivity extends BaseActivity
      */
     @Override
     public void onConnectionLost() {
-        // Mostrar notificación de pérdida de conexión
+
+        // Create a PendingIntent that opens the MainActivity
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE // Mandatory on Android 12+
+        );
+
+        // Show connection loss notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CONNECTION_CHANNEL_ID)
                 .setContentTitle("Conexión del Nodo Perdida")
                 .setContentText("No se están recibiendo mediciones del nodo")
                 .setSmallIcon(R.drawable.howsair_logo)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent); // When notification is clicked, open MainActivity
 
         notificationManager.notify(1, builder.build());
     }
@@ -275,12 +288,24 @@ public class MainActivity extends BaseActivity
      */
     @Override
     public void onConnectionRestored() {
-        // Mostrar notificación de reconexión
+
+        // Create a PendingIntent that opens the MainActivity
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE // Mandatory on Android 12+
+        );
+
+        // Show reconnection notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CONNECTION_CHANNEL_ID)
                 .setContentTitle("Conexión del Nodo Restaurada")
                 .setContentText("Se han reanudado las mediciones del nodo")
                 .setSmallIcon(R.drawable.howsair_logo)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent) // When notification is clicked, open MainActivity
                 .setAutoCancel(true);
 
         notificationManager.notify(2, builder.build());

@@ -3,6 +3,7 @@ package com.example.mborper.breathbetter.bluetooth;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanSettings;
@@ -25,6 +26,7 @@ import androidx.core.app.NotificationCompat;
 import android.Manifest;
 
 import com.example.mborper.breathbetter.R;
+import com.example.mborper.breathbetter.activities.MainActivity;
 import com.example.mborper.breathbetter.measurements.GasAlertManager;
 import com.example.mborper.breathbetter.measurements.LocationUtils;
 import com.example.mborper.breathbetter.measurements.Measurement;
@@ -168,6 +170,16 @@ public class BeaconListeningService extends Service {
             notificationManager.createNotificationChannel(channel);
         }
 
+        // Create a PendingIntent that opens the MainActivity
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE // Mandatory on Android 12+
+        );
+
         Notification notification = new NotificationCompat.Builder(this, "BLE_CHANNEL_ID")
                 .setContentTitle("Howsair")
                 .setContentText("Buscando medidas de tu nodo...")
@@ -177,6 +189,7 @@ public class BeaconListeningService extends Service {
                 .setAutoCancel(false)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setSilent(true)
+                .setContentIntent(pendingIntent) // When notification is clicked, open MainActivity
                 .build();
 
         startForeground(NOTIFICATION_ID, notification);

@@ -400,11 +400,20 @@ public class GasAlertManager {
      * when the system has re-established the connection and is receiving measurements.
      */
     private void sendReconnectionNotification() {
+
+        // Intent para abrir MainActivity al hacer clic en la notificación
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context, 0, intent, PendingIntent.FLAG_IMMUTABLE
+        );
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, ERROR_CHANNEL_ID)
                 .setSmallIcon(R.drawable.howsair_logo)
                 .setContentTitle("Conexión restaurada")
                 .setContentText("El nodo ha vuelto a enviar medidas.")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
                 .setAutoCancel(true);
 
         notificationManager.notify(ERROR_NOTIFICATION_ID, builder.build());
