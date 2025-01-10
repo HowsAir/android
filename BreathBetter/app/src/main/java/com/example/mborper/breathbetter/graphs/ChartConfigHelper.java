@@ -93,7 +93,7 @@ public class ChartConfigHelper {
         YAxis leftAxis = barChart.getAxisLeft();
         leftAxis.setDrawGridLines(false);
         leftAxis.setAxisMinimum(0f);
-        leftAxis.setAxisMaximum(110f);
+        leftAxis.setAxisMaximum(80f);
         leftAxis.setGranularity(20f);
         leftAxis.setDrawLabels(true);
         leftAxis.setDrawAxisLine(false);
@@ -104,9 +104,9 @@ public class ChartConfigHelper {
         leftAxis.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
-                if (value == 20f) return "Buena";
-                if (value == 60f) return "Regular";
-                if (value == 100f) return "Peligrosa";
+                if (value == 0f) return "Buena";
+                if (value == 20f) return "Regular";
+                if (value == 60f) return "Peligrosa";
                 return "";
             }
         });
@@ -127,15 +127,12 @@ public class ChartConfigHelper {
 
         LimitLine goodLine = createLimitLine(20f);
         LimitLine regularLine = createLimitLine(60f);
-        LimitLine dangerousLine = createLimitLine(100f);
 
         goodLine.setLineColor(Color.parseColor("#80E3E3E3")); // Semi-transparent
         regularLine.setLineColor(Color.parseColor("#80E3E3E3")); // Semi-transparent
-        dangerousLine.setLineColor(Color.parseColor("#80E3E3E3")); // Semi-transparent
 
         leftAxis.addLimitLine(goodLine);
         leftAxis.addLimitLine(regularLine);
-        leftAxis.addLimitLine(dangerousLine);
     }
 
     /**
