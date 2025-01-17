@@ -23,17 +23,17 @@ import com.google.android.gms.location.Priority;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-24
- * last edited: 2025-01-10
+ * last edited: 2025-01-17
  */
 public class LocationUtils {
     private static final String TAG = "LocationUtils";
     // Reduced intervals for more frequent updates
     private static final long UPDATE_INTERVAL = 10000; // 10 seconds
     private static final long FASTEST_UPDATE_INTERVAL = 5000; // 5 seconds
-    private static final float MIN_DISTANCE_CHANGE = 5f; // 5 meters
+    private static final float MIN_DISTANCE_CHANGE = 2f; // Reduced to 2 meters
 
-    private static final float MAX_ACCURACY_THRESHOLD = 10.0f; // 10 meters of maximum accuracy acceptable
-    private static final double SIGNIFICANT_CHANGE_THRESHOLD = 0.0001; // Approx 10 meters in coordinates
+    private static final float MAX_ACCURACY_THRESHOLD = 20.0f; // 20 meters of maximum accuracy acceptable
+    private static final double SIGNIFICANT_CHANGE_THRESHOLD = 0.00003;
 
 
     private final Context context;
@@ -113,6 +113,8 @@ public class LocationUtils {
     private boolean isLocationAcceptable(Location newLocation) {
         // Verify precision and significant change
         if (newLocation.getAccuracy() > MAX_ACCURACY_THRESHOLD) {
+            Log.d(TAG, String.format("Ubicación descartada por baja precisión: %.2fm",
+                    newLocation.getAccuracy()));
             return false;
         }
 
@@ -125,7 +127,19 @@ public class LocationUtils {
         double latDiff = Math.abs(newLocation.getLatitude() - currentLocation.getLatitude());
         double lonDiff = Math.abs(newLocation.getLongitude() - currentLocation.getLongitude());
 
-        return latDiff > SIGNIFICANT_CHANGE_THRESHOLD || lonDiff > SIGNIFICANT_CHANGE_THRESHOLD;
+        // Calculate actual distance in meters for logging
+        float distanceInMeters = currentLocation.distanceTo(newLocation);
+
+        boolean isSignificant = latDiff > SIGNIFICANT_CHANGE_THRESHOLD ||
+                lonDiff > SIGNIFICANT_CHANGE_THRESHOLD;
+
+        if (!isSignificant) {
+            Log.d(TAG, String.format("Ubicación descartada - Distancia muy pequeña: %.2fm",
+                    distanceInMeters));
+        }
+
+        return isSignificant;
+
     }
 
     /**
