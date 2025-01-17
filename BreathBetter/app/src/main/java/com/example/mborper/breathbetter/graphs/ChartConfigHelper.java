@@ -230,6 +230,18 @@ public class ChartConfigHelper {
         RoundedBarChartRenderer roundedRenderer = new RoundedBarChartRenderer(barChart, 20f);
         barChart.setRenderer(roundedRenderer);
 
+        // Forzar el recálculo del layout
+        barChart.post(new Runnable() {
+            @Override
+            public void run() {
+                // Forzar un recálculo completo
+                barChart.notifyDataSetChanged();
+                barChart.calculateOffsets();
+                barChart.requestLayout();
+                barChart.invalidate();
+            }
+        });
+
         // Mostrar advertencias si hay mediciones peligrosas
         boolean hasDangerousMeasurement = colorList.contains(Color.parseColor("#DC2626")); // Rojo
 
