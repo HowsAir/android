@@ -4,6 +4,8 @@ import static com.example.mborper.breathbetter.activities.BaseActivity.setCurren
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -35,7 +37,7 @@ import java.util.Locale;
  *
  * @author Alejandro Rosado
  * @since  2024-11-19
- * last updated: 2024-12-12
+ * last updated: 2025-01-10
  */
 public class GoalActivity extends BaseActivity {
 
@@ -50,6 +52,9 @@ public class GoalActivity extends BaseActivity {
     private boolean isAscendingPremio = false;
     private boolean isAscendingCiudad = false;
     private boolean isAscendingFecha = false;
+
+    private Handler dashboardUpdateHandler = new Handler(Looper.getMainLooper());
+    private Runnable dashboardUpdateRunnable;
 
     /**
      * Called when the activity is created.
@@ -89,14 +94,31 @@ public class GoalActivity extends BaseActivity {
 
         // Fetch current month's distance
         getCurrentMonthDistance();
+
+
+        // Setup periodic month distance data fetch
+        dashboardUpdateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                getCurrentMonthDistance();
+                dashboardUpdateHandler.postDelayed(this, 30000); // 30 seconds
+            }
+        };
+        dashboardUpdateHandler.post(dashboardUpdateRunnable);
     }
 
+    /**
+     * Handles new intents and reinitializes bottom navigation
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setupBottomNavigation();
     }
 
+    /**
+     * Reinitializes bottom navigation when the activity resumes
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -124,8 +146,8 @@ public class GoalActivity extends BaseActivity {
             @Override
             public void onFailure(Call<JsonObject> call, Throwable t) {
                 // Handle network error
-                textTotalDistance.setText("Network error");
-                textProgressPercentage.setText("0%");
+                textTotalDistance.setText("Error conexión");
+                textProgressPercentage.setText("x%");
             }
         });
     }
@@ -158,18 +180,51 @@ public class GoalActivity extends BaseActivity {
         TextView headerCiudad = findViewById(R.id.header_ciudad);
         TextView headerFecha = findViewById(R.id.header_fecha);
 
+        // Set initial indicators for columns
+        setInitialHeaderState(headerPremio, isAscendingPremio);
+        setInitialHeaderState(headerCiudad, isAscendingCiudad);
+        setInitialHeaderState(headerFecha, isAscendingFecha);
+
+        // Assign click listeners
         headerPremio.setOnClickListener(v -> {
-            rotateHeader(headerPremio, isAscendingPremio);
-            sortTable(0, isAscendingPremio = !isAscendingPremio);
+            isAscendingPremio = !isAscendingPremio;
+            updateHeaderState(headerPremio, isAscendingPremio);
+            sortTable(0, isAscendingPremio);
         });
+
         headerCiudad.setOnClickListener(v -> {
-            rotateHeader(headerCiudad, isAscendingCiudad);
-            sortTable(1, isAscendingCiudad = !isAscendingCiudad);
+            isAscendingCiudad = !isAscendingCiudad;
+            updateHeaderState(headerCiudad, isAscendingCiudad);
+            sortTable(1, isAscendingCiudad);
         });
+
         headerFecha.setOnClickListener(v -> {
-            rotateHeader(headerFecha, isAscendingFecha);
-            sortTable(2, isAscendingFecha = !isAscendingFecha);
+            isAscendingFecha = !isAscendingFecha;
+            updateHeaderState(headerFecha, isAscendingFecha);
+            sortTable(2, isAscendingFecha);
         });
+    }
+
+    /**
+     * Set the initial state of the header with the ▲ or ▼ order indicators.
+     */
+    private void setInitialHeaderState(TextView header, boolean isAscending) {
+        String text = header.getText().toString();
+        if (!text.contains("▲") && !text.contains("▼")) {
+            header.setText(String.format("%s %s", text, isAscending ? "▲" : "▼"));
+        }
+    }
+
+    /**
+     * Updates the header visual indicator after a sort change.
+     */
+    private void updateHeaderState(TextView header, boolean isAscending) {
+        String text = header.getText().toString();
+        if (text.contains("▲") || text.contains("▼")) {
+            header.setText(text.replace(isAscending ? "▼" : "▲", isAscending ? "▲" : "▼"));
+        } else {
+            header.setText(String.format("%s %s", text, isAscending ? "▲" : "▼"));
+        }
     }
 
     /**

@@ -51,7 +51,7 @@ import retrofit2.Response;
  *
  * @author Alejandro Rosado
  * @since  2024-12-11
- * last updated 2024-12-12
+ * last updated 2025-01-10
  */
 public class MapsActivity extends BaseActivity {
 
@@ -71,21 +71,18 @@ public class MapsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        //BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
-        //bottomNavigationView.setSelectedItemId(R.id.map);
         setCurrentScreen("MAP");
         setupBottomNavigation();
-
 
         Button showPopupButton = findViewById(R.id.show_popup_button); // Este botón debe estar definido en el layout XML
         showPopupButton.setOnClickListener(v -> showPopupDialog());
 
-        // Configurar WebView
+        // Configure WebView
         webView = findViewById(R.id.webview_mapa);
 
         WebView.setWebContentsDebuggingEnabled(true);
 
-        // Configuraciones de WebView para interactividad
+        // WebView settings for interactivity
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
@@ -94,7 +91,7 @@ public class MapsActivity extends BaseActivity {
         webSettings.setAllowUniversalAccessFromFileURLs(true);
         webSettings.setAllowFileAccessFromFileURLs(true);
 
-        // Configurar WebViewClient para manejar la carga de recursos
+        // Configure WebViewClient to handle resource loading
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -114,16 +111,21 @@ public class MapsActivity extends BaseActivity {
 
         });
 
-        // Cargar el HTML directamente
         loadHtmlContent();
     }
 
+    /**
+     * Handles new intents and reinitializes bottom navigation
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setupBottomNavigation();
     }
 
+    /**
+     * Reinitializes bottom navigation when the activity resumes
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -188,12 +190,20 @@ public class MapsActivity extends BaseActivity {
         });
     }
 
+    /**
+     * Displays a popup dialog with detailed information about different air pollutants
+     * <p>
+     * Creates a custom dialog with a ViewPager2 that shows information about Ozone,
+     * Carbon Monoxide, Nitrogen Dioxide, and general air quality tips
+     *
+     * @return void Creates and shows a dialog without returning a value
+     */
     private void showPopupDialog() {
         // Inflate the popup layout (which contains ViewPager2 and paginator)
         LayoutInflater inflater = getLayoutInflater();
         View popupView = inflater.inflate(R.layout.gas_info_popup, null);
 
-        // Aplicar bordes redondeados directamente al diseño del popup
+        // Apply rounded edges directly to the popup design
         popupView.setBackgroundResource(R.drawable.rounded_dialog_background);
 
         // Create the dialog
@@ -215,43 +225,46 @@ public class MapsActivity extends BaseActivity {
 
         // Page 1
         pages.add(new PageContent(
-                "Ozono (O3)",  // Title for Page 1
+                "Ozono (O3)",  // Title
                 Arrays.asList(
                         "Origen: vehículos, fábricas tras reaccionar con la luz del sol. ",
                         "Efectos: Dificultad para respirar, agrava el asma. ",
                         "Tip: Evita actividades al aire libre de 10:00 a 17:00.",
-                        "Límite/hora: 0.2 ppm"
+                        "Regular: 0.1-0.2 ppm " +
+                                "Peligroso: > 0.2 ppm "
                 ),
                 Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 2
         pages.add(new PageContent(
-                "Monóxido de Carbono (CO2)",  // Title for Page 2
+                "Monóxido de Carbono (CO)",
                 Arrays.asList(
                         "Origen: Calefacción y combustión de carburantes. ",
                         "Efectos: Mareos, fatiga; peligro en alta exposición",
                         "Tip: Evita motores encendidos en espacios cerrados.",
-                        "Límite/hora: 20 ppm"
+                        "Regular: 10-20 ppm " +
+                                "Peligroso: > 20 ppm"
                 ),
                 Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 3
         pages.add(new PageContent(
-                "Dióxido de nitrógeno (NO2)",  // Title for Page 3
+                "Dióxido de nitrógeno (NO2)",
                 Arrays.asList(
                         "Origen: Tráfico y combustibles fósiles. ",
                         "Efectos: Irrita las vías respiratorias, reduce función pulmonar. ",
                         "Tip: Mantén ventanas cerradas en horas pico.",
-                        "Límite/hora: 0.2 ppm"
+                        "Regular: 0.1-0.2 ppm " +
+                                "Peligroso: > 0.2 ppm"
                 ),
                 Arrays.asList(R.drawable.ic_origin, R.drawable.ic_effects, R.drawable.ic_tip, R.drawable.good_quality)
         ));
 
         // Page 4
         pages.add(new PageContent(
-                "Tips generales",  // Title for Page 4
+                "Tips generales",
                 Arrays.asList(
                         "Ventila tu casa temprano o tarde, y usa purificadores",
                         "Opta por rutas con menos tráfico",
@@ -276,38 +289,46 @@ public class MapsActivity extends BaseActivity {
         dialog.show();
 
         if (dialog.getWindow() != null) {
-            // Fondo transparente para el Window
+            // Transparent background for the Window
             dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
-        // Ajustar tamaño del diálogo manualmente
+        // Adjust dialog size manually
         WindowManager.LayoutParams params = new WindowManager.LayoutParams();
         params.copyFrom(dialog.getWindow().getAttributes());
-        // Convertir 320dp a píxeles
+        // Convert 320dp to pixels
         int heightInPixels = (int) TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP,
                 420,
                 getResources().getDisplayMetrics()
         );
 
-        // Usar el valor convertido para la altura del diálogo
-        params.width = heightInPixels; // Ajusta según tus necesidades
-        params.height = WindowManager.LayoutParams.WRAP_CONTENT; // Ajusta según tus necesidades
+        // Use converted value for dialog height
+        params.width = heightInPixels;
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT;
         dialog.getWindow().setAttributes(params);
 
-        // Agregar márgenes al popup
-        int marginHorizontal = getResources().getDimensionPixelSize(R.dimen.popup_margin_horizontal); // Define en dimens.xml
+        // Add margins to popup
+        int marginHorizontal = getResources().getDimensionPixelSize(R.dimen.popup_margin_horizontal);
         dialog.getWindow().getDecorView().setPadding(marginHorizontal, 0, marginHorizontal, 0);
     }
 
-
+    /**
+     * Sets up pagination dots for the ViewPager2 in the popup dialog
+     * <p>
+     * Creates and manages dot indicators that reflect the current page selection
+     *
+     * @param numPages Total number of pages in the ViewPager2
+     * @param dotsLayout LinearLayout container for dot indicators
+     * @param viewPager The ViewPager2 being tracked for page changes
+     */
     private void setupDots(int numPages, LinearLayout dotsLayout, ViewPager2 viewPager) {
         dotsLayout.removeAllViews();
         ImageView[] dots = new ImageView[numPages];
 
         for (int i = 0; i < numPages; i++) {
             dots[i] = new ImageView(this);
-            dots[i].setImageResource(R.drawable.dot_inactive);  // Asegúrate de tener este recurso en tus drawable
+            dots[i].setImageResource(R.drawable.dot_inactive);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -317,7 +338,7 @@ public class MapsActivity extends BaseActivity {
             dotsLayout.addView(dots[i]);
         }
 
-        // Cambiar el estado activo al deslizar
+        // Change active state by swiping
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -327,8 +348,8 @@ public class MapsActivity extends BaseActivity {
             }
         });
 
-        // Configurar el estado inicial
-        dots[0].setImageResource(R.drawable.dot_active);  // Asegúrate de tener este recurso en tus drawable
+        // Setting the initial state
+        dots[0].setImageResource(R.drawable.dot_active);
     }
 
 }

@@ -2,6 +2,7 @@ package com.example.mborper.breathbetter.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -11,6 +12,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public abstract class BaseActivity extends AppCompatActivity {
     protected void setupBottomNavigation() {
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        if (bottomNavigationView == null) {
+            Log.e("BaseActivity", "BottomNavigationView not found");
+            return;
+        }
 
         // Set the correct selected item based on the current activity
         bottomNavigationView.setSelectedItemId(getSelectedItemId());

@@ -11,11 +11,13 @@ import android.os.Handler;
  *
  * @author Alejandro Rosado
  * @since  2024-12-11
- * last edited: 2024-12-12
+ * last edited: 2025-01-10
  */
 public class NodeConnectionState {
     private static final String LOG_TAG = "NodeConnectionState";
     private static NodeConnectionState instance;
+
+    private boolean wasPreviouslyDisconnected = false;
 
     /**
      * Enum representing the connection status of the node.
@@ -47,9 +49,9 @@ public class NodeConnectionState {
         handlerThread.start();
         timeoutHandler = new Handler(handlerThread.getLooper());
 
-        // Establecer estado inicial como desconectado
-        currentStatus = ConnectionStatus.DISCONNECTED;
-        lastValidMeasurementTimestamp = 0;
+        // Determinar el estado inicial en función de mediciones válidas
+        lastValidMeasurementTimestamp = System.currentTimeMillis(); // Simula que inicia conectado
+        currentStatus = ConnectionStatus.CONNECTED;
 
         startConnectionTimeoutCheck();
     }
@@ -75,7 +77,6 @@ public class NodeConnectionState {
     private synchronized void checkConnectionTimeout() {
         long currentTime = System.currentTimeMillis();
 
-        // Si no ha habido mediciones válidas desde el inicio
         if (lastValidMeasurementTimestamp == 0 ||
                 currentTime - lastValidMeasurementTimestamp > CONNECTION_TIMEOUT_MS) {
             if (currentStatus != ConnectionStatus.DISCONNECTED) {
@@ -138,6 +139,7 @@ public class NodeConnectionState {
         if (statusListener != null) {
             statusListener.onConnectionRestored();
         }
+        wasPreviouslyDisconnected = false;
     }
 
     /**
@@ -157,10 +159,12 @@ public class NodeConnectionState {
 
             // Si estaba desconectado, intentar reconectar
             if (currentStatus == ConnectionStatus.DISCONNECTED) {
+                wasPreviouslyDisconnected = true;
                 attemptReconnection();
             } else {
                 currentStatus = ConnectionStatus.CONNECTED;
                 consecutiveConnectionAttempts = 0;
+                wasPreviouslyDisconnected = false;
             }
         }
     }
@@ -186,8 +190,7 @@ public class NodeConnectionState {
             Log.i(LOG_TAG, "Attempting to reconnect. Attempt: " + consecutiveConnectionAttempts);
             triggerReconnectionNotification();
         } else {
-            currentStatus = ConnectionStatus.DISCONNECTED;
-            Log.e(LOG_TAG, "Max reconnection attempts reached");
+            handleConnectionLoss();
         }
     }
 

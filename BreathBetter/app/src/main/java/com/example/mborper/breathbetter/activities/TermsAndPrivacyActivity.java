@@ -1,5 +1,6 @@
 package com.example.mborper.breathbetter.activities;
 
+
 import android.os.Bundle;
 import android.widget.TextView;
 
@@ -33,7 +34,12 @@ public class TermsAndPrivacyActivity extends AppCompatActivity {
         TextView textView = findViewById(R.id.textViewTermsPrivacy);
 
         // Sets the text with the terms and privacy policy
-        String termsAndPrivacyText = getString(R.string.terms_and_privacy_text);
+        String termsAndPrivacyText = getString(R.string.Terms_Conditions);
         textView.setText(termsAndPrivacyText);
+
+        findViewById(R.id.btnBack5).setOnClickListener(v -> {
+            getOnBackPressedDispatcher().onBackPressed();
+        });
+
     }
 }

@@ -13,12 +13,12 @@ import com.example.mborper.breathbetter.R;
 
 import java.util.List;
 
-// Clase del adaptador para el ViewPager2
+// Adapter class for ViewPager2
 class PopupPagerAdapter extends RecyclerView.Adapter<PopupPagerAdapter.ViewHolder> {
 
     private final List<PageContent> pageContents;
 
-    // Constructor
+    // Builder
     public PopupPagerAdapter(List<PageContent> pageContents) {
         this.pageContents = pageContents;
     }
@@ -35,7 +35,7 @@ class PopupPagerAdapter extends RecyclerView.Adapter<PopupPagerAdapter.ViewHolde
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         PageContent content = pageContents.get(position);
         holder.bind(content); // Bind data (texts and icons) to the page views
-        holder.itemView.requestLayout(); // Forzamos el ajuste del tamaño
+        holder.itemView.requestLayout(); // Force the size adjustment
     }
 
 
@@ -47,7 +47,7 @@ class PopupPagerAdapter extends RecyclerView.Adapter<PopupPagerAdapter.ViewHolde
     // ViewHolder for each page
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private final TextView title;  // Title for the page
+        private final TextView title;
         private final TextView text1, text2, text3, text4;
         private final ImageView icon1, icon2, icon3, icon4;
 
@@ -65,7 +65,7 @@ class PopupPagerAdapter extends RecyclerView.Adapter<PopupPagerAdapter.ViewHolde
         }
 
         public void bind(PageContent content) {
-            title.setText(content.getTitle());  // Set the title for the page
+            title.setText(content.getTitle());
             text1.setText(content.getTexts().get(0));
             text2.setText(content.getTexts().get(1));
             text3.setText(content.getTexts().get(2));

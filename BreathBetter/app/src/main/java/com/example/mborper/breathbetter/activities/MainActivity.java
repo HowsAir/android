@@ -1,17 +1,25 @@
 package com.example.mborper.breathbetter.activities;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.location.Location;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.MutableLiveData;
@@ -20,6 +28,8 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.util.Log;
 
 import android.view.View;
@@ -37,6 +47,7 @@ import com.example.mborper.breathbetter.api.ApiService;
 import com.example.mborper.breathbetter.graphs.ChartConfigHelper;
 import com.example.mborper.breathbetter.login.SessionManager;
 import com.example.mborper.breathbetter.measurements.GasAlertManager;
+import com.example.mborper.breathbetter.measurements.LocationUtils;
 import com.example.mborper.breathbetter.measurements.Measurement;
 import com.example.mborper.breathbetter.bluetooth.BluetoothPermissionHandler;
 
@@ -67,7 +78,7 @@ import java.util.ArrayList;
  * @author Manuel Borregales
  * @author Alejandro Rosado
  * @since  2024-10-07
- * last edited: 2024-12-12
+ * last edited: 2025-01-10
  */
 public class MainActivity extends BaseActivity
         implements NodeConnectionState.ConnectionStatusListener {
@@ -147,6 +158,9 @@ public class MainActivity extends BaseActivity
 
     private NodeConnectionState connectionState;
 
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+    private static final int BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE = 1002;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,7 +173,6 @@ public class MainActivity extends BaseActivity
         NodeConnectionState connectionState = NodeConnectionState.getInstance();
         connectionState.setConnectionStatusListener(this);
 
-        // Crear canal de notificaciones para conexión
         createConnectionNotificationChannel();
 
         overridePendingTransition(0, 0);
@@ -189,15 +202,14 @@ public class MainActivity extends BaseActivity
             return;
         }
 
+        requestBatteryOptimizationsDisabled();
+
+        checkAndRequestLocationPermissions();
+
         // If permissions are granted, proceed with setup
         setupMainActivity(isFirstLaunch);
 
         setCurrentScreen("HOME");
-
-        // Bottom navigation
-        setupBottomNavigation();
-
-
 
         cautionAirIcon = findViewById(R.id.caution_air_icon);
         textCaution = findViewById(R.id.text_caution);
@@ -246,13 +258,25 @@ public class MainActivity extends BaseActivity
      */
     @Override
     public void onConnectionLost() {
-        // Mostrar notificación de pérdida de conexión
+
+        // Create a PendingIntent that opens the MainActivity
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE // Mandatory on Android 12+
+        );
+
+        // Show connection loss notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CONNECTION_CHANNEL_ID)
                 .setContentTitle("Conexión del Nodo Perdida")
                 .setContentText("No se están recibiendo mediciones del nodo")
                 .setSmallIcon(R.drawable.howsair_logo)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent); // When notification is clicked, open MainActivity
 
         notificationManager.notify(1, builder.build());
     }
@@ -264,12 +288,24 @@ public class MainActivity extends BaseActivity
      */
     @Override
     public void onConnectionRestored() {
-        // Mostrar notificación de reconexión
+
+        // Create a PendingIntent that opens the MainActivity
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE // Mandatory on Android 12+
+        );
+
+        // Show reconnection notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CONNECTION_CHANNEL_ID)
                 .setContentTitle("Conexión del Nodo Restaurada")
                 .setContentText("Se han reanudado las mediciones del nodo")
                 .setSmallIcon(R.drawable.howsair_logo)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent) // When notification is clicked, open MainActivity
                 .setAutoCancel(true);
 
         notificationManager.notify(2, builder.build());
@@ -361,7 +397,9 @@ public class MainActivity extends BaseActivity
                         JsonObject lastAirQuality = responseData.getAsJsonObject("lastAirQualityReading");
                         JsonObject airQualityReadingsInfo = responseData.getAsJsonObject("airQualityReadingsInfo");
 
-                        if (airQualityReadingsInfo != null && airQualityReadingsInfo.has("overallAirQuality")) {
+                        if (airQualityReadingsInfo != null &&
+                                airQualityReadingsInfo.has("overallAirQuality") &&
+                                !airQualityReadingsInfo.get("overallAirQuality").isJsonNull()) {
                             String overallAirQuality = airQualityReadingsInfo.get("overallAirQuality").getAsString();
 
                             // Call the new method to update air quality display
@@ -378,9 +416,10 @@ public class MainActivity extends BaseActivity
 
                         // Check for null or empty objects before accessing
                         if (lastAirQuality != null &&
-                                lastAirQuality.has("timestamp") &&
-                                lastAirQuality.has("proportionalValue") &&
-                                lastAirQuality.has("gas")) {
+                                lastAirQuality.has("timestamp") && !lastAirQuality.get("timestamp").isJsonNull() &&
+                                lastAirQuality.has("ppmValue") && !lastAirQuality.get("ppmValue").isJsonNull() &&
+                                lastAirQuality.has("gas") && !lastAirQuality.get("gas").isJsonNull() &&
+                                lastAirQuality.has("proportionalValue") && !lastAirQuality.get("proportionalValue").isJsonNull()) {
 
                             // Update the UI dashboard data
                             updateUIDashboardData(
@@ -688,10 +727,10 @@ public class MainActivity extends BaseActivity
         }
     }
 
-
-
     /**
      * Handles the result of the permission request, it's called after accepting or rejecting a permission request.
+     * Processes the granted or denied permissions for Bluetooth and location.
+     *
      * <p>
      *      Natural: requestCode
      *      [Texto]: Permissions    ---->   onRequestPermissionsResult()
@@ -715,8 +754,61 @@ public class MainActivity extends BaseActivity
                 // Permissions denied, show a message or handle accordingly
                 Toast.makeText(this, "Bluetooth permissions are required", Toast.LENGTH_LONG).show();
             }
+        } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            boolean fineLocationGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            boolean backgroundLocationGranted = permissions.length > 1 && grantResults[1] == PackageManager.PERMISSION_GRANTED;
+
+            if (fineLocationGranted) {
+                Log.d("MainActivity", "Fine location permission granted.");
+                if (backgroundLocationGranted) {
+                    Log.d("MainActivity", "Background location permission granted.");
+                    // Now that fine location is granted, start location updates
+                    startLocationUpdates();
+                }
+            } else {
+                Log.e("MainActivity", "Fine location permission NOT granted.");
+                Toast.makeText(this, "El permiso de ubicación es necesario para continuar.", Toast.LENGTH_LONG).show();
+            }
+        }
+        else if (requestCode == BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("MainActivity", "Background location permission granted.");
+                startLocationUpdates();
+            } else {
+                Log.w("MainActivity", "Background location permission NOT granted.");
+                Toast.makeText(this, "El permiso para ubicación en segundo plano es necesario.", Toast.LENGTH_LONG).show();
+                showBackgroundLocationPermissionRationale();
+            }
         }
     }
+
+    /**
+     * Starts location updates using the utility class.
+     */
+    private void startLocationUpdates() {
+        LocationUtils locationUtils = new LocationUtils(this);
+        locationUtils.startLocationUpdates();
+    }
+
+    /**
+     * Displays a rationale dialog for requesting background location permission.
+     * <p>
+     * Guides the user to enable background location permission in settings.
+     */
+    private void showBackgroundLocationPermissionRationale() {
+        new AlertDialog.Builder(this)
+                .setTitle("Permiso de Ubicación en Segundo Plano")
+                .setMessage("Necesitamos este permiso para rastrear tu ubicación incluso cuando la app no está en uso. Puedes habilitarlo manualmente en la configuración.")
+                .setPositiveButton("Abrir configuración", (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
 
     /**
      * Handles the result of the Bluetooth enable request.
@@ -787,23 +879,68 @@ public class MainActivity extends BaseActivity
      * @param measurement The measurement to send.
      */
     private void sendMeasurementToApi(Measurement measurement) {
+        // Check if we have a valid location
+        LocationUtils locationUtils = new LocationUtils(this);
+        Location currentLocation = locationUtils.getCurrentLocation();
+
+        if (currentLocation == null) {
+            Log.d(LOG_TAG, "Esperando ubicación actualizada antes de enviar medición...");
+            // Setting up a listener to wait for location
+            locationUtils.setLocationUpdateListener(new LocationUtils.LocationUpdateListener() {
+                @Override
+                public void onLocationUpdated(Location location) {
+                    // Update measurement with new location
+                    measurement.setLatitude(location.getLatitude());
+                    measurement.setLongitude(location.getLongitude());
+
+                    // Send the updated measurement
+                    performApiCall(measurement);
+
+                    // Remove listener after sending
+                    locationUtils.setLocationUpdateListener(null);
+                }
+            });
+            // Start location updates if they are not active
+            if (!locationUtils.isTrackingLocation()) {
+                locationUtils.startLocationUpdates();
+            }
+        } else {
+            // If we already have a valid location, update and send immediately
+            measurement.setLatitude(currentLocation.getLatitude());
+            measurement.setLongitude(currentLocation.getLongitude());
+            performApiCall(measurement);
+        }
+    }
+
+    /**
+     * Sends a measurement with location data to the API.
+     * <p>
+     * Measurement -> sendMeasurement() -> Callback handling response or failure.
+     *
+     * @param measurement The measurement object containing location and other relevant data.
+     */
+    private void performApiCall(Measurement measurement) {
+        Log.d(LOG_TAG, "Enviando medición con ubicación - Lat: " + measurement.getLatitude() +
+                " Lon: " + measurement.getLongitude());
+
         Call<Measurement> postCall = apiService.sendMeasurement(measurement);
         postCall.enqueue(new Callback<Measurement>() {
             @Override
             public void onResponse(@NonNull Call<Measurement> call, @NonNull Response<Measurement> response) {
                 if (response.isSuccessful()) {
-                    Log.d(LOG_TAG, "Measurement sent successfully.");
+                    Log.d(LOG_TAG, "Medición enviada exitosamente.");
                 } else {
-                    Log.e(LOG_TAG, "API returned error: " + response.code());
+                    Log.e(LOG_TAG, "Error en la API: " + response.code());
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<Measurement> call, @NonNull Throwable t) {
-                Log.e(LOG_TAG, "Failed to send measurement: " + t.getMessage());
+                Log.e(LOG_TAG, "Error al enviar medición: " + t.getMessage());
             }
         });
     }
+
 
     /**
      * Called when the activity is destroyed. Unbinds the service if it is currently bound.
@@ -994,5 +1131,58 @@ public class MainActivity extends BaseActivity
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Requests the user to disable battery optimizations for the application.
+     * <p>
+     * Flow: PowerManager -> check battery optimization status -> launch settings intent
+     *
+     * This method checks if the app is being affected by battery optimizations.
+     * If optimizations are enabled, it opens a system dialog to request the user to exclude the app.
+     */
+    private void requestBatteryOptimizationsDisabled() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Intent intent = new Intent();
+            String packageName = getPackageName();
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + packageName));
+                startActivity(intent);
+            }
+        }
+    }
+
+    /**
+     * Checks and requests location permissions if needed.
+     * <p>
+     * Handles foreground and background location permissions for Android Q and later.
+     */
+    private void checkAndRequestLocationPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // Solicita solo el permiso de ubicación en primer plano
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            } else if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // Si el permiso de ubicación en primer plano ya está concedido, solicita el de segundo plano
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                        BACKGROUND_LOCATION_PERMISSION_REQUEST_CODE);
+            } else {
+                // Todos los permisos ya están concedidos
+                startLocationUpdates();
+            }
+        } else {
+            // Android 9 y versiones anteriores
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            } else {
+                startLocationUpdates();
+            }
+        }
+    }
 
 }
